@@ -303,7 +303,9 @@ npm test
 
 ## 🚢 Production Deployment
 
-For production deployment, see the comprehensive [Deployment Guide](docs/DEPLOYMENT.md).
+For production deployment:
+- **VPS/Cloud Server**: See our comprehensive [VPS Installation Guide](docs/VPS_INSTALLATION.md) ⭐ Recommended
+- **Docker/Hestia Panel**: See the [Deployment Guide](docs/DEPLOYMENT.md)
 
 Quick production checklist:
 - [ ] Set `NODE_ENV=production`

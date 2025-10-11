@@ -106,7 +106,26 @@ A comprehensive e-learning platform for GreenDye Academy, supporting multi-langu
 
 ## 🛠️ Installation
 
-### Local Development
+### Quick Start Options
+
+Choose the installation method that best fits your needs:
+
+1. **🖥️ VPS/Production Server** - [Complete VPS Installation Guide](docs/VPS_INSTALLATION.md) ⭐ **Recommended for Production**
+   - Step-by-step guide from fresh VPS to running application
+   - Includes security, SSL, backups, and monitoring
+   - Perfect for Ubuntu 22.04 servers
+
+2. **🐳 Docker Deployment** - [Docker Guide](docs/DEPLOYMENT.md#method-1-docker-deployment-recommended)
+   - Quick production deployment
+   - One-command setup
+
+3. **💻 Local Development** - [Quick Setup Guide](SETUP.md)
+   - For developers and testing
+   - Fast local environment setup
+
+---
+
+### Local Development Setup
 
 1. Clone the repository:
 ```bash
@@ -154,14 +173,24 @@ npm start
 
 8. Access the application at `http://localhost:3000`
 
-### Production Deployment with Docker
+---
 
-1. Build and start all services:
+### Production Deployment
+
+**For VPS/Cloud Server:**
+Follow our comprehensive [VPS Installation Guide](docs/VPS_INSTALLATION.md) which covers:
+- Fresh Ubuntu server setup
+- Domain and SSL configuration
+- Security best practices
+- Automated backups
+- Monitoring and maintenance
+
+**Quick Docker Deployment:**
 ```bash
 docker-compose up -d
 ```
 
-2. Access the application at your domain
+See the [Deployment Guide](docs/DEPLOYMENT.md) for more options.
 
 ## 🗂️ Project Structure
 

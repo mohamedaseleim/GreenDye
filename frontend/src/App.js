@@ -1,0 +1,103 @@
+import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
+import CssBaseline from '@mui/material/CssBaseline';
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+// Context Providers
+import { AuthProvider } from './contexts/AuthContext';
+import { LanguageProvider } from './contexts/LanguageContext';
+
+// Pages
+import Home from './pages/Home';
+import Courses from './pages/Courses';
+import CourseDetail from './pages/CourseDetail';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import Dashboard from './pages/Dashboard';
+import VerifyCertificate from './pages/VerifyCertificate';
+import VerifyTrainer from './pages/VerifyTrainer';
+import MyCourses from './pages/MyCourses';
+import CoursePlayer from './pages/CoursePlayer';
+import About from './pages/About';
+import Contact from './pages/Contact';
+import NotFound from './pages/NotFound';
+
+// Components
+import Layout from './components/Layout';
+import PrivateRoute from './components/PrivateRoute';
+
+const theme = createTheme({
+  palette: {
+    primary: {
+      main: '#2e7d32', // Green theme
+      light: '#60ad5e',
+      dark: '#005005',
+    },
+    secondary: {
+      main: '#ff9800',
+      light: '#ffc947',
+      dark: '#c66900',
+    },
+  },
+  typography: {
+    fontFamily: [
+      '-apple-system',
+      'BlinkMacSystemFont',
+      '"Segoe UI"',
+      'Roboto',
+      '"Helvetica Neue"',
+      'Arial',
+      'sans-serif',
+    ].join(','),
+  },
+});
+
+function App() {
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline />
+      <LanguageProvider>
+        <AuthProvider>
+          <Router>
+            <Layout>
+              <Routes>
+                <Route path="/" element={<Home />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/courses/:id" element={<CourseDetail />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/verify/certificate/:certificateId" element={<VerifyCertificate />} />
+                <Route path="/verify/trainer/:trainerId" element={<VerifyTrainer />} />
+                
+                {/* Private Routes */}
+                <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
+                <Route path="/my-courses" element={<PrivateRoute><MyCourses /></PrivateRoute>} />
+                <Route path="/learn/:courseId" element={<PrivateRoute><CoursePlayer /></PrivateRoute>} />
+                
+                {/* 404 Page */}
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </Layout>
+          </Router>
+          <ToastContainer
+            position="top-right"
+            autoClose={3000}
+            hideProgressBar={false}
+            newestOnTop
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+          />
+        </AuthProvider>
+      </LanguageProvider>
+    </ThemeProvider>
+  );
+}
+
+export default App;

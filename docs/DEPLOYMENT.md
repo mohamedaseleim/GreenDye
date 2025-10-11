@@ -2,6 +2,9 @@
 
 This guide explains how to deploy the GreenDye Academy platform on a VPS with Ubuntu 22.04 and Hestia Control Panel v1.9.4.
 
+> **🆕 Looking for a complete VPS setup guide?**  
+> Check out our comprehensive [VPS Installation Guide](VPS_INSTALLATION.md) for step-by-step instructions from fresh Ubuntu server to running application, including security, SSL certificates, backups, and monitoring.
+
 ## Prerequisites
 
 - VPS with Ubuntu 22.04

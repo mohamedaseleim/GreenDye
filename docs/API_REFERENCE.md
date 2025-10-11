@@ -582,18 +582,60 @@ GET /api/certificates
 GET /api/verify/certificate/:certificateId
 ```
 
-**Response:**
+**Description:** Validates a certificate using its Certificate ID or by scanning the QR code (which contains the Certificate ID).
+
+**Response (Valid Certificate):**
 ```json
 {
   "success": true,
+  "verified": true,
+  "message": "Certificate is valid",
   "data": {
     "certificateId": "CERT-ABC123",
-    "userName": "John Doe",
-    "courseName": "Web Development",
-    "completionDate": "2025-01-01",
-    "grade": "A+",
-    "isValid": true
+    "traineeName": "John Doe",
+    "courseTitle": "Web Development",
+    "certificateLevel": "A+",
+    "status": "Valid",
+    "duration": 40,
+    "tutorName": "Jane Smith",
+    "issuedBy": "GreenDye Academy",
+    "verificationDate": "2025-10-11T12:34:56.789Z",
+    "completionDate": "2025-01-01T00:00:00.000Z",
+    "issueDate": "2025-01-01T00:00:00.000Z",
+    "score": 95,
+    "qrCode": "data:image/png;base64,..."
   }
+}
+```
+
+**Response (Invalid/Revoked Certificate):**
+```json
+{
+  "success": true,
+  "verified": false,
+  "message": "Certificate has been revoked. Reason: Academic misconduct",
+  "data": {
+    "certificateId": "CERT-ABC123",
+    "traineeName": "John Doe",
+    "courseTitle": "Web Development",
+    "certificateLevel": "A+",
+    "status": "Revoked",
+    "duration": 40,
+    "tutorName": "Jane Smith",
+    "issuedBy": "GreenDye Academy",
+    "verificationDate": "2025-10-11T12:34:56.789Z",
+    "isRevoked": true,
+    "revokedDate": "2025-10-10T00:00:00.000Z"
+  }
+}
+```
+
+**Response (Certificate Not Found):**
+```json
+{
+  "success": false,
+  "verified": false,
+  "message": "Certificate not found"
 }
 ```
 

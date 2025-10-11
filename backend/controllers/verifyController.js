@@ -20,6 +20,11 @@ exports.verifyCertificate = async (req, res, next) => {
       });
     }
 
+    // Determine certificate status
+    const status = certificate.isRevoked 
+      ? 'Revoked' 
+      : (certificate.isValid ? 'Valid' : 'Invalid');
+
     if (!certificate.isValid || certificate.isRevoked) {
       return res.status(200).json({
         success: true,
@@ -29,6 +34,14 @@ exports.verifyCertificate = async (req, res, next) => {
           : 'Certificate is not valid',
         data: {
           certificateId: certificate.certificateId,
+          traineeName: certificate.userName,
+          courseTitle: certificate.courseName,
+          certificateLevel: certificate.grade,
+          status: status,
+          duration: certificate.metadata?.duration,
+          tutorName: certificate.metadata?.instructor,
+          issuedBy: 'GreenDye Academy',
+          verificationDate: new Date(),
           isRevoked: certificate.isRevoked,
           revokedDate: certificate.revokedDate
         }
@@ -41,11 +54,16 @@ exports.verifyCertificate = async (req, res, next) => {
       message: 'Certificate is valid',
       data: {
         certificateId: certificate.certificateId,
-        userName: certificate.userName,
-        courseName: certificate.courseName,
+        traineeName: certificate.userName,
+        courseTitle: certificate.courseName,
+        certificateLevel: certificate.grade,
+        status: status,
+        duration: certificate.metadata?.duration,
+        tutorName: certificate.metadata?.instructor,
+        issuedBy: 'GreenDye Academy',
+        verificationDate: new Date(),
         completionDate: certificate.completionDate,
         issueDate: certificate.issueDate,
-        grade: certificate.grade,
         score: certificate.score,
         qrCode: certificate.qrCode
       }

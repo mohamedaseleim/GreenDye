@@ -1,5 +1,9 @@
 # GreenDye Academy Mobile App
 
+## Overview
+
+GreenDye Academy now includes both a Progressive Web App (PWA) and a native React Native mobile application for enhanced mobile learning experience.
+
 ## Progressive Web App (PWA)
 
 The GreenDye Academy platform is built as a Progressive Web App (PWA), which means it can be installed and used like a native mobile application on both iOS and Android devices.
@@ -46,51 +50,96 @@ The GreenDye Academy platform is built as a Progressive Web App (PWA), which mea
 | Development Cost | Lower | Higher |
 | Maintenance | Single codebase | Multiple codebases |
 
-## Future Development: React Native App
+## React Native Mobile App (NEW!)
 
-For enhanced mobile experience with full native features, a React Native version is planned.
+The native React Native mobile app is now implemented with core features.
 
-### Planned Features
-- Native navigation
-- Offline video playback
-- Advanced notifications
-- Camera integration for ID verification
-- Biometric authentication
-- Native file access
-- Deep linking
+### Current Features
+- ✅ User authentication (Login/Register)
+- ✅ Home screen with personalized recommendations
+- ✅ Course browsing and search
+- ✅ My Learning dashboard with progress tracking
+- ✅ Profile with gamification stats
+- ✅ AI-powered course recommendations
+- ✅ Leaderboard and achievements
+- ✅ Native navigation
+- ✅ Offline token storage
 
-### Development Roadmap
+### Installation
 
-1. **Phase 1: Core Features** (Current - PWA)
-   - Basic functionality
-   - Course browsing
-   - Video playback
-   - User authentication
+1. **Prerequisites**
+   ```bash
+   # Install Node.js 16+ and npm
+   # Install React Native CLI
+   npm install -g react-native-cli
+   
+   # For iOS (macOS only)
+   sudo gem install cocoapods
+   
+   # For Android
+   # Install Android Studio and set up Android SDK
+   ```
 
-2. **Phase 2: Enhanced PWA**
-   - Offline course downloads
-   - Advanced caching
-   - Better performance
+2. **Install Dependencies**
+   ```bash
+   cd mobile-app
+   npm install
+   
+   # For iOS
+   cd ios && pod install && cd ..
+   ```
 
-3. **Phase 3: React Native App**
-   - Native iOS app
-   - Native Android app
-   - Enhanced features
-   - App Store/Play Store submission
+3. **Configure API Endpoint**
+   Edit `src/services/api.js` and update the `API_BASE_URL` to point to your backend server.
 
-## Technical Stack for Future Native App
+4. **Run the App**
+   ```bash
+   # For iOS
+   npm run ios
+   
+   # For Android
+   npm run android
+   ```
+
+### Technical Stack
 
 ```
 Technology Stack:
-- React Native
-- Expo (optional)
-- React Navigation
-- Redux/Context API
-- AsyncStorage
-- React Native Video
-- Push Notifications
-- Native Device Features
+- React Native 0.72
+- React Navigation 6
+- Axios for API calls
+- AsyncStorage for local storage
+- React Native Vector Icons
+- React Native Video (planned)
 ```
+
+### Project Structure
+
+```
+mobile-app/
+├── src/
+│   ├── screens/          # App screens
+│   │   ├── auth/         # Login, Register
+│   │   ├── HomeScreen.js
+│   │   ├── CoursesScreen.js
+│   │   ├── MyLearningScreen.js
+│   │   └── ProfileScreen.js
+│   ├── navigation/       # Navigation setup
+│   ├── services/         # API integration
+│   ├── components/       # Reusable components
+│   └── utils/            # Helper functions
+├── android/              # Android native code
+├── ios/                  # iOS native code
+└── package.json
+```
+
+### Future Enhancements
+- 🔄 Offline video playback
+- 🔄 Push notifications
+- 🔄 Camera integration for ID verification
+- 🔄 Biometric authentication
+- 🔄 Deep linking
+- 🔄 App Store/Play Store submission
 
 ## Contributing
 

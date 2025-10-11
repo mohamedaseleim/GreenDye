@@ -75,6 +75,11 @@ app.use('/api/forums', require('./routes/forumRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/gamification', require('./routes/gamificationRoutes'));
+app.use('/api/recommendations', require('./routes/recommendationRoutes'));
+app.use('/api/corporate', require('./routes/corporateRoutes'));
+app.use('/api/search', require('./routes/searchRoutes'));
+app.use('/api/lms-integration', require('./routes/lmsIntegrationRoutes'));
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -90,7 +95,7 @@ app.get('/api/docs', (req, res) => {
   res.status(200).json({
     success: true,
     message: 'GreenDye Academy API Documentation',
-    version: '1.0.0',
+    version: '1.2.0',
     endpoints: {
       auth: '/api/auth - Authentication endpoints',
       users: '/api/users - User management',
@@ -104,7 +109,12 @@ app.get('/api/docs', (req, res) => {
       forums: '/api/forums - Discussion forums',
       notifications: '/api/notifications - Notification system',
       payments: '/api/payments - Payment processing',
-      analytics: '/api/analytics - Analytics and reports'
+      analytics: '/api/analytics - Analytics and reports',
+      gamification: '/api/gamification - Badges, points, and leaderboards',
+      recommendations: '/api/recommendations - AI-powered course recommendations',
+      corporate: '/api/corporate - Corporate portal and team management',
+      search: '/api/search - Advanced search functionality',
+      lmsIntegration: '/api/lms-integration - External LMS integrations'
     }
   });
 });

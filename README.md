@@ -18,6 +18,36 @@ A comprehensive e-learning platform for GreenDye Academy, supporting multi-langu
 - **Payment Integration**: Secure payment processing for courses
 - **Mobile-First Design**: Responsive design that works on all devices
 - **Progressive Web App (PWA)**: Installable mobile experience
+- **React Native Mobile App**: Native iOS and Android applications
+
+### NEW in Version 1.2.0 🎉
+- **AI-Powered Recommendations**: Intelligent course suggestions based on user behavior and preferences
+- **Gamification System**: 
+  - Badges and achievements
+  - Points and levels
+  - Leaderboards (all-time, monthly, weekly)
+  - Learning streak tracking
+- **Corporate Portal**: 
+  - Organization management
+  - Team enrollments
+  - Bulk course purchases
+  - Team progress tracking
+- **Advanced Search**:
+  - Multi-language full-text search
+  - Advanced filters (category, level, price, rating)
+  - Search history and suggestions
+  - Popular searches tracking
+- **External LMS Integration**:
+  - Support for Moodle, Canvas, Blackboard
+  - SCORM 1.2 and 2004 packages
+  - Bidirectional data sync
+  - xAPI (Tin Can) support
+- **React Native Mobile App**:
+  - Native iOS and Android apps
+  - Offline token storage
+  - AI recommendations
+  - Gamification stats
+  - Course search and browsing
 
 ### Additional Features
 - **Discussion Forums**: Interactive community discussions with replies, likes, and resolution
@@ -54,8 +84,11 @@ A comprehensive e-learning platform for GreenDye Academy, supporting multi-langu
 - **PWA**: Workbox for service workers
 
 ### Mobile
-- **Technology**: Progressive Web App (PWA)
-- **Alternative**: React Native (future implementation)
+- **Progressive Web App**: Installable PWA for all platforms
+- **React Native**: Native iOS and Android applications
+- **Navigation**: React Navigation 6
+- **State Management**: AsyncStorage for offline support
+- **API Integration**: Axios with interceptors
 
 ### DevOps
 - **Containerization**: Docker & Docker Compose

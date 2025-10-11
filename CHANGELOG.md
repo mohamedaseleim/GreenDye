@@ -5,6 +5,160 @@ All notable changes to the GreenDye Academy project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2025-10-11
+
+### Added
+
+#### React Native Mobile App
+- **Native Mobile Application**
+  - Complete React Native mobile app implementation
+  - User authentication (Login/Register)
+  - Home screen with personalized recommendations
+  - Course browsing and search
+  - My Learning dashboard with progress tracking
+  - Profile screen with gamification stats
+  - Native navigation with bottom tabs
+  - Offline token storage with AsyncStorage
+  - API integration layer with Axios
+- **Mobile App Screens**
+  - LoginScreen - User authentication
+  - RegisterScreen - Account creation
+  - HomeScreen - Dashboard with recommendations
+  - CoursesScreen - Browse and search courses
+  - MyLearningScreen - Track enrolled courses
+  - ProfileScreen - User stats and achievements
+- **Dependencies**: React Native 0.72, React Navigation 6, AsyncStorage, Vector Icons
+
+#### AI-Powered Course Recommendations
+- **Recommendation Engine**
+  - Collaborative filtering algorithm
+  - Multi-factor scoring system (category match, level match, popularity, instructor match)
+  - Personalized course suggestions based on user history
+  - Trending courses detection
+  - Recommendation caching for performance
+- **User Preferences**
+  - Favorite categories tracking
+  - Preferred learning level
+  - Favorite instructors
+  - Dismissed recommendations tracking
+  - Interaction score calculation
+- **Models**: Recommendation and UserPreference models
+- **Controllers**: Complete recommendation controller with AI logic
+- **Routes**: RESTful recommendation API endpoints
+
+#### Gamification Features
+- **Badge System**
+  - Multi-language badge names and descriptions
+  - Badge criteria (courses completed, points earned, streak days, etc.)
+  - Rarity levels (common, rare, epic, legendary)
+  - Points reward system
+  - Automatic badge awarding based on achievements
+- **Leaderboard System**
+  - Global and periodic leaderboards (all-time, monthly, weekly)
+  - Points tracking and ranking
+  - Streak tracking (current and longest)
+  - Level calculation based on points
+  - Course completion tracking
+- **User Achievements**
+  - Personal achievement tracking
+  - Progress monitoring for badges
+  - Achievement history
+- **Models**: Badge, UserAchievement, LeaderboardEntry models
+- **Controllers**: Complete gamification controller
+- **Routes**: Gamification API endpoints
+
+#### Corporate Portal
+- **Organization Management**
+  - Create and manage organizations
+  - Organization profiles with industry and size
+  - Subscription plans (basic, professional, enterprise)
+  - Member limits and status tracking
+  - Custom branding settings
+- **Team Management**
+  - Add/remove members
+  - Role assignment (admin, manager, member)
+  - Department organization
+  - Member status tracking
+- **Team Enrollments**
+  - Bulk course enrollment for teams
+  - Team progress tracking
+  - Deadline management
+  - Purchase information tracking
+  - Team statistics and reporting
+- **Models**: Organization and TeamEnrollment models
+- **Controllers**: Complete corporate controller
+- **Routes**: Corporate portal API endpoints
+
+#### Advanced Search
+- **Search Functionality**
+  - Multi-language text search
+  - Advanced filtering (category, level, price range, rating, language)
+  - Multiple sort options (relevance, price, rating, date, popularity)
+  - Pagination support
+  - Search suggestions/autocomplete
+  - Popular searches tracking
+- **Search History**
+  - User search history tracking
+  - Search analytics
+  - Clear history functionality
+- **Search Index**
+  - Course indexing system
+  - Keyword extraction
+  - Metadata storage
+  - Popularity tracking
+- **Search Filters**
+  - Dynamic filter generation
+  - Available categories and levels
+  - Price range calculation
+  - Language options
+- **Models**: SearchIndex and SearchHistory models
+- **Controllers**: Complete search controller
+- **Routes**: Advanced search API endpoints
+
+#### External LMS Integration
+- **LMS Connectors**
+  - Support for Moodle, Canvas, Blackboard
+  - SCORM 1.2 and 2004 support
+  - xAPI (Tin Can) structure
+  - Custom LMS integration
+- **Integration Features**
+  - Bidirectional sync (import/export)
+  - Configurable sync intervals
+  - Field mapping customization
+  - Connection testing
+  - Sync status tracking
+- **Data Sync**
+  - Course data sync
+  - User data sync
+  - Enrollment sync
+  - Grade sync
+  - Progress tracking sync
+- **SCORM Package Management**
+  - Upload SCORM packages
+  - Manifest parsing
+  - Resource management
+  - Course association
+- **Sync Logging**
+  - Detailed sync logs
+  - Error tracking
+  - Performance metrics
+  - Audit trail
+- **Models**: ExternalLMS, DataSyncLog, SCORMPackage models
+- **Controllers**: Complete LMS integration controller
+- **Routes**: LMS integration API endpoints
+
+### Changed
+- Updated API version to 1.2.0
+- Enhanced server.js with new route integrations
+- Updated mobile-app README with React Native documentation
+
+### Documentation
+- Created NEW_FEATURES_API.md with comprehensive API documentation
+- Updated mobile-app README with installation and usage instructions
+- Added React Native project structure documentation
+
+---
+
 ## [1.1.0] - 2025-10-11
 
 ### Added

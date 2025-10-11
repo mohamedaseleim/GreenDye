@@ -1,14 +1,19 @@
 const express = require('express');
 const router = express.Router();
-const { protect } = require('../middleware/auth');
+const { protect, authorize } = require('../middleware/auth');
+const {
+  createCheckout,
+  verifyPayment,
+  getUserPayments,
+  requestRefund,
+  getInvoice
+} = require('../controllers/paymentController');
 
-// Placeholder for payment functionality
-router.post('/checkout', protect, (req, res) => {
-  res.status(200).json({
-    success: true,
-    message: 'Payment routes - Coming soon',
-    data: {}
-  });
-});
+// Payment routes
+router.post('/checkout', protect, createCheckout);
+router.post('/verify', verifyPayment); // Public webhook
+router.get('/', protect, getUserPayments);
+router.post('/:id/refund', protect, requestRefund);
+router.get('/:id/invoice', protect, getInvoice);
 
 module.exports = router;

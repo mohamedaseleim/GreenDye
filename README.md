@@ -20,14 +20,20 @@ A comprehensive e-learning platform for GreenDye Academy, supporting multi-langu
 - **Progressive Web App (PWA)**: Installable mobile experience
 
 ### Additional Features
-- **Discussion Forums**: Interactive community discussions
+- **Discussion Forums**: Interactive community discussions with replies, likes, and resolution
 - **Live Chat Support**: Real-time support for students
 - **Assessment & Quizzes**: Test knowledge and track progress
 - **Video Streaming**: Optimized video delivery for courses
 - **Certificates Generation**: Automatic certificate generation upon course completion
-- **Notifications**: Email and push notifications
-- **Analytics Dashboard**: Comprehensive analytics for admins
+- **Notifications**: Email and push notifications with multi-language support
+- **Analytics Dashboard**: Comprehensive analytics for students, trainers, and admins
 - **Content Management**: Easy content updates through admin panel
+- **Payment Integration**: Multiple payment gateways (Stripe, PayPal, Fawry, Paymob)
+- **Multi-Currency Support**: USD, EUR, EGP, SAR, NGN
+- **Refund System**: Automated refund processing with policy management
+- **Invoice Generation**: Automatic invoice creation for all payments
+- **Event Tracking**: Detailed analytics on user behavior and engagement
+- **Learning Streak**: Track daily learning consistency
 
 ## 🚀 Technology Stack
 
@@ -179,7 +185,15 @@ FILE_UPLOAD_PATH=./uploads
 
 # Frontend URL
 FRONTEND_URL=http://localhost:3000
+
+# Payment Gateways (Optional - configure as needed)
+STRIPE_SECRET_KEY=your_stripe_key
+PAYPAL_CLIENT_ID=your_paypal_id
+FAWRY_MERCHANT_CODE=your_fawry_code
+PAYMOB_API_KEY=your_paymob_key
 ```
+
+For complete environment configuration, see `backend/.env.example`
 
 ## 📱 Mobile App
 
@@ -200,7 +214,12 @@ Language can be changed from the user menu or automatically detected based on br
 
 ## 📊 API Documentation
 
-API documentation is available at `/api/docs` when running the server.
+Comprehensive API documentation is available:
+- **Quick Reference**: `/api/docs` endpoint when running the server
+- **Full Documentation**: [API Reference](docs/API_REFERENCE.md)
+- **Payment Integration**: [Payment Guide](docs/PAYMENT_INTEGRATION.md)
+- **Deployment Guide**: [Deployment](docs/DEPLOYMENT.md)
+- **User Guide**: [User Guide](docs/USER_GUIDE.md)
 
 ### Key Endpoints
 
@@ -210,6 +229,12 @@ API documentation is available at `/api/docs` when running the server.
 - **Certificates**: `/api/certificates/*`
 - **Trainers**: `/api/trainers/*`
 - **Verification**: `/api/verify/*`
+- **Payments**: `/api/payments/*` - Checkout, refunds, invoices
+- **Analytics**: `/api/analytics/*` - Platform stats, course analytics, user metrics
+- **Forums**: `/api/forums/*` - Posts, replies, likes
+- **Notifications**: `/api/notifications/*` - User notifications, email/push
+
+For complete API documentation, see [API Reference](docs/API_REFERENCE.md)
 
 ## 🧪 Testing
 
@@ -246,11 +271,15 @@ For support, email support@greendye-academy.com or join our community forum.
 - [x] Trainer verification
 - [x] LMS with synchronous/asynchronous learning
 - [x] PWA support
+- [x] Payment system (Stripe, PayPal, Fawry, Paymob)
+- [x] Analytics dashboard
+- [x] Forum/Discussion system
+- [x] Notification system (Email & Push)
 - [ ] Mobile app (React Native)
 - [ ] AI-powered course recommendations
 - [ ] Gamification features
-- [ ] Social learning features
-- [ ] Advanced analytics
+- [ ] Corporate portal
+- [ ] Advanced search (Elasticsearch/Algolia)
 - [ ] Integration with external LMS systems
 
 ## 🏆 Target Audience

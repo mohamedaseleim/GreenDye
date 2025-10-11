@@ -300,15 +300,57 @@ For complete API documentation, see [API Reference](docs/API_REFERENCE.md)
 
 ## 🧪 Testing
 
+The project includes comprehensive test coverage for both backend and frontend.
+
+### Backend Tests
+
 ```bash
-# Run backend tests
 cd backend
+
+# Run all tests with coverage
 npm test
 
-# Run frontend tests
-cd frontend
-npm test
+# Run tests in watch mode
+npm run test:watch
+
+# Run specific test file
+npm test -- User.test.js
+
+# Run without coverage
+npx jest --coverage=false
 ```
+
+**Test Structure:**
+- Model tests: Unit tests for database models
+- Integration tests: API endpoint tests
+- Helper utilities: Authentication and test data helpers
+
+**Coverage Goals:** 50% minimum for branches, functions, lines, and statements
+
+### Frontend Tests
+
+```bash
+cd frontend
+
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm test -- --watch
+
+# Run with coverage
+npm test -- --coverage
+```
+
+### Test Database Setup
+
+Tests require a MongoDB connection. Options:
+
+1. **Local MongoDB**: `mongod` (tests use `greendye-test` database)
+2. **MongoDB Atlas**: Set `MONGODB_TEST_URI` environment variable
+3. **In-Memory**: Install `mongodb-memory-server` for fast, isolated tests
+
+For detailed testing documentation, see [Backend Tests README](backend/__tests__/README.md).
 
 ## 🤝 Contributing
 

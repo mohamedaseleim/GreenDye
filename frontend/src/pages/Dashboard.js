@@ -24,7 +24,7 @@ import {
   TrendingUp,
   PlayCircleOutline,
   Person,
-  Certificate as CertificateIcon,
+  CardMembership,
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -166,7 +166,7 @@ const Dashboard = () => {
             <CardContent>
               <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
                 <Avatar sx={{ bgcolor: 'warning.main' }}>
-                  <CertificateIcon />
+                  <CardMembership />
                 </Avatar>
                 <Box>
                   <Typography variant="h4">{completedCourses}</Typography>

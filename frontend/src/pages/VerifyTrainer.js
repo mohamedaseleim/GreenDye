@@ -18,7 +18,7 @@ import {
   Divider,
 } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Search, Person, Verified, School, WorkOutline } from '@mui/icons-material';
+import { Search, Person, Verified, School } from '@mui/icons-material';
 import axios from 'axios';
 
 const VerifyTrainer = () => {
@@ -37,6 +37,7 @@ const VerifyTrainer = () => {
     if (urlTrainerId || qrTrainerId) {
       handleVerify();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlTrainerId, qrTrainerId]);
 
   const handleVerify = async (e) => {

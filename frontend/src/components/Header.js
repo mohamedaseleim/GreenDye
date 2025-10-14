@@ -15,8 +15,7 @@ import {
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  AccountCircle,
-  Language as LanguageIcon
+  AccountCircle
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
@@ -25,7 +24,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 const Header = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { user, logout, isAuthenticated } = useAuth();
+  const { logout, isAuthenticated } = useAuth();
   const { language, changeLanguage } = useLanguage();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);

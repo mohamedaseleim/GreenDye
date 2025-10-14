@@ -21,7 +21,6 @@ import {
 import {
   PlayCircleOutline,
   CheckCircle,
-  Lock,
   MenuBook,
   Quiz,
   Assignment,
@@ -42,6 +41,7 @@ const CoursePlayer = () => {
 
   useEffect(() => {
     fetchCourseData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [courseId]);
 
   const fetchCourseData = async () => {

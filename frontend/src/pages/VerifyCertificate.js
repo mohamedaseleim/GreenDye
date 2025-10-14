@@ -31,6 +31,7 @@ const VerifyCertificate = () => {
     if (urlCertificateId || qrCertificateId) {
       handleVerify();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [urlCertificateId, qrCertificateId]);
 
   const handleVerify = async (e) => {

@@ -7,8 +7,7 @@ import {
   Box,
   Grid,
   Card,
-  CardContent,
-  CardMedia
+  CardContent
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
 import { School, Verified, Language, People } from '@mui/icons-material';

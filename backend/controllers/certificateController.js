@@ -116,7 +116,10 @@ exports.generateCertificate = async (req, res, next) => {
         language: user.language
       }
     });
-
+    /  / Generate unique QR code using the certificate's verification URL
+      const uniqueQrCodeData = await QRCode.toDataURL(certificate.verificationUrl);
+  certificate.qrCode = uniqueQrCodeData;
+  await certificate.save();
     // Update enrollment with certificate reference
     enrollment.certificate = certificate._id;
     await enrollment.save();

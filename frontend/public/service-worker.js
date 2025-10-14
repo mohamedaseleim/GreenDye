@@ -125,8 +125,7 @@ self.addEventListener('notificationclick', (event) => {
     clients.matchAll({ type: 'window', includeUncontrolled: true })
       .then((windowClients) => {
         // Check if there's already a window open
-        for (let i = 0; i < windowClients.length; i++) {
-          const client = windowClients[i];
+        for (const client of windowClients) {
           if (client.url === urlToOpen && 'focus' in client) {
             return client.focus();
           }
@@ -147,7 +146,11 @@ self.addEventListener('sync', (event) => {
 });
 
 async function syncData() {
-  // Placeholder for background sync logic
-  // This would sync any offline actions when network is restored
-  console.log('Background sync triggered');
+  // TODO: Implement background sync logic
+  // This function should sync any offline actions when network is restored
+  // Examples:
+  // - Sync enrollment requests made while offline
+  // - Upload progress updates
+  // - Send analytics events
+  console.log('Background sync triggered - implementation pending');
 }

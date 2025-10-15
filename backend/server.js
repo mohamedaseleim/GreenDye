@@ -79,6 +79,8 @@ app.use('/api/gamification', require('./routes/gamificationRoutes'));
 app.use('/api/recommendations', require('./routes/recommendationRoutes'));
 app.use('/api/corporate', require('./routes/corporateRoutes'));
 app.use('/api/search', require('./routes/searchRoutes'));
+app.use('/api/progress', require('./routes/progressRoutes'));
+
 app.use('/api/lms-integration', require('./routes/lmsIntegrationRoutes'));
 
 // Health check endpoint
@@ -114,8 +116,11 @@ app.get('/api/docs', (req, res) => {
       recommendations: '/api/recommendations - AI-powered course recommendations',
       corporate: '/api/corporate - Corporate portal and team management',
       search: '/api/search - Advanced search functionality',
+          progress: '/api/progress - Progress tracking',
+
       lmsIntegration: '/api/lms-integration - External LMS integrations'
     }
+    
   });
 });
 

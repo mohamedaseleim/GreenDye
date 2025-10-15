@@ -137,7 +137,28 @@ recording: String,
 
   }],
   tags: [String],
-  metadata: {
+  
+  authors: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  }],
+  approvalStatus: {
+    type: String,
+    enum: ['draft', 'pending', 'approved', 'rejected'],
+    default: 'draft'
+  },
+  version: {
+    type: Number,
+    default: 1
+  },
+  metaDescription: {
+    type: Map,
+    of: String
+  },
+  canonicalUrl: {
+    type: String
+  },
+metadata: {
     views: {
       type: Number,
       default: 0

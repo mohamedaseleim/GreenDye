@@ -11,6 +11,7 @@ const {
   getCoursesByCategory,
   searchCourses
 } = require('../controllers/courseController');
+const { submitCourseForApproval, approveCourse, rejectCourse, addAuthor } = require('../controllers/courseApprovalController');
 
 router.route('/')
   .get(getCourses)
@@ -18,6 +19,10 @@ router.route('/')
 
 router.get('/featured', getFeaturedCourses);
 router.get('/category/:category', getCoursesByCategory);
+router.put('/:id/submit', protect, authorize('trainer','admin'), submitCourseForApproval);
+router.put('/:id/approve', protect, authorize('admin'), approveCourse);
+router.put('/:id/reject', protect, authorize('admin'), rejectCourse);
+router.put('/:id/add-author', protect, authorize('trainer','admin'), addAuthor);
 router.get('/search', searchCourses);
 
 router.route('/:id')

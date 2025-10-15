@@ -23,4 +23,19 @@ router.route('/:id')
 router.put('/:id/verify', protect, authorize('admin'), verifyTrainer);
 router.get('/:id/courses', getTrainerCourses);
 
+// Apply for trainer verification
+router.put(
+  '/:id/apply-verification',
+  protect,
+  require('../controllers/trainerVerificationController').applyForVerification
+);
+
+// Admin-only: view all pending verifications
+router.get(
+  '/pending-verifications',
+  protect,
+  authorize('admin'),
+  require('../controllers/trainerVerificationController').getPendingVerifications
+);
+
 module.exports = router;

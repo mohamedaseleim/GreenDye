@@ -65,7 +65,12 @@ const CourseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Lesson'
   }],
-  requirements: {
+  
+    sections: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Section'
+  }],
+requirements: {
     type: Map,
     of: [String]
   },
@@ -118,7 +123,18 @@ const CourseSchema = new mongoose.Schema({
     date: Date,
     duration: Number, // in minutes
     meetingLink: String,
-    recording: String
+recording: String,
+
+          participants: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    }],
+    platform: {
+      type: String,
+      enum: ['zoom', 'jitsi', 'github-classroom', 'agora', 'other'],
+      default: 'zoom'
+    },
+
   }],
   tags: [String],
   metadata: {

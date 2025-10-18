@@ -1,6 +1,11 @@
 {
   "short_name": "GreenDye",
   "name": "GreenDye Academy",
+    "lang": "en",
+  "dir": "ltr",
+  "scope": "/",
+  "orientation": "portrait",
+
   "icons": [
     {
       "src": "favicon.ico",

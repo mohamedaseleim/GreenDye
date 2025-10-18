@@ -103,3 +103,9 @@ function App() {
 }
 
 export default App;
+
+import Chat from './pages/Chat';
+
+// inside <Routes>
+<Route path="/chat" element={<Chat />} />
+

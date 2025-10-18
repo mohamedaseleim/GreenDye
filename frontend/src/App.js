@@ -24,6 +24,7 @@ import About from './pages/About';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 import Forum from './pages/Forum';
+import Chat from './pages/Chat';
 
 // Components
 import Layout from './components/Layout';
@@ -71,15 +72,37 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
-          a<Route path="/forums" element={<Forum />} />
+                <Route path="/forums" element={<Forum />} />
+                <Route path="/chat" element={<Chat />} />
                 <Route path="/verify/certificate/:certificateId" element={<VerifyCertificate />} />
                 <Route path="/verify/trainer/:trainerId" element={<VerifyTrainer />} />
-                
+
                 {/* Private Routes */}
-                <Route path="/dashboard" element={<PrivateRoute><Dashboard /></PrivateRoute>} />
-                <Route path="/my-courses" element={<PrivateRoute><MyCourses /></PrivateRoute>} />
-                <Route path="/learn/:courseId" element={<PrivateRoute><CoursePlayer /></PrivateRoute>} />
-                
+                <Route
+                  path="/dashboard"
+                  element={
+                    <PrivateRoute>
+                      <Dashboard />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/my-courses"
+                  element={
+                    <PrivateRoute>
+                      <MyCourses />
+                    </PrivateRoute>
+                  }
+                />
+                <Route
+                  path="/learn/:courseId"
+                  element={
+                    <PrivateRoute>
+                      <CoursePlayer />
+                    </PrivateRoute>
+                  }
+                />
+
                 {/* 404 Page */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

@@ -82,6 +82,8 @@ app.use('/api/search', require('./routes/searchRoutes'));
 app.use('/api/progress', require('./routes/progressRoutes'));
 
 app.use('/api/lms-integration', require('./routes/lmsIntegrationRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
+
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -113,6 +115,9 @@ app.get('/api/docs', (req, res) => {
       payments: '/api/payments - Payment processing',
       analytics: '/api/analytics - Analytics and reports',
       gamification: '/api/gamification - Badges, points, and leaderboards',
+          chat: '/api/chat - Live chat support',
+
+
       recommendations: '/api/recommendations - AI-powered course recommendations',
       corporate: '/api/corporate - Corporate portal and team management',
       search: '/api/search - Advanced search functionality',

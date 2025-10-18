@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
+const { verifyWebhook } = require('../controllers/paymentWebhookController');
 const {
   createCheckout,
   verifyPayment,
@@ -12,6 +13,8 @@ const {
 // Payment routes
 router.post('/checkout', protect, createCheckout);
 router.post('/verify', verifyPayment); // Public webhook
+router.post('/webhook', verifyWebhook);
+
 router.get('/', protect, getUserPayments);
 router.post('/:id/refund', protect, requestRefund);
 router.get('/:id/invoice', protect, getInvoice);

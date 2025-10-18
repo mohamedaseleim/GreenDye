@@ -26,3 +26,10 @@ code {
 #root {
   min-height: 100vh;
 }
+
+/* Improve touch targets for mobile */
+button,
+a.button {
+  padding: 0.75rem 1.25rem;
+  font-size: 1rem;
+}

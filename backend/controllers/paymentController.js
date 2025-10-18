@@ -1,6 +1,9 @@
 const Payment = require('../models/Payment');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
+const FawryService = require('../services/fawryService');
+const PaymobService = require('../services/paymobService');
+
 
 // @desc    Create payment intent/checkout session
 // @route   POST /api/payments/checkout
@@ -302,20 +305,13 @@ async function createPayPalCheckout(payment, course) {
   };
 }
 
-async function createFawryCheckout(payment, course) {
-  // TODO: Integrate with Fawry API
-  return {
-    checkoutUrl: `${process.env.FRONTEND_URL}/checkout/fawry/${payment._id}`,
-    referenceNumber: `fawry_ref_${payment._id}`,
-    merchantCode: process.env.FAWRY_MERCHANT_CODE || 'fawry_mock'
-  };
+aasync function createFawryCheckout(payment, course) {
+  const fawryService = new FawryService();
+  return await fawryService.createCheckout(payment);
 }
 
 async function createPaymobCheckout(payment, course) {
-  // TODO: Integrate with Paymob API
-  return {
-    checkoutUrl: `${process.env.FRONTEND_URL}/checkout/paymob/${payment._id}`,
-    paymentToken: `paymob_token_${payment._id}`,
-    integrationId: process.env.PAYMOB_INTEGRATION_ID || 'paymob_mock'
-  };
+  const paymobService = new PaymobService();
+  return await paymobService.createCheckout(payment);
 }
+

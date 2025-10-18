@@ -23,6 +23,7 @@ import CoursePlayer from './pages/CoursePlayer';
 import About from './pages/About';
 import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
+import Forum from './pages/Forum';
 
 // Components
 import Layout from './components/Layout';
@@ -70,6 +71,7 @@ function App() {
                 <Route path="/register" element={<Register />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/contact" element={<Contact />} />
+          a<Route path="/forums" element={<Forum />} />
                 <Route path="/verify/certificate/:certificateId" element={<VerifyCertificate />} />
                 <Route path="/verify/trainer/:trainerId" element={<VerifyTrainer />} />
                 

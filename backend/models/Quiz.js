@@ -10,6 +10,7 @@ const QuizSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Lesson'
   },
+  // Multilingual title and description using a Map
   title: {
     type: Map,
     of: String,
@@ -19,6 +20,7 @@ const QuizSchema = new mongoose.Schema({
     type: Map,
     of: String
   },
+  // Array of embedded question objects
   questions: [{
     question: {
       type: Map,
@@ -30,6 +32,7 @@ const QuizSchema = new mongoose.Schema({
       enum: ['multiple-choice', 'true-false', 'short-answer', 'essay'],
       default: 'multiple-choice'
     },
+    // Each option contains multilingual text and a flag for correctness
     options: [{
       text: {
         type: Map,
@@ -40,7 +43,8 @@ const QuizSchema = new mongoose.Schema({
         default: false
       }
     }],
-    correctAnswer: String, // For short-answer questions
+    // For short-answer questions, you can specify a correct answer string
+    correctAnswer: String,
     points: {
       type: Number,
       default: 1
@@ -48,8 +52,23 @@ const QuizSchema = new mongoose.Schema({
     explanation: {
       type: Map,
       of: String
+    },
+    // Additional metadata to support question banks and adaptive scoring
+    difficulty: {
+      type: String,
+      enum: ['easy', 'medium', 'hard'],
+      default: 'medium'
+    },
+    tags: [{
+      type: String
+    }],
+    // Optional reference to a separate Question document (question bank)
+    bankRef: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Question'
     }
   }],
+  // Quiz-level configuration fields
   totalPoints: {
     type: Number,
     default: 0
@@ -79,6 +98,11 @@ const QuizSchema = new mongoose.Schema({
     enum: ['immediately', 'after-submission', 'never'],
     default: 'after-submission'
   },
+  // Whether the quiz uses adaptive scoring (optional flag)
+  isAdaptive: {
+    type: Boolean,
+    default: false
+  },
   isRequired: {
     type: Boolean,
     default: false
@@ -97,9 +121,12 @@ const QuizSchema = new mongoose.Schema({
   }
 });
 
-// Calculate total points before saving
+// Calculate total points and update timestamps before saving
 QuizSchema.pre('save', function(next) {
-  this.totalPoints = this.questions.reduce((sum, q) => sum + (q.points || 1), 0);
+  this.totalPoints = this.questions.reduce(
+    (sum, q) => sum + (q.points || 1),
+    0
+  );
   this.updatedAt = Date.now();
   next();
 });

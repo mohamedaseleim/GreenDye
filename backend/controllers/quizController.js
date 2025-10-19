@@ -1,12 +1,23 @@
 const Quiz = require('../models/Quiz');
 const Enrollment = require('../models/Enrollment');
 
-// @desc    Get all quizzes for a course
-// @route   GET /api/quizzes?courseId=xxx
+/**
+ * Helper to shuffle an array in place.
+ */
+function shuffleArray(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+  return arr;
+}
+
+// @desc    Get all published quizzes for a course (and optional lesson)
+// @route   GET /api/quizzes?courseId=xxx&lessonId=yyy
 // @access  Private
 exports.getQuizzes = async (req, res, next) => {
   try {
-    const { courseId } = req.query;
+    const { courseId, lessonId } = req.query;
 
     if (!courseId) {
       return res.status(400).json({
@@ -15,7 +26,12 @@ exports.getQuizzes = async (req, res, next) => {
       });
     }
 
-    const quizzes = await Quiz.find({ course: courseId, isPublished: true });
+    const filter = { course: courseId, isPublished: true };
+    if (lessonId) {
+      filter.lesson = lessonId;
+    }
+
+    const quizzes = await Quiz.find(filter);
 
     res.status(200).json({
       success: true,
@@ -41,18 +57,42 @@ exports.getQuiz = async (req, res, next) => {
       });
     }
 
-    // Hide correct answers from students
+    // Hide correct answers and optionally shuffle for students
     if (req.user.role === 'student') {
       const sanitizedQuiz = quiz.toObject();
-      sanitizedQuiz.questions = sanitizedQuiz.questions.map(q => {
-        const sanitizedQuestion = { ...q };
-        if (q.options) {
-          sanitizedQuestion.options = q.options.map(opt => ({
-            text: opt.text
-          }));
+
+      // Shuffle questions if enabled
+      if (sanitizedQuiz.shuffleQuestions) {
+        sanitizedQuiz.questions = shuffleArray(
+          sanitizedQuiz.questions.slice()
+        );
+      }
+
+      sanitizedQuiz.questions = sanitizedQuiz.questions.map((q) => {
+        const sanitizedQuestion = {
+          question: q.question,
+          type: q.type,
+          points: q.points,
+          // Only send the option text
+          options: q.options
+            ? q.options.map((opt) => ({
+                text: opt.text
+              }))
+            : undefined,
+          explanation: null
+        };
+
+        // Shuffle options if enabled
+        if (
+          sanitizedQuiz.shuffleOptions &&
+          sanitizedQuestion.options &&
+          sanitizedQuestion.options.length > 1
+        ) {
+          sanitizedQuestion.options = shuffleArray(
+            sanitizedQuestion.options.slice()
+          );
         }
-        delete sanitizedQuestion.correctAnswer;
-        delete sanitizedQuestion.explanation;
+
         return sanitizedQuestion;
       });
 
@@ -62,6 +102,7 @@ exports.getQuiz = async (req, res, next) => {
       });
     }
 
+    // Trainers/admins get the full quiz, including correct answers
     res.status(200).json({
       success: true,
       data: quiz
@@ -143,7 +184,6 @@ exports.deleteQuiz = async (req, res, next) => {
 exports.submitQuiz = async (req, res, next) => {
   try {
     const { answers, courseId } = req.body;
-
     const quiz = await Quiz.findById(req.params.id);
 
     if (!quiz) {
@@ -151,6 +191,32 @@ exports.submitQuiz = async (req, res, next) => {
         success: false,
         message: 'Quiz not found'
       });
+    }
+
+    // Enforce attempt limits if tied to a course
+    let enrollment;
+    if (courseId) {
+      enrollment = await Enrollment.findOne({
+        user: req.user.id,
+        course: courseId
+      });
+
+      if (enrollment) {
+        const existing = enrollment.quizScores.find(
+          (qs) => qs.quiz.toString() === quiz._id.toString()
+        );
+        // Check attemptsAllowed (-1 means unlimited)
+        if (
+          existing &&
+          quiz.attemptsAllowed !== -1 &&
+          existing.attempt >= quiz.attemptsAllowed
+        ) {
+          return res.status(400).json({
+            success: false,
+            message: 'Maximum attempts reached for this quiz'
+          });
+        }
+      }
     }
 
     // Calculate score
@@ -162,61 +228,76 @@ exports.submitQuiz = async (req, res, next) => {
       const userAnswer = answers[index];
       let isCorrect = false;
 
-      if (question.type === 'multiple-choice') {
-        const correctOption = question.options.find(opt => opt.isCorrect);
-        isCorrect = userAnswer === correctOption.text.get('en'); // Simplified
-      } else if (question.type === 'true-false') {
-        isCorrect = userAnswer === question.correctAnswer;
-      } else if (question.type === 'short-answer') {
-        isCorrect = userAnswer.toLowerCase() === question.correctAnswer.toLowerCase();
+      switch (question.type) {
+        case 'multiple-choice': {
+          const correctOption = question.options.find((opt) => opt.isCorrect);
+          // Compare by text; adjust this if you instead use option IDs
+          const expected = correctOption
+            ? correctOption.text.get('en') || correctOption.text
+            : undefined;
+          isCorrect = userAnswer === expected;
+          break;
+        }
+        case 'true-false':
+          isCorrect = userAnswer === question.correctAnswer;
+          break;
+        case 'short-answer':
+          isCorrect =
+            userAnswer &&
+            userAnswer.toString().trim().toLowerCase() ===
+              question.correctAnswer?.trim().toLowerCase();
+          break;
+        case 'essay':
+          // Essay questions must be graded manually
+          isCorrect = null;
+          break;
+        default:
+          break;
       }
 
-      totalPoints += question.points;
-      if (isCorrect) {
+      // Add up total possible points
+      totalPoints += question.points || 1;
+      // Only award points for auto-gradable question types
+      if (isCorrect === true) {
         correctAnswers++;
-        earnedPoints += question.points;
+        earnedPoints += question.points || 1;
       }
 
       return {
         questionIndex: index,
         isCorrect,
         userAnswer,
-        explanation: isCorrect ? null : question.explanation
+        // Only return explanation if the quiz permits showing results
+        explanation:
+          isCorrect || quiz.showResults === 'never'
+            ? null
+            : question.explanation
       };
     });
 
     const score = (earnedPoints / totalPoints) * 100;
     const passed = score >= quiz.passingScore;
 
-    // Save score to enrollment
-    if (courseId) {
-      const enrollment = await Enrollment.findOne({
-        user: req.user.id,
-        course: courseId
-      });
-
-      if (enrollment) {
-        const existingQuizScore = enrollment.quizScores.find(
-          qs => qs.quiz.toString() === quiz._id.toString()
-        );
-
-        if (existingQuizScore) {
-          existingQuizScore.attempt += 1;
-          existingQuizScore.score = earnedPoints;
-          existingQuizScore.maxScore = totalPoints;
-          existingQuizScore.completedAt = Date.now();
-        } else {
-          enrollment.quizScores.push({
-            quiz: quiz._id,
-            score: earnedPoints,
-            maxScore: totalPoints,
-            attempt: 1,
-            completedAt: Date.now()
-          });
-        }
-
-        await enrollment.save();
+    // Save score to enrollment record (quizScores) if applicable
+    if (courseId && enrollment) {
+      let record = enrollment.quizScores.find(
+        (qs) => qs.quiz.toString() === quiz._id.toString()
+      );
+      if (record) {
+        record.attempt += 1;
+        record.score = earnedPoints;
+        record.maxScore = totalPoints;
+        record.completedAt = Date.now();
+      } else {
+        enrollment.quizScores.push({
+          quiz: quiz._id,
+          score: earnedPoints,
+          maxScore: totalPoints,
+          attempt: 1,
+          completedAt: Date.now()
+        });
       }
+      await enrollment.save();
     }
 
     res.status(200).json({

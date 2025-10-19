@@ -26,6 +26,11 @@ import NotFound from './pages/NotFound';
 import Forum from './pages/Forum';
 import Chat from './pages/Chat';
 
+// NEW: Quiz pages
+import Quiz from './pages/Quiz';
+// If you create a separate results page component, uncomment the next line:
+// import QuizResults from './pages/QuizResults';
+
 // Components
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
@@ -65,6 +70,7 @@ function App() {
           <Router>
             <Layout>
               <Routes>
+                {/* Public routes */}
                 <Route path="/" element={<Home />} />
                 <Route path="/courses" element={<Courses />} />
                 <Route path="/courses/:id" element={<CourseDetail />} />
@@ -77,7 +83,7 @@ function App() {
                 <Route path="/verify/certificate/:certificateId" element={<VerifyCertificate />} />
                 <Route path="/verify/trainer/:trainerId" element={<VerifyTrainer />} />
 
-                {/* Private Routes */}
+                {/* Private routes */}
                 <Route
                   path="/dashboard"
                   element={
@@ -102,8 +108,26 @@ function App() {
                     </PrivateRoute>
                   }
                 />
+                {/* NEW: Quiz routes */}
+                <Route
+                  path="/quizzes/:id"
+                  element={
+                    <PrivateRoute>
+                      <Quiz />
+                    </PrivateRoute>
+                  }
+                />
+                {/* If you create a dedicated results page, enable this: */}
+                {/* <Route
+                  path="/quizzes/:id/results"
+                  element={
+                    <PrivateRoute>
+                      <QuizResults />
+                    </PrivateRoute>
+                  }
+                /> */}
 
-                {/* 404 Page */}
+                {/* 404 */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Layout>

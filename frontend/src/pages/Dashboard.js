@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -17,6 +17,8 @@ import {
   ListItemText,
   CircularProgress,
   Alert,
+  Chip,
+  Stack,
 } from '@mui/material';
 import {
   School,
@@ -25,6 +27,7 @@ import {
   PlayCircleOutline,
   Person,
   CardMembership,
+  Quiz as QuizIcon,
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -73,6 +76,46 @@ const Dashboard = () => {
     }
     return courseTitle || 'Untitled Course';
   };
+
+  const getQuizTitle = (quiz) => {
+    // quiz may be an ObjectId or a populated object with title Map
+    if (!quiz) return 'Quiz';
+    if (typeof quiz === 'object' && quiz.title instanceof Map) {
+      return quiz.title.get('en') || quiz.title.get('ar') || quiz.title.get('fr') || 'Quiz';
+    }
+    if (typeof quiz === 'object' && quiz.title && typeof quiz.title === 'object') {
+      // If it came as a plain object (not Map) after JSON serialization
+      return quiz.title.en || quiz.title.ar || quiz.title.fr || 'Quiz';
+    }
+    return 'Quiz';
+  };
+
+  // Aggregate quiz attempts from enrollments.quizScores (if backend supplies them)
+  const recentQuizAttempts = useMemo(() => {
+    const rows = [];
+    for (const e of enrollments) {
+      const courseId = e.course?._id || e.course;
+      const courseTitle = getCourseTitle(e.course?.title || e.courseTitle);
+
+      if (Array.isArray(e.quizScores)) {
+        for (const qs of e.quizScores) {
+          rows.push({
+            courseId,
+            courseTitle,
+            quizId: qs.quiz?._id || qs.quiz,
+            quizTitle: getQuizTitle(qs.quiz),
+            score: qs.score,
+            maxScore: qs.maxScore,
+            attempt: qs.attempt,
+            completedAt: qs.completedAt ? new Date(qs.completedAt) : null,
+          });
+        }
+      }
+    }
+    // Sort: most recent first
+    rows.sort((a, b) => (b.completedAt?.getTime?.() || 0) - (a.completedAt?.getTime?.() || 0));
+    return rows.slice(0, 8); // show top 8
+  }, [enrollments]);
 
   const completedCourses = enrollments.filter((e) => e.completionStatus === 'completed').length;
   const inProgressCourses = enrollments.filter((e) => e.completionStatus === 'in_progress').length;
@@ -213,7 +256,9 @@ const Dashboard = () => {
                       cursor: 'pointer',
                       '&:hover': { bgcolor: 'grey.100' },
                     }}
-                    onClick={() => navigate(`/learn/${enrollment.course?._id || enrollment.course}`)}
+                    onClick={() =>
+                      navigate(`/learn/${enrollment.course?._id || enrollment.course}`)
+                    }
                   >
                     <Box sx={{ width: '100%' }}>
                       <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
@@ -221,13 +266,23 @@ const Dashboard = () => {
                           primary={getCourseTitle(enrollment.course?.title)}
                           secondary={`${enrollment.progress || 0}% complete`}
                         />
-                        <Button
-                          variant="outlined"
-                          size="small"
-                          startIcon={<PlayCircleOutline />}
-                        >
-                          Continue
-                        </Button>
+                        <Stack direction="row" spacing={1}>
+                          {Array.isArray(enrollment.quizScores) && enrollment.quizScores.length > 0 && (
+                            <Chip
+                              size="small"
+                              color="primary"
+                              icon={<QuizIcon fontSize="small" />}
+                              label={`${enrollment.quizScores.length} quiz${enrollment.quizScores.length > 1 ? 'zes' : ''}`}
+                            />
+                          )}
+                          <Button
+                            variant="outlined"
+                            size="small"
+                            startIcon={<PlayCircleOutline />}
+                          >
+                            Continue
+                          </Button>
+                        </Stack>
                       </Box>
                       <LinearProgress
                         variant="determinate"
@@ -249,7 +304,7 @@ const Dashboard = () => {
           </Paper>
         </Grid>
 
-        {/* Quick Stats */}
+        {/* Quick Stats + Profile */}
         <Grid item xs={12} md={4}>
           <Paper sx={{ p: 3, mb: 3 }}>
             <Typography variant="h6" gutterBottom>
@@ -313,6 +368,49 @@ const Dashboard = () => {
           </Paper>
         </Grid>
       </Grid>
+
+      {/* Recent Quiz Attempts */}
+      <Box sx={{ mt: 4 }}>
+        <Paper sx={{ p: 3 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <Typography variant="h5">Recent Quiz Attempts</Typography>
+            <Chip icon={<QuizIcon />} label={`${recentQuizAttempts.length}`} />
+          </Box>
+          <Divider sx={{ mb: 2 }} />
+          {recentQuizAttempts.length === 0 ? (
+            <Typography variant="body2" color="text.secondary">
+              No quiz attempts yet. Start a course and take your first quiz!
+            </Typography>
+          ) : (
+            <List>
+              {recentQuizAttempts.map((row, idx) => (
+                <ListItem
+                  key={`${row.quizId}-${idx}`}
+                  secondaryAction={
+                    <Button
+                      size="small"
+                      variant="outlined"
+                      onClick={() => navigate(`/quizzes/${row.quizId}`)}
+                    >
+                      View Quiz
+                    </Button>
+                  }
+                >
+                  <ListItemText
+                    primary={`${row.quizTitle} • ${row.courseTitle}`}
+                    secondary={
+                      <>
+                        Attempt {row.attempt} — {row.score}/{row.maxScore} points
+                        {row.completedAt ? ` • ${row.completedAt.toLocaleString()}` : ''}
+                      </>
+                    }
+                  />
+                </ListItem>
+              ))}
+            </List>
+          )}
+        </Paper>
+      </Box>
     </Container>
   );
 };

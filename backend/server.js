@@ -29,10 +29,12 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // CORS middleware
-app.use(cors({
-  origin: process.env.FRONTEND_URL || 'http://localhost:3000',
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: process.env.FRONTEND_URL || 'http://localhost:3000',
+    credentials: true
+  })
+);
 
 // Sanitize data
 app.use(mongoSanitize());
@@ -42,7 +44,8 @@ app.use(xss());
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
+  windowMs:
+    parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
   max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100
 });
 app.use('/api/', limiter);
@@ -70,7 +73,7 @@ app.use('/api/trainers', require('./routes/trainerRoutes'));
 app.use('/api/verify', require('./routes/verifyRoutes'));
 app.use('/api/enrollments', require('./routes/enrollmentRoutes'));
 app.use('/api/lessons', require('./routes/lessonRoutes'));
-app.use('/api/quizzes', require('./routes/quizRoutes'));
+app.use('/api/quizzes', require('./routes/quizRoutes')); // includes attempts/analytics/grade
 app.use('/api/forums', require('./routes/forumRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
@@ -80,10 +83,8 @@ app.use('/api/recommendations', require('./routes/recommendationRoutes'));
 app.use('/api/corporate', require('./routes/corporateRoutes'));
 app.use('/api/search', require('./routes/searchRoutes'));
 app.use('/api/progress', require('./routes/progressRoutes'));
-
 app.use('/api/lms-integration', require('./routes/lmsIntegrationRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
-
 
 // Health check endpoint
 app.get('/api/health', (req, res) => {
@@ -109,23 +110,21 @@ app.get('/api/docs', (req, res) => {
       verify: '/api/verify - Verification services',
       enrollments: '/api/enrollments - Course enrollments',
       lessons: '/api/lessons - Lesson management',
-      quizzes: '/api/quizzes - Quiz and assessment',
+      quizzes:
+        '/api/quizzes - Quiz and assessment (including submission, attempts, analytics and grading)',
       forums: '/api/forums - Discussion forums',
       notifications: '/api/notifications - Notification system',
       payments: '/api/payments - Payment processing',
       analytics: '/api/analytics - Analytics and reports',
       gamification: '/api/gamification - Badges, points, and leaderboards',
-          chat: '/api/chat - Live chat support',
-
-
-      recommendations: '/api/recommendations - AI-powered course recommendations',
+      chat: '/api/chat - Live chat support',
+      recommendations:
+        '/api/recommendations - AI-powered course recommendations',
       corporate: '/api/corporate - Corporate portal and team management',
       search: '/api/search - Advanced search functionality',
-          progress: '/api/progress - Progress tracking',
-
+      progress: '/api/progress - Progress tracking',
       lmsIntegration: '/api/lms-integration - External LMS integrations'
     }
-    
   });
 });
 
@@ -155,7 +154,7 @@ const server = app.listen(PORT, () => {
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error(`Unhandled Rejection: ${err.message}`);
+  console.error(\`Unhandled Rejection: \${err.message}\`);
   server.close(() => process.exit(1));
 });
 
@@ -171,13 +170,13 @@ io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
   socket.on('join-course', (courseId) => {
-    socket.join(`course-${courseId}`);
-    console.log(`User joined course room: ${courseId}`);
+    socket.join(\`course-\${courseId}\`);
+    console.log(\`User joined course room: \${courseId}\`);
   });
 
   socket.on('leave-course', (courseId) => {
-    socket.leave(`course-${courseId}`);
-    console.log(`User left course room: ${courseId}`);
+    socket.leave(\`course-\${courseId}\`);
+    console.log(\`User left course room: \${courseId}\`);
   });
 
   socket.on('disconnect', () => {

@@ -28,6 +28,7 @@ import {
   ArrowBack,
 } from '@mui/icons-material';
 import axios from 'axios';
+import VideoPlayer from '../components/VideoPlayer';
 
 const CoursePlayer = () => {
   const { courseId } = useParams();
@@ -85,6 +86,7 @@ const CoursePlayer = () => {
           title: 'Introduction to the Course',
           type: 'video',
           duration: 15,
+                    url: 'https://example.com/intro.m3u8',
           completed: userEnrollment.progress >= 20,
         },
         {
@@ -98,6 +100,7 @@ const CoursePlayer = () => {
           _id: '3',
           title: 'Core Concepts',
           type: 'video',
+                              url: 'https://example.com/core.m3u8',
           duration: 25,
           completed: userEnrollment.progress >= 60,
         },
@@ -242,28 +245,7 @@ const CoursePlayer = () => {
                   }}
                 >
                   {currentLesson.type === 'video' && (
-                    <Box sx={{ textAlign: 'center' }}>
-                      <VideoLibrary sx={{ fontSize: 80, color: 'grey.400', mb: 2 }} />
-                      <Typography variant="h6" color="text.secondary">
-                        Video Player
-                      </Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        Duration: {currentLesson.duration} minutes
-                      </Typography>
-                    </Box>
-                  )}
-                  {currentLesson.type === 'text' && (
-                    <Box sx={{ p: 4, width: '100%' }}>
-                      <Typography variant="body1" paragraph>
-                        This is where the lesson text content would appear. In a full implementation,
-                        this would load the actual lesson content from the database.
-                      </Typography>
-                      <Typography variant="body1" paragraph>
-                        The content can include formatted text, images, code snippets, and more.
-                      </Typography>
-                    </Box>
-                  )}
-                  {currentLesson.type === 'quiz' && (
+<VideoPlayer url={currentLesson.url} />
                     <Box sx={{ textAlign: 'center' }}>
                       <Quiz sx={{ fontSize: 80, color: 'grey.400', mb: 2 }} />
                       <Typography variant="h6" color="text.secondary">

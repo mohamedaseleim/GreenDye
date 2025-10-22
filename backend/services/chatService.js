@@ -1,38 +1,66 @@
-const { v4: uuidv4 } = require('uuid');
+const ChatConversation = require('../models/ChatConversation');
+const ChatMessage = require('../models/ChatMessage');
 
 class ChatService {
   constructor() {
-    // Initialize chat service provider or WebSocket connections here if needed.
+    // Initialize any providers or settings here if needed
   }
 
-  // Create a new chat session for a user
-  async createSession(userId) {
-    // TODO: integrate with a real-time chat provider (e.g., Firebase, Twilio, Chatwoot)
-    const sessionId = uuidv4();
-    return {
-      sessionId,
+  /**
+   * Create a new chat conversation for a user. Optionally ties it to a course.
+   * @param {String} userId
+   * @param {String} [courseId]
+   */
+  async createSession(userId, courseId) {
+    const conversation = new ChatConversation({
       participants: [userId],
-      createdAt: new Date(),
-    };
+      status: 'open',
+      meta: {
+        courseId: courseId || undefined,
+      },
+    });
+    await conversation.save();
+    return conversation;
   }
 
-  // Send a message within a chat session
+  /**
+   * Send a text message in an existing conversation
+   * @param {String} sessionId
+   * @param {String} userId
+   * @param {String} content
+   */
   async sendMessage(sessionId, userId, content) {
-    // TODO: send message via the chat provider
-    const message = {
-      id: uuidv4(),
-      sessionId,
+    const message = new ChatMessage({
+      conversation: sessionId,
       sender: userId,
-      content,
-      timestamp: new Date(),
-    };
+      senderType: 'user',
+      type: 'text',
+      text: content,
+    });
+    await message.save();
+    await ChatConversation.findByIdAndUpdate(sessionId, { lastMessageAt: new Date() });
     return message;
   }
 
-  // Retrieve messages for a chat session
-  async getMessages(sessionId) {
-    // TODO: retrieve messages from chat provider or database
-    return [];
+  /**
+   * Retrieve messages for a conversation with optional pagination
+   * @param {String} sessionId
+   * @param {Number} [page=1]
+   * @param {Number} [limit=50]
+   */
+  async getMessages(sessionId, page = 1, limit = 50) {
+    return ChatMessage.find({ conversation: sessionId })
+      .sort({ createdAt: 1 })
+      .skip((page - 1) * limit)
+      .limit(limit);
+  }
+
+  /**
+   * Get all conversations for a user
+   * @param {String} userId
+   */
+  async getConversationsForUser(userId) {
+    return ChatConversation.find({ participants: userId }).sort({ lastMessageAt: -1 });
   }
 }
 

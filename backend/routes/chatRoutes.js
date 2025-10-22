@@ -13,4 +13,7 @@ router.post('/:sessionId/messages', protect, chatController.sendMessage);
 // Get messages from a chat session
 router.get('/:sessionId/messages', protect, chatController.getMessages);
 
+// Get all chat conversations
+router.get('/conversations', protect, chatController.getConversations);
+
 module.exports = router;

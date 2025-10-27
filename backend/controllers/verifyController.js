@@ -1,14 +1,33 @@
 const Certificate = require('../models/Certificate');
 const Trainer = require('../models/Trainer');
 
-// @desc    Verify certificate
-// @route   GET /api/verify/certificate/:certificateId
+// Helper to read Map<string,string> courseName or populated course title
+function resolveCourseTitle(cert) {
+  if (cert.courseName) {
+    // Mongoose Map supports get(); when serialized it may appear as plain object
+    if (typeof cert.courseName.get === 'function') {
+      return cert.courseName.get('default') || cert.courseName.get('en') || Array.from(cert.courseName.values())[0];
+    }
+    // plain object fallback
+    return cert.courseName.default || cert.courseName.en || cert.courseName.title || Object.values(cert.courseName)[0];
+  }
+  return cert.course?.title || 'Course';
+}
+
+// @desc    Verify certificate (token-aware, revocation/expiry-aware)
+// @route   GET /api/verify/certificate/:certificateId?t=<verificationToken>
 // @access  Public
 exports.verifyCertificate = async (req, res, next) => {
   try {
-    const certificate = await Certificate.findOne({
-      certificateId: req.params.certificateId
-    })
+    const { certificateId } = req.params;
+    const token = req.query.t;
+
+    // If a token is present, require it. Otherwise, fall back to id-only lookup.
+    const query = token
+      ? { certificateId, verificationToken: token }
+      : { certificateId };
+
+    const certificate = await Certificate.findOne(query)
       .populate('user', 'name email')
       .populate('course', 'title');
 
@@ -20,53 +39,69 @@ exports.verifyCertificate = async (req, res, next) => {
       });
     }
 
-    // Determine certificate status
-    const status = certificate.isRevoked 
-      ? 'Revoked' 
-      : (certificate.isValid ? 'Valid' : 'Invalid');
+    // Compute status
+    const now = new Date();
+    const isExpired = certificate.expiryDate ? now > new Date(certificate.expiryDate) : false;
 
-    if (!certificate.isValid || certificate.isRevoked) {
+    let status;
+    if (certificate.isRevoked) status = 'Revoked';
+    else if (!certificate.isValid) status = 'Invalid';
+    else if (isExpired) status = 'Expired';
+    else status = 'Valid';
+
+    const basePayload = {
+      certificateId: certificate.certificateId,
+      traineeName: certificate.userName || certificate.user?.name,
+      courseTitle: resolveCourseTitle(certificate),
+      certificateLevel: certificate.grade,
+      duration: certificate.metadata?.duration,
+      tutorName: certificate.metadata?.instructor,
+      issuedBy: 'GreenDye Academy',
+      verificationDate: new Date(),
+      status,
+      isRevoked: !!certificate.isRevoked,
+      revokedDate: certificate.revokedDate || null,
+      revokedReason: certificate.revokedReason || null,
+      completionDate: certificate.completionDate || null,
+      issueDate: certificate.issueDate || null,
+      expiryDate: certificate.expiryDate || null,
+      score: typeof certificate.score === 'number' ? certificate.score : null,
+      verificationUrl: certificate.verificationUrl || null,
+      qrCode: certificate.qrCode || null
+    };
+
+    // If not valid (revoked/invalid/expired) return verified:false but success:true
+    if (certificate.isRevoked || !certificate.isValid || isExpired) {
+      const message = certificate.isRevoked
+        ? `Certificate has been revoked.${certificate.revokedReason ? ' Reason: ' + certificate.revokedReason : ''}`
+        : isExpired
+          ? 'Certificate has expired'
+          : 'Certificate is not valid';
+
       return res.status(200).json({
         success: true,
         verified: false,
-        message: certificate.isRevoked 
-          ? `Certificate has been revoked. Reason: ${certificate.revokedReason}`
-          : 'Certificate is not valid',
-        data: {
-          certificateId: certificate.certificateId,
-          traineeName: certificate.userName,
-          courseTitle: certificate.courseName,
-          certificateLevel: certificate.grade,
-          status: status,
-          duration: certificate.metadata?.duration,
-          tutorName: certificate.metadata?.instructor,
-          issuedBy: 'GreenDye Academy',
-          verificationDate: new Date(),
-          isRevoked: certificate.isRevoked,
-          revokedDate: certificate.revokedDate
-        }
+        message,
+        data: basePayload
       });
     }
 
-    res.status(200).json({
+    // When token was provided but does not match, treat as not verified (defense-in-depth)
+    if (token && certificate.verificationToken && token !== certificate.verificationToken) {
+      return res.status(200).json({
+        success: true,
+        verified: false,
+        message: 'Verification token mismatch',
+        data: basePayload
+      });
+    }
+
+    // Valid certificate
+    return res.status(200).json({
       success: true,
       verified: true,
       message: 'Certificate is valid',
-      data: {
-        certificateId: certificate.certificateId,
-        traineeName: certificate.userName,
-        courseTitle: certificate.courseName,
-        certificateLevel: certificate.grade,
-        status: status,
-        duration: certificate.metadata?.duration,
-        tutorName: certificate.metadata?.instructor,
-        issuedBy: 'GreenDye Academy',
-        verificationDate: new Date(),
-        completionDate: certificate.completionDate,
-        issueDate: certificate.issueDate,
-        score: certificate.score,
-        qrCode: certificate.qrCode
-      }
+      data: basePayload
     });
   } catch (error) {
     next(error);
@@ -94,7 +129,7 @@ exports.verifyTrainer = async (req, res, next) => {
       return res.status(200).json({
         success: true,
         verified: false,
-        message: !trainer.isActive 
+        message: !trainer.isActive
           ? 'Trainer account is not active'
           : 'Trainer is not verified',
         data: {
@@ -106,7 +141,7 @@ exports.verifyTrainer = async (req, res, next) => {
       });
     }
 
-    res.status(200).json({
+    return res.status(200).json({
       success: true,
       verified: true,
       message: 'Trainer is verified and active',

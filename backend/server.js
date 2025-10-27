@@ -21,8 +21,16 @@ connectDB();
 // Initialize Express app
 const app = express();
 
+// If behind a proxy/load balancer (Heroku, Vercel, Nginx)
+app.set('trust proxy', 1);
+
 // Security middleware
-app.use(helmet());
+app.use(
+  helmet({
+    // Tweak if you embed PDFs/images/QRs on the frontend
+    crossOriginResourcePolicy: { policy: 'cross-origin' }
+  })
+);
 
 // Body parser middleware
 app.use(express.json({ limit: '10mb' }));
@@ -44,9 +52,10 @@ app.use(xss());
 
 // Rate limiting
 const limiter = rateLimit({
-  windowMs:
-    parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 minutes
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000, // 15 minutes
+  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100,
+  standardHeaders: true,
+  legacyHeaders: false
 });
 app.use('/api/', limiter);
 
@@ -70,7 +79,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/certificates', require('./routes/certificateRoutes'));
 app.use('/api/trainers', require('./routes/trainerRoutes'));
-app.use('/api/verify', require('./routes/verifyRoutes'));
+app.use('/api/verify', require('./routes/verifyRoutes')); // public verification (supports ?t=token)
 app.use('/api/enrollments', require('./routes/enrollmentRoutes'));
 app.use('/api/lessons', require('./routes/lessonRoutes'));
 app.use('/api/quizzes', require('./routes/quizRoutes')); // includes attempts/analytics/grade
@@ -128,16 +137,16 @@ app.get('/api/docs', (req, res) => {
   });
 });
 
-// Error handler middleware (must be last)
-app.use(errorHandler);
-
-// Handle 404
+// Handle 404 (keep before error handler)
 app.use((req, res) => {
   res.status(404).json({
     success: false,
     message: 'Route not found'
   });
 });
+
+// Error handler middleware (must be last)
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
@@ -154,14 +163,14 @@ const server = app.listen(PORT, () => {
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error(\`Unhandled Rejection: \${err.message}\`);
+  console.error(`Unhandled Rejection: ${err.message}`);
   server.close(() => process.exit(1));
 });
 
 // Socket.io setup for real-time features
 const io = require('socket.io')(server, {
   cors: {
-    origin: process.env.SOCKET_CORS_ORIGIN || 'http://localhost:3000',
+    origin: process.env.SOCKET_CORS_ORIGIN || process.env.FRONTEND_URL || 'http://localhost:3000',
     methods: ['GET', 'POST']
   }
 });
@@ -170,13 +179,13 @@ io.on('connection', (socket) => {
   console.log('New client connected:', socket.id);
 
   socket.on('join-course', (courseId) => {
-    socket.join(\`course-\${courseId}\`);
-    console.log(\`User joined course room: \${courseId}\`);
+    socket.join(`course-${courseId}`);
+    console.log(`User joined course room: ${courseId}`);
   });
 
   socket.on('leave-course', (courseId) => {
-    socket.leave(\`course-\${courseId}\`);
-    console.log(\`User left course room: \${courseId}\`);
+    socket.leave(`course-${courseId}`);
+    console.log(`User left course room: ${courseId}`);
   });
 
   socket.on('disconnect', () => {

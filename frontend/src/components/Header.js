@@ -24,7 +24,7 @@ import { useLanguage } from '../contexts/LanguageContext';
 const Header = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const { language, changeLanguage } = useLanguage();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
@@ -84,7 +84,17 @@ const Header = () => {
             <Button color="inherit" component={RouterLink} to="/contact">
               {t('contact')}
             </Button>
-
+            {/* Analytics Links */}
+            {isAuthenticated && (
+              <Button color="inherit" component={RouterLink} to="/analytics">
+                {t('analytics')}
+              </Button>
+            )}
+            {user?.role === 'admin' && (
+              <Button color="inherit" component={RouterLink} to="/admin/analytics">
+                {t('adminAnalytics')}
+              </Button>
+            )}
             {/* Language Selector */}
             <FormControl size="small" sx={{ minWidth: 80 }}>
               <Select
@@ -119,6 +129,14 @@ const Header = () => {
                   <MenuItem onClick={() => { navigate('/my-courses'); handleClose(); }}>
                     {t('myCourses')}
                   </MenuItem>
+                  <MenuItem onClick={() => { navigate('/analytics'); handleClose(); }}>
+                    {t('analytics')}
+                  </MenuItem>
+                  {user?.role === 'admin' && (
+                    <MenuItem onClick={() => { navigate('/admin/analytics'); handleClose(); }}>
+                      {t('adminAnalytics')}
+                    </MenuItem>
+                  )}
                   <MenuItem onClick={handleLogout}>{t('logout')}</MenuItem>
                 </Menu>
               </div>
@@ -168,6 +186,14 @@ const Header = () => {
                   <MenuItem onClick={() => { navigate('/my-courses'); handleMobileMenuClose(); }}>
                     {t('myCourses')}
                   </MenuItem>
+                  <MenuItem onClick={() => { navigate('/analytics'); handleMobileMenuClose(); }}>
+                    {t('analytics')}
+                  </MenuItem>
+                  {user?.role === 'admin' && (
+                    <MenuItem onClick={() => { navigate('/admin/analytics'); handleMobileMenuClose(); }}>
+                      {t('adminAnalytics')}
+                    </MenuItem>
+                  )}
                   <MenuItem onClick={handleLogout}>{t('logout')}</MenuItem>
                 </>
               )}

@@ -25,6 +25,8 @@ import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 import Forum from './pages/Forum';
 import Chat from './pages/Chat';
+import UserAnalytics from './pages/UserAnalytics';
+import AdminAnalytics from './pages/AdminAnalytics';
 
 // NEW: Quiz pages
 import Quiz from './pages/Quiz';
@@ -109,7 +111,24 @@ function App() {
                   }
                 />
                 {/* NEW: Quiz routes */}
-                <Route
+             
+        <Route
+          path="/analytics"
+          element={
+            <PrivateRoute>
+              <UserAnalytics />
+            </PrivateRoute>
+          }
+        />
+        <Route
+          path="/admin/analytics"
+          element={
+            <PrivateRoute>
+              <AdminAnalytics />
+            </PrivateRoute>
+          }
+        />
+<Route
                   path="/quizzes/:id"
                   element={
                     <PrivateRoute>

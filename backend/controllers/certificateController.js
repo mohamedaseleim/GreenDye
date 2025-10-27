@@ -3,8 +3,6 @@ const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const QRCode = require('qrcode');
 const PDFDocument = require('pdfkit');
-const fs = require('fs');
-const path = require('path');
 
 // @desc    Get all certificates for current user
 // @route   GET /api/certificates
@@ -97,29 +95,26 @@ exports.generateCertificate = async (req, res, next) => {
     const User = require('../models/User');
     const user = await User.findById(userId);
 
-    // Generate QR code
-    const verificationUrl = `${process.env.FRONTEND_URL}/verify/certificate/`;
-    const qrCodeData = await QRCode.toDataURL(verificationUrl);
-
-    // Create certificate
+    // Create certificate (verificationToken & verificationUrl are set by pre-save hook in the model)
     const certificate = await Certificate.create({
       user: userId,
       course: courseId,
       userName: user.name,
-      courseName: course.title,
+      courseName: { default: course.title }, // keep Map<string,string> structure; adjust if you set locales elsewhere
       grade: grade || 'Pass',
-      score: score || 100,
-      qrCode: qrCodeData,
+      score: typeof score === 'number' ? score : 100,
       metadata: {
         duration: course.duration,
-        instructor: course.instructor.name,
-        language: user.language
+        instructor: course.instructor?.name || '',
+        language: user.language || 'en'
       }
     });
-    /  / Generate unique QR code using the certificate's verification URL
-      const uniqueQrCodeData = await QRCode.toDataURL(certificate.verificationUrl);
-  certificate.qrCode = uniqueQrCodeData;
-  await certificate.save();
+
+    // Generate unique QR code using the certificate's verification URL (created by pre-save hook)
+    const uniqueQrCodeData = await QRCode.toDataURL(certificate.verificationUrl);
+    certificate.qrCode = uniqueQrCodeData;
+    await certificate.save();
+
     // Update enrollment with certificate reference
     enrollment.certificate = certificate._id;
     await enrollment.save();
@@ -165,7 +160,7 @@ exports.revokeCertificate = async (req, res, next) => {
   }
 };
 
-// @desc    Download certificate
+// @desc    Download certificate (PDF)
 // @route   GET /api/certificates/:id/download
 // @access  Private
 exports.downloadCertificate = async (req, res, next) => {
@@ -189,13 +184,68 @@ exports.downloadCertificate = async (req, res, next) => {
       });
     }
 
-    // For now, return certificate data
-    // TODO: Generate actual PDF certificate
-    res.status(200).json({
-      success: true,
-      message: 'Certificate download - PDF generation coming soon',
-      data: certificate
-    });
+    if (certificate.isRevoked) {
+      return res.status(410).json({
+        success: false,
+        message: 'Certificate revoked'
+      });
+    }
+
+    // Ensure we have a QR (regenerate if missing)
+    let qrDataUrl = certificate.qrCode;
+    if (!qrDataUrl) {
+      qrDataUrl = await QRCode.toDataURL(certificate.verificationUrl);
+      certificate.qrCode = qrDataUrl;
+      await certificate.save();
+    }
+    const qrBase64 = qrDataUrl.replace(/^data:image\/\w+;base64,/, '');
+    const qrBuffer = Buffer.from(qrBase64, 'base64');
+
+    // Generate PDF on the fly
+    const doc = new PDFDocument({ size: 'A4', margin: 54 });
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename=certificate-${certificate.certificateId}.pdf`
+    );
+
+    doc.pipe(res);
+
+    // Title & body
+    doc.fontSize(24).text('Certificate of Completion', { align: 'center' }).moveDown();
+    doc
+      .fontSize(16)
+      .text(
+        `This certifies that ${certificate.userName || certificate.user.name}`,
+        { align: 'center' }
+      );
+    doc.fontSize(16).text('has successfully completed the course', { align: 'center' }).moveDown(0.5);
+
+    const courseTitle =
+      (certificate.courseName && (certificate.courseName.get?.('default') || certificate.courseName.default)) ||
+      certificate.course?.title ||
+      'Course';
+
+    doc.fontSize(20).text(courseTitle, { align: 'center' }).moveDown();
+
+    doc.fontSize(12).text(`Grade: ${certificate.grade}`, { align: 'center' });
+    if (typeof certificate.score === 'number')
+      doc.fontSize(12).text(`Score: ${certificate.score}`, { align: 'center' });
+
+    const issued = certificate.issueDate ? new Date(certificate.issueDate) : new Date();
+    doc.fontSize(12).text(`Issued on: ${issued.toDateString()}`, { align: 'center' });
+    doc.fontSize(10).text(`Certificate ID: ${certificate.certificateId}`, { align: 'center' }).moveDown();
+
+    // QR bottom-right + verification URL
+    const qrSize = 110;
+    const x = doc.page.width - qrSize - 54;
+    const y = doc.page.height - qrSize - 54;
+    doc.image(qrBuffer, x, y, { width: qrSize, height: qrSize });
+    doc.fontSize(8).text('Verify:', x, y - 20);
+    doc.fontSize(8).text(certificate.verificationUrl, { width: qrSize, align: 'right' });
+
+    doc.end();
   } catch (error) {
     next(error);
   }

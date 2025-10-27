@@ -18,13 +18,14 @@ import {
   AccountCircle
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
+  // Added `user` to destructure from AuthContext
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 
 const Header = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const { logout, isAuthenticated } = useAuth();
+  const { user, logout, isAuthenticated } = useAuth();
   const { language, changeLanguage } = useLanguage();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
@@ -85,6 +86,18 @@ const Header = () => {
               {t('contact')}
             </Button>
 
+            {/* Analytics links: shown only when logged in */}
+            {isAuthenticated && (
+              <Button color="inherit" component={RouterLink} to="/analytics">
+                {t('analytics')}
+              </Button>
+            )}
+            {isAuthenticated && user?.role === 'admin' && (
+              <Button color="inherit" component={RouterLink} to="/admin/analytics">
+                {t('adminAnalytics')}
+              </Button>
+            )}
+
             {/* Language Selector */}
             <FormControl size="small" sx={{ minWidth: 80 }}>
               <Select
@@ -119,6 +132,15 @@ const Header = () => {
                   <MenuItem onClick={() => { navigate('/my-courses'); handleClose(); }}>
                     {t('myCourses')}
                   </MenuItem>
+                  {/* Analytics menu items */}
+                  <MenuItem onClick={() => { navigate('/analytics'); handleClose(); }}>
+                    {t('analytics')}
+                  </MenuItem>
+                  {user?.role === 'admin' && (
+                    <MenuItem onClick={() => { navigate('/admin/analytics'); handleClose(); }}>
+                      {t('adminAnalytics')}
+                    </MenuItem>
+                  )}
                   <MenuItem onClick={handleLogout}>{t('logout')}</MenuItem>
                 </Menu>
               </div>
@@ -162,6 +184,15 @@ const Header = () => {
               </MenuItem>
               {isAuthenticated && (
                 <>
+                  {/* Mobile analytics menu items */}
+                  <MenuItem onClick={() => { navigate('/analytics'); handleMobileMenuClose(); }}>
+                    {t('analytics')}
+                  </MenuItem>
+                  {user?.role === 'admin' && (
+                    <MenuItem onClick={() => { navigate('/admin/analytics'); handleMobileMenuClose(); }}>
+                      {t('adminAnalytics')}
+                    </MenuItem>
+                  )}
                   <MenuItem onClick={() => { navigate('/dashboard'); handleMobileMenuClose(); }}>
                     {t('dashboard')}
                   </MenuItem>

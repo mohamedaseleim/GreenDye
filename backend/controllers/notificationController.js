@@ -1,8 +1,20 @@
+
 const Notification = require('../models/Notification');
+const NotificationPreferences = require('../models/NotificationPreferences');
 const nodemailer = require('nodemailer');
+const mjml = require('mjml');
+const admin = require('firebase-admin');
+
+// Initialize Firebase Admin for push notifications
+const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT) : null;
+if (serviceAccount && !admin.apps.length) {
+  admin.initializeApp({
+    credential: admin.credential.cert(serviceAccount),
+  });
+}
 
 // Create email transporter
-const transporter = nodemailer.createTransporter({
+const transporter = nodemailer.createTransport({
   host: process.env.SMTP_HOST,
   port: process.env.SMTP_PORT,
   secure: false,
@@ -237,35 +249,46 @@ async function sendEmailNotification(notification) {
     const user = await require('../models/User').findById(notification.user);
     if (!user || !user.email) return;
 
-    const language = user.preferredLanguage || 'en';
+    let preferences = await NotificationPreferences.findOne({ user: user._id });
+    if (!preferences) {
+      preferences = await NotificationPreferences.create({ user: user._id });
+    }
+    if (!preferences.emailEnabled) return;
+
+    const language = preferences.preferredLanguage || user.preferredLanguage || 'en';
     const emailTitle = notification.title.get(language) || notification.title.get('en');
     const emailMessage = notification.message.get(language) || notification.message.get('en');
+    const buttonText = language === 'ar' ? 'عرض التفاصيل' : 'View Details';
+
+    const linkButton = notification.link
+      ? `<mj-button background-color="#2e7d32" color="#ffffff" href="${notification.link}">${buttonText}</mj-button>`
+      : '';
+
+    const mjmlTemplate = `
+      <mjml>
+        <mj-body>
+          <mj-section>
+            <mj-column>
+              <mj-text font-size="20px" color="#2e7d32">${emailTitle}</mj-text>
+              <mj-text>${emailMessage}</mj-text>
+              ${linkButton}
+              <mj-divider border-color="#eeeeee"></mj-divider>
+              <mj-text font-size="12px" color="#666666">This is an automated message from GreenDye Academy. Please do not reply.</mj-text>
+            </mj-column>
+          </mj-section>
+        </mj-body>
+      </mjml>
+    `;
+    const htmlOutput = mjml(mjmlTemplate).html;
 
     const mailOptions = {
       from: `"GreenDye Academy" <${process.env.SMTP_USER}>`,
       to: user.email,
       subject: emailTitle,
-      html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #2e7d32;">${emailTitle}</h2>
-          <p>${emailMessage}</p>
-          ${notification.link ? `
-            <a href="${notification.link}" 
-               style="display: inline-block; padding: 10px 20px; background-color: #2e7d32; 
-                      color: white; text-decoration: none; border-radius: 5px; margin-top: 10px;">
-              View Details
-            </a>
-          ` : ''}
-          <hr style="margin-top: 30px; border: none; border-top: 1px solid #eee;">
-          <p style="color: #666; font-size: 12px;">
-            This is an automated message from GreenDye Academy. Please do not reply to this email.
-          </p>
-        </div>
-      `
+      html: htmlOutput
     };
 
     await transporter.sendMail(mailOptions);
-    
     notification.emailSent = true;
     notification.emailSentAt = Date.now();
     await notification.save();
@@ -277,8 +300,39 @@ async function sendEmailNotification(notification) {
 // Helper function to send push notification
 async function sendPushNotification(notification) {
   try {
-    // TODO: Implement push notification using Firebase Cloud Messaging or similar
-    // For now, just mark as sent
+    const user = await require('../models/User').findById(notification.user);
+    if (!user) return;
+    let preferences = await NotificationPreferences.findOne({ user: user._id });
+    if (!preferences) {
+      preferences = await NotificationPreferences.create({ user: user._id });
+    }
+    if (!preferences.pushEnabled) return;
+    const language = preferences.preferredLanguage || user.preferredLanguage || 'en';
+    const title = notification.title.get(language) || notification.title.get('en');
+    const body = notification.message.get(language) || notification.message.get('en');
+    const tokens = preferences.fcmTokens || [];
+    if (tokens.length === 0) {
+      return;
+    }
+    const message = {
+      notification: { title, body },
+      data: {
+        notificationId: notification._id.toString(),
+        type: notification.type || ''
+      },
+      tokens
+    };
+    const response = await admin.messaging().sendMulticast(message);
+    const invalidTokens = [];
+    response.responses.forEach((resp, idx) => {
+      if (!resp.success) {
+        invalidTokens.push(tokens[idx]);
+      }
+    });
+    if (invalidTokens.length > 0) {
+      preferences.fcmTokens = preferences.fcmTokens.filter(token => !invalidTokens.includes(token));
+      await preferences.save();
+    }
     notification.pushSent = true;
     notification.pushSentAt = Date.now();
     await notification.save();

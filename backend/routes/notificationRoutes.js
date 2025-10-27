@@ -10,6 +10,15 @@ const {
   createNotification
 } = require('../controllers/notificationController');
 
+const {
+  getNotificationPreferences,
+  updateNotificationPreferences,
+} = require('../controllers/notificationPreferencesController');
+
+// Notification preferences routes
+router.get('/preferences', protect, getNotificationPreferences);
+router.put('/preferences', protect, updateNotificationPreferences);
+
 // Notification routes
 router.get('/', protect, getNotifications);
 router.put('/read-all', protect, markAllAsRead);

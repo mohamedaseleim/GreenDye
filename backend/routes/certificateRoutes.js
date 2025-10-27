@@ -9,16 +9,22 @@ const {
   downloadCertificate
 } = require('../controllers/certificateController');
 
+// Protect all routes
 router.use(protect);
 
-router.route('/')
-  .get(getCertificates);
+// Get all certificates for current user
+router.get('/', getCertificates);
 
-router.route('/:id')
-  .get(getCertificate);
+// Get single certificate
+router.get('/:id', getCertificate);
 
+// Generate a new certificate (admin or trainer only)
 router.post('/generate', authorize('admin', 'trainer'), generateCertificate);
+
+// Revoke a certificate (admin only)
 router.put('/:id/revoke', authorize('admin'), revokeCertificate);
+
+// Download certificate as PDF (user or admin)
 router.get('/:id/download', downloadCertificate);
 
 module.exports = router;

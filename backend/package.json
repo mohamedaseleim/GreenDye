@@ -11,7 +11,13 @@
     "lint": "eslint . --ext .js",
     "format": "prettier --write ."
   },
-  "keywords": ["lms", "api", "education", "certificates", "greendye"],
+  "keywords": [
+    "lms",
+    "api",
+    "education",
+    "certificates",
+    "greendye"
+  ],
   "author": "GreenDye Academy Dev Team",
   "license": "MIT",
   "dependencies": {
@@ -35,7 +41,9 @@
     "qrcode": "^1.5.3",
     "socket.io": "^4.7.2",
     "uuid": "^9.0.0",
-    "xss-clean": "^0.1.4"
+    "xss-clean": "^0.1.4",
+    "firebase-admin": "^11.10.0",
+    "mjml": "^4.14.1"
   },
   "devDependencies": {
     "eslint": "^8.57.0",

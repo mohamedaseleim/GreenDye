@@ -1,11 +1,19 @@
 const Course = require('../models/Course');
+const currencyService = require('../services/currencyService');
 
 // @desc    Get all courses
 // @route   GET /api/courses
 // @access  Public
 exports.getCourses = async (req, res, next) => {
   try {
-    const { page = 1, limit = 10, category, level, language } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      category,
+      level,
+      language,
+      currency,
+    } = req.query;
 
     const query = { isPublished: true };
 
@@ -13,6 +21,7 @@ exports.getCourses = async (req, res, next) => {
     if (level) query.level = level;
     if (language) query.language = language;
 
+    // Retrieve courses with pagination
     const courses = await Course.find(query)
       .populate('instructor', 'name avatar')
       .limit(limit * 1)
@@ -21,13 +30,41 @@ exports.getCourses = async (req, res, next) => {
 
     const count = await Course.countDocuments(query);
 
+    // Convert prices if currency parameter is provided
+    if (currency) {
+      const target = currency.toUpperCase();
+      await Promise.all(
+        courses.map(async (courseDoc) => {
+          const fromCur = (courseDoc.currency || 'USD').toUpperCase();
+          if (fromCur !== target) {
+            try {
+              const converted = await currencyService.convert(
+                courseDoc.price,
+                fromCur,
+                target
+              );
+              courseDoc.price = parseFloat(converted.toFixed(2));
+              courseDoc.currency = target;
+            } catch (err) {
+              // Log conversion errors and leave original price
+              console.error(
+                'Currency conversion failed for course',
+                courseDoc._id,
+                err.message || err
+              );
+            }
+          }
+        })
+      );
+    }
+
     res.status(200).json({
       success: true,
       count: courses.length,
       total: count,
       page: parseInt(page),
       pages: Math.ceil(count / limit),
-      data: courses
+      data: courses,
     });
   } catch (error) {
     next(error);
@@ -39,6 +76,7 @@ exports.getCourses = async (req, res, next) => {
 // @access  Public
 exports.getCourse = async (req, res, next) => {
   try {
+    const { currency } = req.query;
     const course = await Course.findById(req.params.id)
       .populate('instructor', 'name avatar bio')
       .populate('lessons');
@@ -46,7 +84,7 @@ exports.getCourse = async (req, res, next) => {
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: 'Course not found',
       });
     }
 
@@ -54,9 +92,32 @@ exports.getCourse = async (req, res, next) => {
     course.metadata.views += 1;
     await course.save();
 
+    // Convert price if currency parameter is set
+    if (currency) {
+      const target = currency.toUpperCase();
+      const fromCur = (course.currency || 'USD').toUpperCase();
+      if (fromCur !== target) {
+        try {
+          const converted = await currencyService.convert(
+            course.price,
+            fromCur,
+            target
+          );
+          course.price = parseFloat(converted.toFixed(2));
+          course.currency = target;
+        } catch (err) {
+          console.error(
+            'Currency conversion failed for course',
+            course._id,
+            err.message || err
+          );
+        }
+      }
+    }
+
     res.status(200).json({
       success: true,
-      data: course
+      data: course,
     });
   } catch (error) {
     next(error);
@@ -74,7 +135,7 @@ exports.createCourse = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      data: course
+      data: course,
     });
   } catch (error) {
     next(error);
@@ -91,7 +152,7 @@ exports.updateCourse = async (req, res, next) => {
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: 'Course not found',
       });
     }
 
@@ -99,18 +160,18 @@ exports.updateCourse = async (req, res, next) => {
     if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to update this course'
+        message: 'Not authorized to update this course',
       });
     }
 
     course = await Course.findByIdAndUpdate(req.params.id, req.body, {
       new: true,
-      runValidators: true
+      runValidators: true,
     });
 
     res.status(200).json({
       success: true,
-      data: course
+      data: course,
     });
   } catch (error) {
     next(error);
@@ -127,7 +188,7 @@ exports.deleteCourse = async (req, res, next) => {
     if (!course) {
       return res.status(404).json({
         success: false,
-        message: 'Course not found'
+        message: 'Course not found',
       });
     }
 
@@ -135,7 +196,7 @@ exports.deleteCourse = async (req, res, next) => {
     if (course.instructor.toString() !== req.user.id && req.user.role !== 'admin') {
       return res.status(401).json({
         success: false,
-        message: 'Not authorized to delete this course'
+        message: 'Not authorized to delete this course',
       });
     }
 
@@ -144,7 +205,7 @@ exports.deleteCourse = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: 'Course deleted successfully',
-      data: {}
+      data: {},
     });
   } catch (error) {
     next(error);
@@ -163,7 +224,7 @@ exports.getFeaturedCourses = async (req, res, next) => {
     res.status(200).json({
       success: true,
       count: courses.length,
-      data: courses
+      data: courses,
     });
   } catch (error) {
     next(error);
@@ -177,13 +238,13 @@ exports.getCoursesByCategory = async (req, res, next) => {
   try {
     const courses = await Course.find({
       category: req.params.category,
-      isPublished: true
+      isPublished: true,
     }).populate('instructor', 'name avatar');
 
     res.status(200).json({
       success: true,
       count: courses.length,
-      data: courses
+      data: courses,
     });
   } catch (error) {
     next(error);
@@ -200,7 +261,7 @@ exports.searchCourses = async (req, res, next) => {
     if (!q) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide search query'
+        message: 'Please provide search query',
       });
     }
 
@@ -211,15 +272,15 @@ exports.searchCourses = async (req, res, next) => {
         { 'title.fr': { $regex: q, $options: 'i' } },
         { 'description.en': { $regex: q, $options: 'i' } },
         { 'description.ar': { $regex: q, $options: 'i' } },
-        { 'description.fr': { $regex: q, $options: 'i' } }
+        { 'description.fr': { $regex: q, $options: 'i' } },
       ],
-      isPublished: true
+      isPublished: true,
     }).populate('instructor', 'name avatar');
 
     res.status(200).json({
       success: true,
       count: courses.length,
-      data: courses
+      data: courses,
     });
   } catch (error) {
     next(error);

@@ -21,9 +21,11 @@ import {
 } from '@mui/material';
 import { Search, PlayCircleOutline } from '@mui/icons-material';
 import axios from 'axios';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const Courses = () => {
   const navigate = useNavigate();
+  const { currency, formatPrice } = useCurrency();
   const [courses, setCourses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -34,17 +36,18 @@ const Courses = () => {
   useEffect(() => {
     fetchCourses();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [category, level]);
+  }, [category, level, currency]);
 
   const fetchCourses = async () => {
     setLoading(true);
     setError('');
     try {
       let url = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/courses?`;
-      
+
       if (category) url += `category=${category}&`;
       if (level) url += `level=${level}&`;
-      
+      if (currency) url += `currency=${currency}&`;
+
       const response = await axios.get(url);
       setCourses(response.data.data || []);
     } catch (err) {
@@ -60,13 +63,18 @@ const Courses = () => {
   };
 
   const filteredCourses = courses.filter((course) => {
-    const title = typeof course.title === 'object' 
-      ? (course.title.en || course.title.ar || course.title.fr || '')
-      : (course.title || '');
-    const description = typeof course.description === 'object'
-      ? (course.description.en || course.description.ar || course.description.fr || '')
-      : (course.description || '');
-    
+    const title =
+      typeof course.title === 'object'
+        ? course.title.en || course.title.ar || course.title.fr || ''
+        : course.title || '';
+    const description =
+      typeof course.description === 'object'
+        ? course.description.en ||
+          course.description.ar ||
+          course.description.fr ||
+          ''
+        : course.description || '';
+
     return (
       title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       description.toLowerCase().includes(searchTerm.toLowerCase())
@@ -242,7 +250,7 @@ const Courses = () => {
                         </Box>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <Typography variant="h6" color="primary">
-                            {course.price === 0 ? 'Free' : `$${course.price}`}
+                            {formatPrice(course.price, course.currency || currency)}
                           </Typography>
                           {course.duration && (
                             <Typography variant="body2" color="text.secondary">

@@ -11,6 +11,9 @@ const { convertCurrency } = require('../utils/currencyConverter');
 const RefundRequest = require('../models/RefundRequest');
 const PolicyConfig = require('../models/PolicyConfig');
 
+// Invoice utilities
+const { generateInvoicePDF, sendInvoiceEmail } = require('../utils/invoiceGenerator');
+
 /**
  * Create payment intent/checkout session
  * POST /api/payments/checkout
@@ -100,13 +103,15 @@ exports.verifyPayment = async (req, res) => {
     if (!payment) {
       return res.status(404).json({ success: false, message: 'Payment not found' });
     }
-    // Update payment status
+    // Update payment status and attach gateway response
     payment.status = status === 'success' ? 'completed' : 'failed';
     payment.transactionId = transactionId;
     payment.paymentGatewayResponse = gatewayResponse;
+
     if (status === 'success') {
+      // mark as completed
       payment.completedAt = new Date();
-      // Create enrollment if payment is successful
+      // create enrollment record
       await Enrollment.create({
         user: payment.user,
         course: payment.course,
@@ -114,7 +119,31 @@ exports.verifyPayment = async (req, res) => {
         status: 'active',
       });
     }
+
+    // Save first to trigger pre-save hook (generates invoice number)
     await payment.save();
+
+    // If successful, generate invoice PDF, store URL, and send it via email
+    if (status === 'success') {
+      try {
+        // populate user and course for invoice details
+        await payment.populate([
+          { path: 'user', select: 'name email' },
+          { path: 'course', select: 'title' },
+        ]);
+        // generate PDF invoice
+        const { fileName, filePath } = await generateInvoicePDF(payment, payment.user, payment.course);
+        // store relative invoice URL
+        payment.invoice.invoiceUrl = `/invoices/${fileName}`;
+        await payment.save();
+        // email the invoice to the user
+        await sendInvoiceEmail(payment.user, payment, payment.course, filePath);
+      } catch (invoiceErr) {
+        // log invoice errors but do not block payment verification
+        console.error('Invoice generation/email error:', invoiceErr);
+      }
+    }
+
     res.status(200).json({ success: true, data: payment });
   } catch (error) {
     console.error('Payment verification error:', error);
@@ -236,6 +265,7 @@ exports.getInvoice = async (req, res) => {
         amount: payment.amount,
         currency: payment.currency,
         status: payment.status,
+        invoiceUrl: payment.invoice.invoiceUrl, // expose the PDF URL
         user: {
           name: payment.user.name,
           email: payment.user.email,

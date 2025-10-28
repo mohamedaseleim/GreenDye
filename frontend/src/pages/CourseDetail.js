@@ -30,11 +30,13 @@ import {
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
 import { toast } from 'react-toastify';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const CourseDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { currency, formatPrice } = useCurrency();
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -43,14 +45,14 @@ const CourseDetail = () => {
   useEffect(() => {
     fetchCourseDetails();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, currency]);
 
   const fetchCourseDetails = async () => {
     setLoading(true);
     setError('');
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/courses/${id}`
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/courses/${id}?currency=${currency}`
       );
       setCourse(response.data.data);
     } catch (err) {
@@ -164,7 +166,9 @@ const CourseDetail = () => {
                 {course.language && (
                   <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
                     <Language />
-                    <Typography>{Array.isArray(course.language) ? course.language.join(', ') : course.language}</Typography>
+                    <Typography>
+                      {Array.isArray(course.language) ? course.language.join(', ') : course.language}
+                    </Typography>
                   </Box>
                 )}
                 {course.studentsEnrolled !== undefined && (
@@ -179,7 +183,7 @@ const CourseDetail = () => {
               <Card>
                 <CardContent>
                   <Typography variant="h4" color="primary" gutterBottom>
-                    {course.price === 0 ? 'Free' : `$${course.price}`}
+                    {formatPrice(course.price, course.currency || currency)}
                   </Typography>
                   <Button
                     variant="contained"
@@ -193,7 +197,9 @@ const CourseDetail = () => {
                     {enrolling ? 'Enrolling...' : 'Enroll Now'}
                   </Button>
                   <Typography variant="body2" color="text.secondary" align="center">
-                    {course.price === 0 ? 'Access all course content for free' : '30-day money-back guarantee'}
+                    {course.price === 0
+                      ? 'Access all course content for free'
+                      : '30-day money-back guarantee'}
                   </Typography>
                 </CardContent>
               </Card>
@@ -291,7 +297,7 @@ const CourseDetail = () => {
                 </Typography>
                 <Typography variant="body2">{course.level}</Typography>
               </Box>
-              <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', mb: 2 }}>
                 <Typography variant="body2" color="text.secondary">
                   Category
                 </Typography>

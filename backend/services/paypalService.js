@@ -6,24 +6,25 @@ const Enrollment = require('../models/Enrollment');
 const TransactionLog = require('../models/TransactionLog');
 
 /**
- * PayPalService handles order creation and webhook processing for
- * PayPal payments.  It leverages the official PayPal SDK to create
- * orders and optionally capture them upon webhook events.  The
- * service logs each transaction to the TransactionLog model.
+ * PayPalService handles order creation, webhook processing, and
+ * refunds for PayPal payments.  It leverages the official PayPal SDK
+ * to create orders, capture them, and issue refunds.  Each payment
+ * action is recorded in the TransactionLog.
  */
 class PayPalService extends PaymentService {
   constructor() {
     super();
     // Determine environment (sandbox or live)
-    const env = process.env.PAYPAL_MODE === 'live'
-      ? new paypal.core.LiveEnvironment(
-          process.env.PAYPAL_CLIENT_ID,
-          process.env.PAYPAL_CLIENT_SECRET,
-        )
-      : new paypal.core.SandboxEnvironment(
-          process.env.PAYPAL_CLIENT_ID,
-          process.env.PAYPAL_CLIENT_SECRET,
-        );
+    const env =
+      process.env.PAYPAL_MODE === 'live'
+        ? new paypal.core.LiveEnvironment(
+            process.env.PAYPAL_CLIENT_ID,
+            process.env.PAYPAL_CLIENT_SECRET,
+          )
+        : new paypal.core.SandboxEnvironment(
+            process.env.PAYPAL_CLIENT_ID,
+            process.env.PAYPAL_CLIENT_SECRET,
+          );
     this.client = new paypal.core.PayPalHttpClient(env);
     this.clientId = process.env.PAYPAL_CLIENT_ID;
   }
@@ -128,7 +129,10 @@ class PayPalService extends PaymentService {
   async handleWebhook(body) {
     const eventType = body?.event_type;
     try {
-      if (eventType === 'CHECKOUT.ORDER.APPROVED' || eventType === 'PAYMENT.CAPTURE.COMPLETED') {
+      if (
+        eventType === 'CHECKOUT.ORDER.APPROVED' ||
+        eventType === 'PAYMENT.CAPTURE.COMPLETED'
+      ) {
         const resource = body.resource;
         // Determine order ID depending on event type structure
         const orderId = resource?.id || resource?.supplementary_data?.related_ids?.order_id;
@@ -144,7 +148,10 @@ class PayPalService extends PaymentService {
             payment.paymentGatewayResponse = resource;
             await payment.save();
             // Create enrollment
-            const existing = await Enrollment.findOne({ user: payment.user, course: payment.course });
+            const existing = await Enrollment.findOne({
+              user: payment.user,
+              course: payment.course,
+            });
             if (!existing) {
               await Enrollment.create({
                 user: payment.user,
@@ -172,6 +179,56 @@ class PayPalService extends PaymentService {
       console.error('PayPal webhook handling error:', error);
     }
     return body;
+  }
+
+  /**
+   * Issue a refund for a completed PayPal capture.  This method
+   * creates a refund request against the captured transaction, updates
+   * the payment document, removes any associated enrollment, and logs
+   * the refund in TransactionLog.  The returned object is the
+   * PayPal API refund response.
+   *
+   * @param {import('../models/Payment')} payment  Payment document
+   * @param {number} amount                        Amount to refund
+   * @returns {Promise<Object>}                    PayPal refund response
+   */
+  async refundPayment(payment, amount) {
+    try {
+      const captureId = payment.transactionId;
+      // Build refund request for the capture
+      const request = new paypal.payments.CapturesRefundRequest(captureId);
+      request.requestBody({
+        amount: {
+          value: amount.toFixed(2),
+          currency_code: payment.currency,
+        },
+      });
+      const refund = await this.client.execute(request);
+      // Update payment document
+      payment.status = 'refunded';
+      payment.refundedAmount = amount;
+      payment.refundedAt = new Date();
+      payment.refundTransactionId = refund.result?.id;
+      payment.refundGatewayResponse = refund.result;
+      await payment.save();
+      // Remove enrollment and log the refund
+      await Enrollment.deleteOne({ user: payment.user, course: payment.course });
+      await TransactionLog.create({
+        payment: payment._id,
+        user: payment.user,
+        course: payment.course,
+        amount,
+        currency: payment.currency,
+        paymentMethod: payment.paymentMethod,
+        status: 'refunded',
+        transactionId: refund.result?.id,
+        gatewayResponse: refund.result,
+      });
+      return refund.result;
+    } catch (error) {
+      console.error('PayPal refund error:', error);
+      throw new Error('Error processing PayPal refund');
+    }
   }
 }
 

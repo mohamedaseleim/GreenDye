@@ -72,6 +72,8 @@ if (process.env.NODE_ENV === 'development') {
 
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+// Serve generated invoices
+app.use('/invoices', express.static(path.join(__dirname, 'invoices')));
 
 // API Routes
 app.use('/api/auth', require('./routes/authRoutes'));

@@ -7,6 +7,10 @@ const StripeService = require('../services/stripeService');
 const PayPalService = require('../services/paypalService');
 const { convertCurrency } = require('../utils/currencyConverter');
 
+// New imports for refund request and policy configuration
+const RefundRequest = require('../models/RefundRequest');
+const PolicyConfig = require('../models/PolicyConfig');
+
 /**
  * Create payment intent/checkout session
  * POST /api/payments/checkout
@@ -151,27 +155,59 @@ exports.requestRefund = async (req, res) => {
     if (payment.user.toString() !== req.user.id) {
       return res.status(403).json({ success: false, message: 'Not authorized to refund this payment' });
     }
-    // Check if payment can be refunded
+    // Only completed payments can be refunded
     if (payment.status !== 'completed') {
       return res.status(400).json({ success: false, message: 'Only completed payments can be refunded' });
     }
-    // Check refund window (30 days)
-    const daysSincePayment = (Date.now() - payment.completedAt) / (1000 * 60 * 60 * 24);
-    if (daysSincePayment > 30) {
-      return res.status(400).json({ success: false, message: 'Refund window has expired (30 days)' });
+    // Check for existing refund requests (pending or approved)
+    const existingRequest = await RefundRequest.findOne({
+      payment: payment._id,
+      status: { $in: ['pending', 'approved'] }
+    });
+    if (existingRequest) {
+      return res.status(400).json({ success: false, message: 'Refund already requested or processed' });
     }
-    // Process refund (gateway-specific refund logic could be added here)
-    payment.status = 'refunded';
-    payment.refundReason = reason;
-    payment.refundedAmount = payment.amount;
-    payment.refundedAt = new Date();
-    await payment.save();
-    // Remove enrollment
-    await Enrollment.deleteOne({ user: payment.user, course: payment.course });
-    res.status(200).json({ success: true, message: 'Refund processed successfully', data: payment });
+
+    // Load refund policies (with defaults)
+    const windowConfig = await PolicyConfig.findOne({ key: 'refundWindowDays' });
+    const maxDays = windowConfig ? Number(windowConfig.value) : 30;
+    const maxPercentConfig = await PolicyConfig.findOne({ key: 'refundMaxCompletionPercent' });
+    const maxPercent = maxPercentConfig ? Number(maxPercentConfig.value) : 30;
+
+    // Check refund window
+    const daysSincePayment = (Date.now() - payment.completedAt) / (1000 * 60 * 60 * 24);
+    if (daysSincePayment > maxDays) {
+      return res.status(400).json({
+        success: false,
+        message: `Refund window has expired (${maxDays} days)`
+      });
+    }
+
+    // Check course progress against policy
+    const enrollment = await Enrollment.findOne({ user: payment.user, course: payment.course });
+    const progress = enrollment ? enrollment.progress || 0 : 0;
+    if (progress > maxPercent) {
+      return res.status(400).json({
+        success: false,
+        message: `Refund not allowed if progress exceeds ${maxPercent}%`
+      });
+    }
+
+    // Create refund request (status defaults to pending)
+    const refundRequest = await RefundRequest.create({
+      payment: payment._id,
+      user: req.user.id,
+      reason
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Refund request submitted and awaiting admin approval',
+      data: refundRequest
+    });
   } catch (error) {
-    console.error('Refund error:', error);
-    res.status(500).json({ success: false, message: 'Error processing refund', error: error.message });
+    console.error('Refund request error:', error);
+    res.status(500).json({ success: false, message: 'Error processing refund request', error: error.message });
   }
 };
 

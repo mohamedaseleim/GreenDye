@@ -11,22 +11,23 @@ import {
   Box,
   Select,
   FormControl,
-  Container
+  Container,
 } from '@mui/material';
 import {
   Menu as MenuIcon,
-  AccountCircle
+  AccountCircle,
 } from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
-  // Added `user` to destructure from AuthContext
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
+import { useCurrency } from '../contexts/CurrencyContext';
 
 const Header = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
   const { language, changeLanguage } = useLanguage();
+  const { currency, changeCurrency } = useCurrency();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
 
@@ -65,7 +66,7 @@ const Header = () => {
               flexGrow: 1,
               textDecoration: 'none',
               color: 'inherit',
-              fontWeight: 'bold'
+              fontWeight: 'bold',
             }}
           >
             🌿 GreenDye Academy
@@ -103,7 +104,12 @@ const Header = () => {
               <Select
                 value={language}
                 onChange={(e) => changeLanguage(e.target.value)}
-                sx={{ color: 'white', '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.3)' } }}
+                sx={{
+                  color: 'white',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255,255,255,0.3)',
+                  },
+                }}
               >
                 <MenuItem value="en">EN</MenuItem>
                 <MenuItem value="ar">العربية</MenuItem>
@@ -111,36 +117,68 @@ const Header = () => {
               </Select>
             </FormControl>
 
+            {/* Currency Selector */}
+            <FormControl size="small" sx={{ minWidth: 80 }}>
+              <Select
+                value={currency}
+                onChange={(e) => changeCurrency(e.target.value)}
+                sx={{
+                  color: 'white',
+                  '& .MuiOutlinedInput-notchedOutline': {
+                    borderColor: 'rgba(255,255,255,0.3)',
+                  },
+                }}
+              >
+                <MenuItem value="USD">USD</MenuItem>
+                <MenuItem value="EUR">EUR</MenuItem>
+                <MenuItem value="EGP">EGP</MenuItem>
+                <MenuItem value="SAR">SAR</MenuItem>
+                <MenuItem value="NGN">NGN</MenuItem>
+              </Select>
+            </FormControl>
+
             {/* User Menu */}
             {isAuthenticated ? (
               <div>
-                <IconButton
-                  size="large"
-                  onClick={handleMenu}
-                  color="inherit"
-                >
+                <IconButton size="large" onClick={handleMenu} color="inherit">
                   <AccountCircle />
                 </IconButton>
-                <Menu
-                  anchorEl={anchorEl}
-                  open={Boolean(anchorEl)}
-                  onClose={handleClose}
-                >
-                  <MenuItem onClick={() => { navigate('/dashboard'); handleClose(); }}>
+                <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
+                  <MenuItem
+                    onClick={() => {
+                      navigate('/dashboard');
+                      handleClose();
+                    }}
+                  >
                     {t('dashboard')}
                   </MenuItem>
-                  <MenuItem onClick={() => { navigate('/my-courses'); handleClose(); }}>
+                  <MenuItem
+                    onClick={() => {
+                      navigate('/my-courses');
+                      handleClose();
+                    }}
+                  >
                     {t('myCourses')}
                   </MenuItem>
                   {/* Analytics menu items */}
-                  <MenuItem onClick={() => { navigate('/analytics'); handleClose(); }}>
-                    {t('analytics')}
-                  </MenuItem>
-                  {user?.role === 'admin' && (
-                    <MenuItem onClick={() => { navigate('/admin/analytics'); handleClose(); }}>
-                      {t('adminAnalytics')}
+                    <MenuItem
+                      onClick={() => {
+                        navigate('/analytics');
+                        handleClose();
+                      }}
+                    >
+                      {t('analytics')}
                     </MenuItem>
-                  )}
+                    {user?.role === 'admin' && (
+                      <MenuItem
+                        onClick={() => {
+                          navigate('/admin/analytics');
+                          handleClose();
+                        }}
+                      >
+                        {t('adminAnalytics')}
+                      </MenuItem>
+                    )}
                   <MenuItem onClick={handleLogout}>{t('logout')}</MenuItem>
                 </Menu>
               </div>
@@ -158,45 +196,77 @@ const Header = () => {
 
           {/* Mobile Menu */}
           <Box sx={{ display: { xs: 'flex', md: 'none' } }}>
-            <IconButton
-              size="large"
-              onClick={handleMobileMenu}
-              color="inherit"
-            >
+            <IconButton size="large" onClick={handleMobileMenu} color="inherit">
               <MenuIcon />
             </IconButton>
-            <Menu
-              anchorEl={mobileMenuAnchor}
-              open={Boolean(mobileMenuAnchor)}
-              onClose={handleMobileMenuClose}
-            >
-              <MenuItem onClick={() => { navigate('/'); handleMobileMenuClose(); }}>
+            <Menu anchorEl={mobileMenuAnchor} open={Boolean(mobileMenuAnchor)} onClose={handleMobileMenuClose}>
+              <MenuItem
+                onClick={() => {
+                  navigate('/');
+                  handleMobileMenuClose();
+                }}
+              >
                 {t('home')}
               </MenuItem>
-              <MenuItem onClick={() => { navigate('/courses'); handleMobileMenuClose(); }}>
+              <MenuItem
+                onClick={() => {
+                  navigate('/courses');
+                  handleMobileMenuClose();
+                }}
+              >
                 {t('courses')}
               </MenuItem>
-              <MenuItem onClick={() => { navigate('/about'); handleMobileMenuClose(); }}>
+              <MenuItem
+                onClick={() => {
+                  navigate('/about');
+                  handleMobileMenuClose();
+                }}
+              >
                 {t('about')}
               </MenuItem>
-              <MenuItem onClick={() => { navigate('/contact'); handleMobileMenuClose(); }}>
+              <MenuItem
+                onClick={() => {
+                  navigate('/contact');
+                  handleMobileMenuClose();
+                }}
+              >
                 {t('contact')}
               </MenuItem>
               {isAuthenticated && (
                 <>
                   {/* Mobile analytics menu items */}
-                  <MenuItem onClick={() => { navigate('/analytics'); handleMobileMenuClose(); }}>
+                  <MenuItem
+                    onClick={() => {
+                      navigate('/analytics');
+                      handleMobileMenuClose();
+                    }}
+                  >
                     {t('analytics')}
                   </MenuItem>
                   {user?.role === 'admin' && (
-                    <MenuItem onClick={() => { navigate('/admin/analytics'); handleMobileMenuClose(); }}>
+                    <MenuItem
+                      onClick={() => {
+                        navigate('/admin/analytics');
+                        handleMobileMenuClose();
+                      }}
+                    >
                       {t('adminAnalytics')}
                     </MenuItem>
                   )}
-                  <MenuItem onClick={() => { navigate('/dashboard'); handleMobileMenuClose(); }}>
+                  <MenuItem
+                    onClick={() => {
+                      navigate('/dashboard');
+                      handleMobileMenuClose();
+                    }}
+                  >
                     {t('dashboard')}
                   </MenuItem>
-                  <MenuItem onClick={() => { navigate('/my-courses'); handleMobileMenuClose(); }}>
+                  <MenuItem
+                    onClick={() => {
+                      navigate('/my-courses');
+                      handleMobileMenuClose();
+                    }}
+                  >
                     {t('myCourses')}
                   </MenuItem>
                   <MenuItem onClick={handleLogout}>{t('logout')}</MenuItem>
@@ -204,14 +274,58 @@ const Header = () => {
               )}
               {!isAuthenticated && (
                 <>
-                  <MenuItem onClick={() => { navigate('/login'); handleMobileMenuClose(); }}>
+                  <MenuItem
+                    onClick={() => {
+                      navigate('/login');
+                      handleMobileMenuClose();
+                    }}
+                  >
                     {t('login')}
                   </MenuItem>
-                  <MenuItem onClick={() => { navigate('/register'); handleMobileMenuClose(); }}>
+                  <MenuItem
+                    onClick={() => {
+                      navigate('/register');
+                      handleMobileMenuClose();
+                    }}
+                  >
                     {t('register')}
                   </MenuItem>
                 </>
               )}
+              {/* Language selection on mobile */}
+              <MenuItem>
+                <FormControl size="small" fullWidth>
+                  <Select
+                    value={language}
+                    onChange={(e) => {
+                      changeLanguage(e.target.value);
+                      handleMobileMenuClose();
+                    }}
+                  >
+                    <MenuItem value="en">EN</MenuItem>
+                    <MenuItem value="ar">العربية</MenuItem>
+                    <MenuItem value="fr">FR</MenuItem>
+                  </Select>
+                </FormControl>
+              </MenuItem>
+              {/* Currency selection on mobile */}
+              <MenuItem>
+                <FormControl size="small" fullWidth>
+                  <Select
+                    value={currency}
+                    onChange={(e) => {
+                      changeCurrency(e.target.value);
+                      handleMobileMenuClose();
+                    }}
+                  >
+                    <MenuItem value="USD">USD</MenuItem>
+                    <MenuItem value="EUR">EUR</MenuItem>
+                    <MenuItem value="EGP">EGP</MenuItem>
+                    <MenuItem value="SAR">SAR</MenuItem>
+                    <MenuItem value="NGN">NGN</MenuItem>
+                  </Select>
+                </FormControl>
+              </MenuItem>
             </Menu>
           </Box>
         </Toolbar>

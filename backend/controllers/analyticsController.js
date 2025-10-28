@@ -4,6 +4,7 @@ const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const Certificate = require('../models/Certificate');
 const Payment = require('../models/Payment');
+const posthog = require('../services/posthog');
 
 // @desc    Track analytics event
 // @route   POST /api/analytics/track
@@ -31,6 +32,7 @@ exports.trackEvent = async (req, res, next) => {
       course: courseId,
       lesson: lessonId,
       metadata,
+    
       duration,
       score,
       ipAddress: req.ip,
@@ -42,6 +44,30 @@ exports.trackEvent = async (req, res, next) => {
     };
 
     const analytics = await Analytics.create(analyticsData);
+        // Send event to PostHog for analytics and A/B testing
+    if (posthog) {
+      try {
+        posthog.capture({
+          distinctId: req.user && req.user.id ? req.user.id.toString() : undefined,
+          event: eventType,
+          properties: {
+            courseId: courseId || null,
+            lessonId: lessonId || null,
+            metadata,
+            duration,
+            score,
+            ipAddress: req.ip,
+            userAgent,
+            deviceType,
+            browser,
+            os,
+            language: req.user && req.user.preferredLanguage ? req.user.preferredLanguage : 'en'
+          }
+        });
+      } catch (phError) {
+        console.error('PostHog capture error:', phError);
+      }
+    }
 
     res.status(201).json({
       success: true,
@@ -51,6 +77,7 @@ exports.trackEvent = async (req, res, next) => {
     console.error('Track event error:', error);
     res.status(500).json({
       success: false,
+     }
       message: 'Error tracking event',
       error: error.message
     });

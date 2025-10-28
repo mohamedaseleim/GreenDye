@@ -1,5 +1,5 @@
-import React from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import React, { useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import CssBaseline from '@mui/material/CssBaseline';
 import { ToastContainer } from 'react-toastify';
@@ -40,6 +40,9 @@ import PrivateRoute from './components/PrivateRoute';
 import AdminRoute from './components/AdminRoute';
 import AdminLessons from './pages/AdminLessons';
 
+// NEW: analytics import
+import { trackPageView } from './services/analyticsService';
+
 const theme = createTheme({
   palette: {
     primary: {
@@ -66,6 +69,15 @@ const theme = createTheme({
   },
 });
 
+// Component to track page views
+function AnalyticsTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    trackPageView(location.pathname);
+  }, [location.pathname]);
+  return null;
+}
+
 function App() {
   return (
     <ThemeProvider theme={theme}>
@@ -76,6 +88,8 @@ function App() {
           <AuthProvider>
             <Router>
               <Layout>
+                {/* Analytics tracker */}
+                <AnalyticsTracker />
                 <Routes>
                   {/* Public routes */}
                   <Route path="/" element={<Home />} />

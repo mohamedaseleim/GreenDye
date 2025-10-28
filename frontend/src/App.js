@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css';
 // Context Providers
 import { AuthProvider } from './contexts/AuthContext';
 import { LanguageProvider } from './contexts/LanguageContext';
+import { CurrencyProvider } from './contexts/CurrencyContext';
 
 // Pages
 import Home from './pages/Home';
@@ -69,98 +70,107 @@ function App() {
   return (
     <ThemeProvider theme={theme}>
       <CssBaseline />
+      {/* Nest context providers: language first, then currency, then auth */}
       <LanguageProvider>
-        <AuthProvider>
-          <Router>
-            <Layout>
-              <Routes>
-                {/* Public routes */}
-                <Route path="/" element={<Home />} />
-                <Route path="/courses" element={<Courses />} />
-                <Route path="/courses/:id" element={<CourseDetail />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/register" element={<Register />} />
-                <Route path="/about" element={<About />} />
-                <Route path="/contact" element={<Contact />} />
-                <Route path="/forums" element={<Forum />} />
-                <Route path="/chat" element={<Chat />} />
-                <Route path="/verify/certificate/:certificateId" element={<VerifyCertificate />} />
-                <Route path="/verify/trainer/:trainerId" element={<VerifyTrainer />} />
+        <CurrencyProvider>
+          <AuthProvider>
+            <Router>
+              <Layout>
+                <Routes>
+                  {/* Public routes */}
+                  <Route path="/" element={<Home />} />
+                  <Route path="/courses" element={<Courses />} />
+                  <Route path="/courses/:id" element={<CourseDetail />} />
+                  <Route path="/login" element={<Login />} />
+                  <Route path="/register" element={<Register />} />
+                  <Route path="/about" element={<About />} />
+                  <Route path="/contact" element={<Contact />} />
+                  <Route path="/forums" element={<Forum />} />
+                  <Route path="/chat" element={<Chat />} />
+                  <Route
+                    path="/verify/certificate/:certificateId"
+                    element={<VerifyCertificate />}
+                  />
+                  <Route
+                    path="/verify/trainer/:trainerId"
+                    element={<VerifyTrainer />}
+                  />
 
-                {/* Private routes */}
-                <Route
-                  path="/dashboard"
-                  element={
-                    <PrivateRoute>
-                      <Dashboard />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/my-courses"
-                  element={
-                    <PrivateRoute>
-                      <MyCourses />
-                    </PrivateRoute>
-                  }
-                />
-                <Route
-                  path="/learn/:courseId"
-                  element={
-                    <PrivateRoute>
-                      <CoursePlayer />
-                    </PrivateRoute>
-                  }
-                />
+                  {/* Private routes */}
+                  <Route
+                    path="/dashboard"
+                    element={
+                      <PrivateRoute>
+                        <Dashboard />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/my-courses"
+                    element={
+                      <PrivateRoute>
+                        <MyCourses />
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/learn/:courseId"
+                    element={
+                      <PrivateRoute>
+                        <CoursePlayer />
+                      </PrivateRoute>
+                    }
+                  />
 
-                {/* NEW: Admin-only content management */}
-                <Route
-                  path="/admin/lessons/:courseId"
-                  element={
-                    <PrivateRoute>
-                      <AdminRoute>
-                        <AdminLessons />
-                      </AdminRoute>
-                    </PrivateRoute>
-                  }
-                />
+                  {/* NEW: Admin-only content management */}
+                  <Route
+                    path="/admin/lessons/:courseId"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminLessons />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
 
-                {/* NEW: Quiz routes */}
-                <Route
-                  path="/quizzes/:id"
-                  element={
-                    <PrivateRoute>
-                      <Quiz />
-                    </PrivateRoute>
-                  }
-                />
-                {/* If you create a dedicated results page, enable this: */}
-                {/* <Route
-                  path="/quizzes/:id/results"
-                  element={
-                    <PrivateRoute>
-                      <QuizResults />
-                    </PrivateRoute>
-                  }
-                /> */}
+                  {/* NEW: Quiz routes */}
+                  <Route
+                    path="/quizzes/:id"
+                    element={
+                      <PrivateRoute>
+                        <Quiz />
+                      </PrivateRoute>
+                    }
+                  />
+                  {/* If you create a dedicated results page, enable this: */}
+                  {/* <Route
+                    path="/quizzes/:id/results"
+                    element={
+                      <PrivateRoute>
+                        <QuizResults />
+                      </PrivateRoute>
+                    }
+                  /> */}
 
-                {/* 404 */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Layout>
-          </Router>
-          <ToastContainer
-            position="top-right"
-            autoClose={3000}
-            hideProgressBar={false}
-            newestOnTop
-            closeOnClick
-            rtl={false}
-            pauseOnFocusLoss
-            draggable
-            pauseOnHover
-          />
-        </AuthProvider>
+                  {/* 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Layout>
+            </Router>
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
+          </AuthProvider>
+        </CurrencyProvider>
       </LanguageProvider>
     </ThemeProvider>
   );

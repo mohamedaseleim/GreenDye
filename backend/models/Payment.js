@@ -49,6 +49,13 @@ const PaymentSchema = new mongoose.Schema({
   refundedAt: {
     type: Date
   },
+  // Added fields for refund tracking
+  refundTransactionId: {
+    type: String
+  },
+  refundGatewayResponse: {
+    type: mongoose.Schema.Types.Mixed
+  },
   metadata: {
     ipAddress: String,
     userAgent: String,
@@ -76,7 +83,7 @@ PaymentSchema.index({ transactionId: 1 });
 PaymentSchema.index({ createdAt: -1 });
 
 // Generate invoice number before saving
-PaymentSchema.pre('save', function(next) {
+PaymentSchema.pre('save', function (next) {
   if (!this.invoice.invoiceNumber && this.status === 'completed') {
     const year = new Date().getFullYear();
     const random = Math.random().toString(36).substring(2, 8).toUpperCase();

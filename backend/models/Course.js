@@ -50,7 +50,8 @@ const CourseSchema = new mongoose.Schema({
   currency: {
     type: String,
     default: 'USD',
-    enum: ['USD', 'EUR', 'EGP']
+    // Added SAR and NGN to support multi‑currency pricing
+    enum: ['USD', 'EUR', 'EGP', 'SAR', 'NGN']
   },
   duration: {
     type: Number, // in hours
@@ -65,12 +66,11 @@ const CourseSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Lesson'
   }],
-  
-    sections: [{
+  sections: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Section'
   }],
-requirements: {
+  requirements: {
     type: Map,
     of: [String]
   },
@@ -123,9 +123,8 @@ requirements: {
     date: Date,
     duration: Number, // in minutes
     meetingLink: String,
-recording: String,
-
-          participants: [{
+    recording: String,
+    participants: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     }],
@@ -134,10 +133,8 @@ recording: String,
       enum: ['zoom', 'jitsi', 'github-classroom', 'agora', 'other'],
       default: 'zoom'
     },
-
   }],
   tags: [String],
-  
   authors: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
@@ -158,7 +155,7 @@ recording: String,
   canonicalUrl: {
     type: String
   },
-metadata: {
+  metadata: {
     views: {
       type: Number,
       default: 0

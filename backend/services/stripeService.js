@@ -7,9 +7,10 @@ const TransactionLog = require('../models/TransactionLog');
 
 /**
  * StripeService encapsulates interactions with the Stripe API.  It
- * creates checkout sessions and handles webhook notifications.  This
- * service extends the abstract PaymentService to provide a
- * consistent interface for the controller layer.
+ * creates checkout sessions, handles webhook notifications, and now
+ * supports issuing refunds.  This service extends the abstract
+ * PaymentService to provide a consistent interface for the controller
+ * layer.
  */
 class StripeService extends PaymentService {
   constructor() {
@@ -138,7 +139,10 @@ class StripeService extends PaymentService {
           payment.completedAt = new Date();
           await payment.save();
           // Ensure enrollment exists
-          const existing = await Enrollment.findOne({ user: payment.user, course: payment.course });
+          const existing = await Enrollment.findOne({
+            user: payment.user,
+            course: payment.course,
+          });
           if (!existing) {
             await Enrollment.create({
               user: payment.user,
@@ -163,6 +167,57 @@ class StripeService extends PaymentService {
       }
     }
     return event;
+  }
+
+  /**
+   * Issue a refund for a completed payment.  The amount should be the
+   * entire remaining amount or a partial refund.  On success, the payment
+   * status, refundedAmount, refundedAt, and refund identifiers are
+   * updated.  Enrollment is removed and the refund is logged.
+   *
+   * @param {import('../models/Payment')} payment  Payment document
+   * @param {number} amount                        Amount to refund
+   * @returns {Promise<Object>}                    Stripe refund object
+   */
+  async refundPayment(payment, amount) {
+    try {
+      const params = {};
+      // Provide the payment_intent or session ID for Stripe to locate the charge
+      if (payment.transactionId) {
+        params.payment_intent = payment.transactionId;
+      }
+      // Refund in smallest currency unit if amount provided
+      if (amount) {
+        params.amount = Math.round(amount * 100);
+      }
+      // Create refund via Stripe API
+      const refund = await this.stripe.refunds.create(params);
+      // Update payment document
+      payment.status = 'refunded';
+      payment.refundedAmount = amount;
+      payment.refundedAt = new Date();
+      payment.refundTransactionId = refund.id;
+      payment.refundGatewayResponse = refund;
+      await payment.save();
+      // Remove enrollment
+      await Enrollment.deleteOne({ user: payment.user, course: payment.course });
+      // Log the refund
+      await TransactionLog.create({
+        payment: payment._id,
+        user: payment.user,
+        course: payment.course,
+        amount,
+        currency: payment.currency,
+        paymentMethod: payment.paymentMethod,
+        status: 'refunded',
+        transactionId: refund.id,
+        gatewayResponse: refund,
+      });
+      return refund;
+    } catch (error) {
+      console.error('Stripe refund error:', error);
+      throw new Error('Error processing Stripe refund');
+    }
   }
 }
 

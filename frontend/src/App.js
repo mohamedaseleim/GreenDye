@@ -35,6 +35,10 @@ import Quiz from './pages/Quiz';
 import Layout from './components/Layout';
 import PrivateRoute from './components/PrivateRoute';
 
+// NEW: Admin-only content management
+import AdminRoute from './components/AdminRoute';
+import AdminLessons from './pages/AdminLessons';
+
 const theme = createTheme({
   palette: {
     primary: {
@@ -108,6 +112,19 @@ function App() {
                     </PrivateRoute>
                   }
                 />
+
+                {/* NEW: Admin-only content management */}
+                <Route
+                  path="/admin/lessons/:courseId"
+                  element={
+                    <PrivateRoute>
+                      <AdminRoute>
+                        <AdminLessons />
+                      </AdminRoute>
+                    </PrivateRoute>
+                  }
+                />
+
                 {/* NEW: Quiz routes */}
                 <Route
                   path="/quizzes/:id"

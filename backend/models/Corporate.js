@@ -138,6 +138,11 @@ const TeamEnrollmentSchema = new mongoose.Schema({
     quantity: Number,
     pricePerSeat: Number,
     totalAmount: Number,
+    // Added currency field for multi‑currency support
+    currency: {
+      type: String,
+      default: 'USD'
+    },
     paymentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Payment'

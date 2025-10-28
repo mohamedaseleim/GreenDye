@@ -8,10 +8,15 @@ const {
   updateLesson,
   deleteLesson
 } = require('../controllers/lessonController');
+const { reorderLessons } = require('../controllers/reorderController');
 
 router.route('/')
   .get(getLessons)
   .post(protect, authorize('trainer', 'admin'), createLesson);
+
+// Must be before "/:id" to avoid matching "reorder" as an id
+router.route('/reorder')
+  .put(protect, authorize('trainer', 'admin'), reorderLessons);
 
 router.route('/:id')
   .get(protect, getLesson)

@@ -15,11 +15,14 @@ const PaymentService = require('./paymentService');
 class FawryService extends PaymentService {
   constructor() {
     super();
-    this.apiUrl = process.env.FAWRY_API_URL || 'https://atfawry.fawrystaging.com/ECommerceWeb/Fawry/payments/charge';
+    this.apiUrl = process.env.FAWRY_API_URL ||
+      'https://atfawry.fawrystaging.com/ECommerceWeb/Fawry/payments/charge';
     this.merchantCode = process.env.FAWRY_MERCHANT_CODE;
     this.securityKey = process.env.FAWRY_SECURITY_KEY;
     if (!this.merchantCode || !this.securityKey) {
-      console.warn('FawryService: missing FAWRY_MERCHANT_CODE or FAWRY_SECURITY_KEY environment variables');
+      console.warn(
+        'FawryService: missing FAWRY_MERCHANT_CODE or FAWRY_SECURITY_KEY environment variables',
+      );
     }
   }
 
@@ -29,7 +32,7 @@ class FawryService extends PaymentService {
    * (merchantCode + merchantRefNum + customerProfileId + paymentMethod
    * + amount + securityKey).  All values are concatenated with no
    * separators.  See the Fawry API documentation lines 84–120 for
-   * reference【141058834745107†L84-L120】.
+   * reference:contentReference[oaicite:0]{index=0}.
    *
    * @param {String} merchantRefNum  Unique reference number for the order
    * @param {String} customerProfileId  Identifier for the customer
@@ -96,7 +99,9 @@ class FawryService extends PaymentService {
       });
       // Fawry returns a reference number and a redirect URL when using card payments.
       const referenceNumber = data?.referenceNumber || merchantRefNum;
-      const checkoutUrl = data?.paymentMethodUrl || data?.redirectUrl || `${process.env.FRONTEND_URL}/checkout/fawry/${payment._id}`;
+      const checkoutUrl =
+        data?.paymentMethodUrl || data?.redirectUrl ||
+        `${process.env.FRONTEND_URL}/checkout/fawry/${payment._id}`;
       // Persist provider response on the payment record
       payment.transactionId = referenceNumber;
       payment.paymentGatewayResponse = data;
@@ -107,7 +112,10 @@ class FawryService extends PaymentService {
         providerResponse: data,
       };
     } catch (error) {
-      console.error('Error creating Fawry checkout:', error.response?.data || error.message);
+      console.error(
+        'Error creating Fawry checkout:',
+        error.response?.data || error.message,
+      );
       throw new Error('Failed to create Fawry checkout');
     }
   }

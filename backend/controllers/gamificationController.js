@@ -2,6 +2,7 @@ const { Badge, UserAchievement, LeaderboardEntry } = require('../models/Gamifica
 const User = require('../models/User');
 const Enrollment = require('../models/Enrollment');
 const Certificate = require('../models/Certificate');
+const { logLearningActivity, updateLeaderboardStreak } = require('../services/learningStreakService');
 
 // @desc    Get all badges
 // @route   GET /api/gamification/badges
@@ -9,7 +10,7 @@ const Certificate = require('../models/Certificate');
 exports.getAllBadges = async (req, res, next) => {
   try {
     const badges = await Badge.find({ isActive: true });
-    
+
     res.status(200).json({
       success: true,
       count: badges.length,
@@ -26,7 +27,7 @@ exports.getAllBadges = async (req, res, next) => {
 exports.createBadge = async (req, res, next) => {
   try {
     const badge = await Badge.create(req.body);
-    
+
     res.status(201).json({
       success: true,
       data: badge
@@ -42,11 +43,11 @@ exports.createBadge = async (req, res, next) => {
 exports.getUserAchievements = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    
+
     const achievements = await UserAchievement.find({ user: userId })
       .populate('badge')
       .sort('-earnedAt');
-    
+
     res.status(200).json({
       success: true,
       count: achievements.length,
@@ -63,37 +64,37 @@ exports.getUserAchievements = async (req, res, next) => {
 exports.checkAndAwardBadges = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    
+
     // Get user stats
     const enrollments = await Enrollment.find({ user: userId });
     const completedCourses = enrollments.filter(e => e.progress === 100).length;
     const certificates = await Certificate.find({ user: userId });
-    
+
     // Get user's leaderboard entry
-    const leaderboardEntry = await LeaderboardEntry.findOne({ 
-      user: userId, 
-      period: 'all_time' 
+    const leaderboardEntry = await LeaderboardEntry.findOne({
+      user: userId,
+      period: 'all_time'
     });
-    
+
     const points = leaderboardEntry ? leaderboardEntry.points : 0;
     const streak = leaderboardEntry ? leaderboardEntry.streak.current : 0;
-    
+
     // Get all active badges
     const badges = await Badge.find({ isActive: true });
-    
+
     const newlyEarnedBadges = [];
-    
+
     for (const badge of badges) {
       // Check if user already has this badge
       const existingAchievement = await UserAchievement.findOne({
         user: userId,
         badge: badge._id
       });
-      
+
       if (existingAchievement) continue;
-      
+
       let shouldAward = false;
-      
+
       switch (badge.criteria.type) {
         case 'courses_completed':
           shouldAward = completedCourses >= badge.criteria.threshold;
@@ -110,7 +111,7 @@ exports.checkAndAwardBadges = async (req, res, next) => {
         default:
           shouldAward = false;
       }
-      
+
       if (shouldAward) {
         const achievement = await UserAchievement.create({
           user: userId,
@@ -120,17 +121,17 @@ exports.checkAndAwardBadges = async (req, res, next) => {
             target: badge.criteria.threshold
           }
         });
-        
+
         // Award points for badge
         if (leaderboardEntry) {
           leaderboardEntry.points += badge.points;
           await leaderboardEntry.save();
         }
-        
+
         newlyEarnedBadges.push(await achievement.populate('badge'));
       }
     }
-    
+
     res.status(200).json({
       success: true,
       newBadges: newlyEarnedBadges.length,
@@ -147,17 +148,17 @@ exports.checkAndAwardBadges = async (req, res, next) => {
 exports.getLeaderboard = async (req, res, next) => {
   try {
     const { period = 'all_time', limit = 100 } = req.query;
-    
+
     const leaderboard = await LeaderboardEntry.find({ period })
       .populate('user', 'name avatar country')
       .sort('-points')
       .limit(parseInt(limit));
-    
+
     // Update ranks
     leaderboard.forEach((entry, index) => {
       entry.rank = index + 1;
     });
-    
+
     res.status(200).json({
       success: true,
       period,
@@ -176,12 +177,13 @@ exports.updateUserPoints = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { points, action } = req.body;
-    
-    let leaderboardEntry = await LeaderboardEntry.findOne({ 
-      user: userId, 
-      period: 'all_time' 
+
+    let leaderboardEntry = await LeaderboardEntry.findOne({
+      user: userId,
+      period: 'all_time'
     });
-    
+
+    // Create leaderboard entry if it doesn't exist
     if (!leaderboardEntry) {
       leaderboardEntry = await LeaderboardEntry.create({
         user: userId,
@@ -189,43 +191,30 @@ exports.updateUserPoints = async (req, res, next) => {
         period: 'all_time'
       });
     }
-    
-    leaderboardEntry.points += points;
-    
-    // Update activity streak
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    
-    if (leaderboardEntry.streak.lastActivity) {
-      const lastActivity = new Date(leaderboardEntry.streak.lastActivity);
-      lastActivity.setHours(0, 0, 0, 0);
-      
-      const daysDiff = Math.floor((today - lastActivity) / (1000 * 60 * 60 * 24));
-      
-      if (daysDiff === 1) {
-        // Consecutive day
-        leaderboardEntry.streak.current += 1;
-        if (leaderboardEntry.streak.current > leaderboardEntry.streak.longest) {
-          leaderboardEntry.streak.longest = leaderboardEntry.streak.current;
-        }
-      } else if (daysDiff > 1) {
-        // Streak broken
-        leaderboardEntry.streak.current = 1;
-      }
-    } else {
-      leaderboardEntry.streak.current = 1;
-      leaderboardEntry.streak.longest = 1;
+
+    try {
+      // Log activity and update the learning streak before adding action points
+      await logLearningActivity(userId, ['points']);
+      const {
+        leaderboardEntry: updatedEntry
+      } = await updateLeaderboardStreak(userId);
+
+      // Add the earned points from this action
+      updatedEntry.points += points;
+
+      // Recalculate level (100 points per level)
+      updatedEntry.level = Math.floor(updatedEntry.points / 100) + 1;
+      await updatedEntry.save();
+
+      leaderboardEntry = updatedEntry;
+    } catch (e) {
+      console.error('Error updating streak via learningStreakService:', e);
+      // Fallback: directly add points and recalc level
+      leaderboardEntry.points += points;
+      leaderboardEntry.level = Math.floor(leaderboardEntry.points / 100) + 1;
+      await leaderboardEntry.save();
     }
-    
-    leaderboardEntry.streak.lastActivity = new Date();
-    leaderboardEntry.updatedAt = new Date();
-    
-    await leaderboardEntry.save();
-    
-    // Calculate level (100 points per level)
-    leaderboardEntry.level = Math.floor(leaderboardEntry.points / 100) + 1;
-    await leaderboardEntry.save();
-    
+
     res.status(200).json({
       success: true,
       data: leaderboardEntry
@@ -241,17 +230,17 @@ exports.updateUserPoints = async (req, res, next) => {
 exports.getUserStats = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    
+
     const achievements = await UserAchievement.find({ user: userId });
-    const leaderboardEntry = await LeaderboardEntry.findOne({ 
-      user: userId, 
-      period: 'all_time' 
+    const leaderboardEntry = await LeaderboardEntry.findOne({
+      user: userId,
+      period: 'all_time'
     });
-    
+
     const enrollments = await Enrollment.find({ user: userId });
     const completedCourses = enrollments.filter(e => e.progress === 100).length;
     const certificates = await Certificate.find({ user: userId });
-    
+
     const stats = {
       points: leaderboardEntry ? leaderboardEntry.points : 0,
       level: leaderboardEntry ? leaderboardEntry.level : 1,
@@ -262,7 +251,7 @@ exports.getUserStats = async (req, res, next) => {
       currentStreak: leaderboardEntry ? leaderboardEntry.streak.current : 0,
       longestStreak: leaderboardEntry ? leaderboardEntry.streak.longest : 0
     };
-    
+
     res.status(200).json({
       success: true,
       data: stats

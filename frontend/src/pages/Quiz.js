@@ -5,6 +5,7 @@ import {
   submitQuiz,
   getQuizAttempts
 } from '../services/quizService';
+import { trackQuizEvent } from '../services/analyticsService';
 
 function Quiz() {
   const { id } = useParams();
@@ -24,6 +25,11 @@ function Quiz() {
         setQuiz(data);
         const past = await getQuizAttempts(id);
         setAttempts(past || []);
+        // Track quiz start event
+        trackQuizEvent('quiz_start', {
+          quizId: id,
+          courseId: data.course
+        });
       } finally {
         setLoading(false);
       }
@@ -35,6 +41,15 @@ function Quiz() {
     const updated = [...answers];
     updated[index] = value;
     setAnswers(updated);
+    // Track answer selection
+    if (quiz) {
+      trackQuizEvent('quiz_answer', {
+        quizId: id,
+        courseId: quiz.course,
+        questionIndex: index,
+        answer: value
+      });
+    }
   }
 
   async function handleSubmit(e) {
@@ -42,6 +57,12 @@ function Quiz() {
     try {
       const result = await submitQuiz(id, answers, quiz.course);
       setResults(result);
+      // Track quiz completion event
+      trackQuizEvent('quiz_complete', {
+        quizId: id,
+        courseId: quiz.course,
+        score: result?.score
+      });
     } catch (err) {
       console.error(err);
       alert('Error submitting quiz. Please try again.');
@@ -66,7 +87,8 @@ function Quiz() {
             <ul>
               {results.results.map((res, idx) => (
                 <li key={idx}>
-                  Question {idx + 1}: {res.isCorrect === true && 'Correct'}
+                  Question {idx + 1}:{' '}
+                  {res.isCorrect === true && 'Correct'}
                   {res.isCorrect === false && 'Incorrect'}
                   {res.isCorrect === null && 'Needs manual grading'}
                 </li>

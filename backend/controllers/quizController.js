@@ -1,5 +1,7 @@
 const Quiz = require('../models/Quiz');
 const Enrollment = require('../models/Enrollment');
+const Submission = require('../models/Submission');
+const Question = require('../models/Question');
 
 /**
  * Helper to shuffle an array in place.
@@ -10,6 +12,75 @@ function shuffleArray(arr) {
     [arr[i], arr[j]] = [arr[j], arr[i]];
   }
   return arr;
+}
+
+/**
+ * Return a weight multiplier based on question difficulty.
+ * If adaptive scoring is disabled, this helper returns 1.
+ */
+function getDifficultyWeight(difficulty) {
+  switch (difficulty) {
+    case 'easy':
+      return 1;
+    case 'hard':
+      return 2;
+    // default to medium if unknown
+    case 'medium':
+    default:
+      return 1.5;
+  }
+}
+
+/**
+ * Resolve an embedded quiz question. If the quiz question has a bankRef,
+ * fetch the Question document and convert it to the same structure used in Quiz.
+ * Bank questions are assumed to be in English only.
+ *
+ * @param {Object} quizQuestion The question object embedded in the quiz.
+ * @returns {Object} An object with fields matching Quiz.questions entries.
+ */
+async function resolveQuestion(quizQuestion) {
+  // If the question points to the Question bank, pull that document.
+  if (quizQuestion.bankRef) {
+    const qDoc = await Question.findById(quizQuestion.bankRef);
+    if (qDoc) {
+      // Map types from the bank (mcq, true_false, essay) to quiz types
+      const typeMapping = {
+        mcq: 'multiple-choice',
+        true_false: 'true-false',
+        essay: 'essay'
+      };
+      const convertedType = typeMapping[qDoc.type] || quizQuestion.type;
+
+      // Build the expected object structure.
+      const bankOptions = qDoc.options
+        ? qDoc.options.map((opt) => ({
+            text: new Map([['en', opt.text]]),
+            isCorrect: opt.isCorrect
+          }))
+        : undefined;
+
+      // Determine the correct answer for true/false or short-answer types.
+      let correctAnswer;
+      if (convertedType === 'true-false' && bankOptions) {
+        const correct = bankOptions.find((opt) => opt.isCorrect);
+        correctAnswer = correct ? correct.text.get('en') : undefined;
+      }
+
+      return {
+        question: new Map([['en', qDoc.text]]),
+        type: convertedType,
+        options: bankOptions,
+        correctAnswer: correctAnswer,
+        points: qDoc.marks,
+        // bank questions do not store difficulty by default; assume medium
+        difficulty: quizQuestion.difficulty || 'medium',
+        explanation: null
+      };
+    }
+  }
+  // If no bankRef, return the quiz's embedded question as is
+  return quizQuestion;
 }
 
 // @desc    Get all published quizzes for a course (and optional lesson)
@@ -219,22 +290,51 @@ exports.submitQuiz = async (req, res, next) => {
       }
     }
 
-    // Calculate score
-    let correctAnswers = 0;
+    // Determine attempt number by counting prior submissions from this user
+    const priorCount = await Submission.countDocuments({
+      quiz: quiz._id,
+      user: req.user.id
+    });
+    const attemptNumber = priorCount + 1;
+
+    // Resolve embedded and bank questions up front
+    const resolvedQuestions = await Promise.all(
+      quiz.questions.map((q) => resolveQuestion(q))
+    );
+
     let totalPoints = 0;
     let earnedPoints = 0;
+    let adaptiveTotal = 0;
+    let adaptiveEarned = 0;
+    let correctAnswers = 0;
 
-    const results = quiz.questions.map((question, index) => {
+    const answersDocs = [];
+    const results = [];
+
+    // Loop through each question and user answer
+    resolvedQuestions.forEach((question, index) => {
       const userAnswer = answers[index];
       let isCorrect = false;
 
+      // Default basePoints and difficulty
+      const basePoints = question.points || 1;
+      const difficulty = question.difficulty || 'medium';
+      const weight = quiz.isAdaptive ? getDifficultyWeight(difficulty) : 1;
+
+      // Total points add up regardless of adaptive flag
+      totalPoints += basePoints;
+      adaptiveTotal += basePoints * weight;
+
       switch (question.type) {
         case 'multiple-choice': {
-          const correctOption = question.options.find((opt) => opt.isCorrect);
-          // Compare by text; adjust this if you instead use option IDs
-          const expected = correctOption
-            ? correctOption.text.get('en') || correctOption.text
+          // find the correct option text
+          const correctOption = question.options
+            ? question.options.find((opt) => opt.isCorrect)
             : undefined;
+          const expected =
+            correctOption && correctOption.text
+              ? correctOption.text.get('en') || correctOption.text
+              : undefined;
           isCorrect = userAnswer === expected;
           break;
         }
@@ -244,72 +344,346 @@ exports.submitQuiz = async (req, res, next) => {
         case 'short-answer':
           isCorrect =
             userAnswer &&
+            question.correctAnswer &&
             userAnswer.toString().trim().toLowerCase() ===
-              question.correctAnswer?.trim().toLowerCase();
+              question.correctAnswer.toString().trim().toLowerCase();
           break;
         case 'essay':
-          // Essay questions must be graded manually
+          // Essay questions require manual grading; mark null
           isCorrect = null;
           break;
         default:
           break;
       }
 
-      // Add up total possible points
-      totalPoints += question.points || 1;
-      // Only award points for auto-gradable question types
+      // Accumulate points only for auto‑gradable questions
+      let pointsAwarded = 0;
       if (isCorrect === true) {
         correctAnswers++;
-        earnedPoints += question.points || 1;
+        pointsAwarded = basePoints;
+        earnedPoints += basePoints;
+        adaptiveEarned += basePoints * weight;
       }
 
-      return {
+      // Build answer document
+      answersDocs.push({
+        question: quiz.questions[index].bankRef || undefined,
+        answer: userAnswer,
+        isCorrect: isCorrect,
+        pointsAwarded: pointsAwarded
+      });
+
+      // Build results object for student
+      results.push({
         questionIndex: index,
         isCorrect,
         userAnswer,
-        // Only return explanation if the quiz permits showing results
         explanation:
-          isCorrect || quiz.showResults === 'never'
+          isCorrect === true || quiz.showResults === 'never'
             ? null
             : question.explanation
-      };
+      });
     });
 
-    const score = (earnedPoints / totalPoints) * 100;
-    const passed = score >= quiz.passingScore;
+    const scorePercentage = (earnedPoints / totalPoints) * 100;
+    const adaptivePercentage = quiz.isAdaptive
+      ? (adaptiveEarned / adaptiveTotal) * 100
+      : undefined;
+    const passed = scorePercentage >= quiz.passingScore;
 
-    // Save score to enrollment record (quizScores) if applicable
+    // Create the submission document
+    const submission = await Submission.create({
+      quiz: quiz._id,
+      user: req.user.id,
+      answers: answersDocs,
+      attempt: attemptNumber,
+      score: scorePercentage,
+      maxScore: totalPoints,
+      earnedPoints: earnedPoints,
+      adaptiveScore: adaptivePercentage,
+      isPassed: passed,
+      graded: !answersDocs.some((ans) => ans.isCorrect === null)
+    });
+
+    // Update enrollment quizScores if courseId provided
     if (courseId && enrollment) {
       let record = enrollment.quizScores.find(
         (qs) => qs.quiz.toString() === quiz._id.toString()
       );
       if (record) {
-        record.attempt += 1;
+        record.attempt = submission.attempt;
         record.score = earnedPoints;
         record.maxScore = totalPoints;
-        record.completedAt = Date.now();
+        record.completedAt = submission.submittedAt;
       } else {
         enrollment.quizScores.push({
           quiz: quiz._id,
           score: earnedPoints,
           maxScore: totalPoints,
-          attempt: 1,
-          completedAt: Date.now()
+          attempt: submission.attempt,
+          completedAt: submission.submittedAt
         });
       }
       await enrollment.save();
     }
 
-    res.status(200).json({
+    // Response to the client
+    return res.status(200).json({
       success: true,
       data: {
-        score,
+        score: scorePercentage,
         passed,
         correctAnswers,
         totalQuestions: quiz.questions.length,
         earnedPoints,
         totalPoints,
+        adaptiveScore: adaptivePercentage,
         results: quiz.showResults !== 'never' ? results : null
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Retrieve quiz attempts for a quiz
+// @route   GET /api/quizzes/:id/attempts
+// @access  Private
+exports.getQuizAttempts = async (req, res, next) => {
+  try {
+    const quizId = req.params.id;
+    const filter = { quiz: quizId };
+
+    // Students see only their own attempts
+    if (req.user.role === 'student') {
+      filter.user = req.user.id;
+    }
+
+    const submissions = await Submission.find(filter).sort({
+      submittedAt: 1
+    });
+
+    if (req.user.role === 'student') {
+      const attempts = submissions.map((sub) => ({
+        attempt: sub.attempt,
+        score: sub.earnedPoints,
+        maxScore: sub.maxScore,
+        completedAt: sub.submittedAt
+      }));
+      return res.status(200).json({
+        success: true,
+        data: attempts
+      });
+    }
+
+    // Trainers/admins see additional info
+    const attempts = await Promise.all(
+      submissions.map(async (sub) => {
+        return {
+          submissionId: sub._id,
+          user: sub.user,
+          attempt: sub.attempt,
+          score: sub.score,
+          earnedPoints: sub.earnedPoints,
+          maxScore: sub.maxScore,
+          isPassed: sub.isPassed,
+          graded: sub.graded,
+          submittedAt: sub.submittedAt
+        };
+      })
+    );
+
+    return res.status(200).json({
+      success: true,
+      data: attempts
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get quiz analytics (average scores, pass rates, per question stats)
+// @route   GET /api/quizzes/:id/analytics
+// @access  Private/Trainer/Admin
+exports.getQuizAnalytics = async (req, res, next) => {
+  try {
+    const quizId = req.params.id;
+
+    // Retrieve all submissions (including ungraded ones)
+    const submissions = await Submission.find({ quiz: quizId });
+
+    if (!submissions || submissions.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: 'No submissions found for this quiz'
+      });
+    }
+
+    const totalAttempts = submissions.length;
+    const totalScoreSum = submissions.reduce(
+      (sum, sub) => sum + (sub.score || 0),
+      0
+    );
+    const averageScore = totalScoreSum / totalAttempts;
+    const passedCount = submissions.filter((sub) => sub.isPassed).length;
+    const passRate = (passedCount / totalAttempts) * 100;
+    const uniqueUsers = new Set(submissions.map((sub) => sub.user.toString()));
+    const participants = uniqueUsers.size;
+
+    // Fetch quiz questions to compute per-question statistics
+    const quiz = await Quiz.findById(quizId);
+    const questionStats = quiz.questions.map((_, idx) => {
+      let correct = 0;
+      let incorrect = 0;
+      let pending = 0;
+
+      submissions.forEach((sub) => {
+        const answer = sub.answers[idx];
+        if (!answer || answer.isCorrect === null) {
+          pending++;
+        } else if (answer.isCorrect === true) {
+          correct++;
+        } else {
+          incorrect++;
+        }
+      });
+
+      return {
+        questionIndex: idx,
+        correct,
+        incorrect,
+        pending,
+        correctRate: (correct / totalAttempts) * 100
+      };
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        totalAttempts,
+        participants,
+        averageScore,
+        passRate,
+        questionStats
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Manually grade a quiz submission (for essay questions)
+// @route   POST /api/quizzes/:id/grade
+// @access  Private/Trainer/Admin
+exports.gradeQuizSubmission = async (req, res, next) => {
+  try {
+    const quizId = req.params.id;
+    const { submissionId, grades } = req.body;
+
+    if (!submissionId || !grades || !Array.isArray(grades)) {
+      return res.status(400).json({
+        success: false,
+        message: 'submissionId and grades array are required'
+      });
+    }
+
+    const submission = await Submission.findById(submissionId);
+    if (!submission) {
+      return res.status(404).json({
+        success: false,
+        message: 'Submission not found'
+      });
+    }
+    if (submission.quiz.toString() !== quizId) {
+      return res.status(400).json({
+        success: false,
+        message: 'Submission does not belong to this quiz'
+      });
+    }
+
+    const quiz = await Quiz.findById(quizId);
+    if (!quiz) {
+      return res.status(404).json({
+        success: false,
+        message: 'Quiz not found'
+      });
+    }
+
+    let earnedPoints = submission.earnedPoints || 0;
+
+    grades.forEach((grade) => {
+      const idx = grade.questionIndex;
+      const ans = submission.answers[idx];
+      const question = quiz.questions[idx];
+
+      if (!ans || !question) {
+        return;
+      }
+
+      // Only adjust essay (or manually graded) questions
+      // Overwrite existing grade if any
+      const basePoints = question.points || 1;
+      // Remove previous manual points if there were any
+      earnedPoints -= ans.pointsAwarded || 0;
+
+      const isCorrect = grade.isCorrect;
+      let awarded;
+      if (typeof grade.pointsAwarded === 'number') {
+        awarded = grade.pointsAwarded;
+      } else {
+        // If points not specified, award basePoints on correct, else 0
+        awarded = isCorrect ? basePoints : 0;
+      }
+
+      ans.isCorrect = isCorrect;
+      ans.pointsAwarded = awarded;
+      earnedPoints += awarded;
+    });
+
+    // Recalculate overall scores
+    const totalPoints = submission.maxScore || quiz.questions.reduce(
+      (sum, q) => sum + (q.points || 1),
+      0
+    );
+    const scorePercentage = (earnedPoints / totalPoints) * 100;
+    const passed = scorePercentage >= quiz.passingScore;
+
+    submission.earnedPoints = earnedPoints;
+    submission.score = scorePercentage;
+    submission.isPassed = passed;
+    submission.graded = !submission.answers.some(
+      (ans) => ans.isCorrect === null
+    );
+
+    await submission.save();
+
+    // Update enrollment record if it matches this attempt
+    const enrollment = await Enrollment.findOne({
+      user: submission.user,
+      course: quiz.course
+    });
+    if (enrollment) {
+      const record = enrollment.quizScores.find(
+        (qs) =>
+          qs.quiz.toString() === quizId && qs.attempt === submission.attempt
+      );
+      if (record) {
+        record.score = earnedPoints;
+        record.maxScore = totalPoints;
+        record.completedAt = submission.submittedAt;
+        await enrollment.save();
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        submissionId: submission._id,
+        score: submission.score,
+        earnedPoints: submission.earnedPoints,
+        maxScore: submission.maxScore,
+        isPassed: submission.isPassed,
+        graded: submission.graded
       }
     });
   } catch (error) {

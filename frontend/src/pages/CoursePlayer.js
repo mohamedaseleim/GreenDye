@@ -28,7 +28,7 @@ import {
   ArrowBack,
 } from '@mui/icons-material';
 import axios from 'axios';
-import VideoPlayer from '../components/VideoPlayer';
+import AnalyticsVideoPlayer from '../components/AnalyticsVideoPlayer';
 
 const CoursePlayer = () => {
   const { courseId } = useParams();
@@ -58,7 +58,7 @@ const CoursePlayer = () => {
           },
         }
       );
-      
+
       const userEnrollment = enrollmentResponse.data.data?.find(
         (e) => (e.course?._id || e.course) === courseId
       );
@@ -70,14 +70,14 @@ const CoursePlayer = () => {
       }
 
       setEnrollment(userEnrollment);
-      
+
       // Fetch course details
       const courseResponse = await axios.get(
         `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/courses/${courseId}`
       );
-      
+
       setCourse(courseResponse.data.data);
-      
+
       // For demo purposes, create sample lessons
       // In a real implementation, you would fetch these from the API
       const sampleLessons = [
@@ -86,7 +86,7 @@ const CoursePlayer = () => {
           title: 'Introduction to the Course',
           type: 'video',
           duration: 15,
-                    url: 'https://example.com/intro.m3u8',
+          url: 'https://example.com/intro.m3u8',
           completed: userEnrollment.progress >= 20,
         },
         {
@@ -100,7 +100,7 @@ const CoursePlayer = () => {
           _id: '3',
           title: 'Core Concepts',
           type: 'video',
-                              url: 'https://example.com/core.m3u8',
+          url: 'https://example.com/core.m3u8',
           duration: 25,
           completed: userEnrollment.progress >= 60,
         },
@@ -119,7 +119,7 @@ const CoursePlayer = () => {
           completed: userEnrollment.progress >= 100,
         },
       ];
-      
+
       setLessons(sampleLessons);
       setCurrentLesson(sampleLessons[0]);
     } catch (err) {
@@ -161,7 +161,7 @@ const CoursePlayer = () => {
       // In a real implementation, you would call the API to mark the lesson as complete
       // For now, we'll just update the local state
       setCurrentLesson({ ...currentLesson, completed: true });
-      
+
       // Find next incomplete lesson
       const currentIndex = lessons.findIndex((l) => l._id === currentLesson._id);
       const nextLesson = lessons[currentIndex + 1];
@@ -229,7 +229,7 @@ const CoursePlayer = () => {
                     <Chip label="Completed" color="success" size="small" />
                   )}
                 </Box>
-                
+
                 <Divider sx={{ my: 2 }} />
 
                 {/* Lesson Content Area */}
@@ -245,7 +245,14 @@ const CoursePlayer = () => {
                   }}
                 >
                   {currentLesson.type === 'video' && (
-<VideoPlayer url={currentLesson.url} />
+                    <AnalyticsVideoPlayer
+                      url={currentLesson.url}
+                      courseId={courseId}
+                      lessonId={currentLesson._id}
+                    />
+                  )}
+
+                  {currentLesson.type === 'quiz' && (
                     <Box sx={{ textAlign: 'center' }}>
                       <Quiz sx={{ fontSize: 80, color: 'grey.400', mb: 2 }} />
                       <Typography variant="h6" color="text.secondary">
@@ -256,6 +263,7 @@ const CoursePlayer = () => {
                       </Typography>
                     </Box>
                   )}
+
                   {currentLesson.type === 'assignment' && (
                     <Box sx={{ textAlign: 'center' }}>
                       <Assignment sx={{ fontSize: 80, color: 'grey.400', mb: 2 }} />
@@ -328,7 +336,7 @@ const CoursePlayer = () => {
             <Typography variant="body2" color="text.secondary" gutterBottom>
               {lessons.filter((l) => l.completed).length} of {lessons.length} lessons completed
             </Typography>
-            
+
             <Divider sx={{ my: 2 }} />
 
             <List>

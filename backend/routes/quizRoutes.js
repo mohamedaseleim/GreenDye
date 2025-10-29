@@ -8,7 +8,6 @@ const {
   updateQuiz,
   deleteQuiz,
   submitQuiz,
-  // New controller methods to implement
   getQuizAttempts,
   getQuizAnalytics,
   gradeQuizSubmission
@@ -33,7 +32,7 @@ router.post('/:id/submit', protect, submitQuiz);
 // Retrieve quiz attempts (for the current user or, for trainers/admins, all attempts)
 router.get('/:id/attempts', protect, getQuizAttempts);
 
-// View quiz analytics (e.g. average scores, completion rate) — trainers/admins only
+// View quiz analytics (average scores, completion rate) — trainers/admins only
 router.get(
   '/:id/analytics',
   protect,

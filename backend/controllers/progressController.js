@@ -1,5 +1,6 @@
 const asyncHandler = require('express-async-handler');
 const Progress = require('../models/Progress');
+const { logLearningActivity, updateLeaderboardStreak } = require('../services/learningStreakService');
 
 // @desc Update lesson progress
 // @route PUT /api/progress
@@ -68,6 +69,17 @@ exports.updateLessonProgress = asyncHandler(async (req, res, next) => {
     }
 
     await progress.save();
+  }
+
+  // Log today’s learning activity and update the user’s streak on the leaderboard.
+  // Any errors during logging or streak update should not prevent the primary
+  // response from being sent to the client.
+  try {
+    await logLearningActivity(req.user.id, ['lesson']);
+    await updateLeaderboardStreak(req.user.id);
+  } catch (err) {
+    // Silently ignore errors in auxiliary services to avoid breaking progress updates
+    console.error('Error updating learning streak:', err);
   }
 
   res.status(200).json({ success: true, data: progress });

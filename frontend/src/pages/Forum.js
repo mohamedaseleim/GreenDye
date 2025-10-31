@@ -5,7 +5,7 @@ import {
   createForumPost,
   addReply,
   likePost,
-  resolvePost
+  markResolved
 } from "../services/forumService";
 
 function Forum() {
@@ -83,7 +83,7 @@ function Forum() {
 
   const handleResolve = async (id) => {
     try {
-      await resolvePost(id);
+      await markResolved(id);
       const updated = await getForumPost(id);
       setSelectedPost(updated);
     } catch (error) {

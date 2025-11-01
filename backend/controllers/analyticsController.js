@@ -77,7 +77,6 @@ exports.trackEvent = async (req, res, next) => {
     console.error('Track event error:', error);
     res.status(500).json({
       success: false,
-     }
       message: 'Error tracking event',
       error: error.message
     });

@@ -281,3 +281,37 @@ exports.getInvoice = async (req, res) => {
     res.status(500).json({ success: false, message: 'Error fetching invoice', error: error.message });
   }
 };
+
+/**
+ * Handle Stripe webhook events
+ * POST /api/payments/webhook/stripe
+ * Public (verified by Stripe signature)
+ * Note: StripeService.handleWebhook requires the full request object for signature verification
+ */
+exports.stripeWebhook = async (req, res) => {
+  try {
+    const service = new StripeService();
+    const event = await service.handleWebhook(req);
+    res.status(200).json({ success: true, received: true, eventType: event.type });
+  } catch (error) {
+    console.error('Stripe webhook error:', error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Handle PayPal webhook events
+ * POST /api/payments/webhook/paypal
+ * Public (should be verified by PayPal signature in production)
+ * Note: PayPalService.handleWebhook requires only the request body
+ */
+exports.paypalWebhook = async (req, res) => {
+  try {
+    const service = new PayPalService();
+    const event = await service.handleWebhook(req.body);
+    res.status(200).json({ success: true, received: true });
+  } catch (error) {
+    console.error('PayPal webhook error:', error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+};

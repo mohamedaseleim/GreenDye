@@ -1,4 +1,4 @@
-const {  { PostHog } = require('posthog-node');
+const { PostHog } = require('posthog-node');
 
 const apiKey = process.env.POSTHOG_API_KEY;
 const apiHost = process.env.POSTHOG_HOST || 'https://app.posthog.com';

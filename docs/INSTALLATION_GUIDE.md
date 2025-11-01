@@ -55,10 +55,37 @@ Welcome! This guide helps you choose the right installation method for your need
 
 ---
 
-### 3. 🎛️ Hestia Control Panel Deployment
+### 3. 🌐 Heliohost VPS Installation (New!)
 
 **Use this if you want to:**
-- Use Hestia Control Panel (v1.9.4)
+- Deploy on Heliohost VPS with Hestia Control Panel
+- Follow Heliohost-specific instructions
+- Setup custom Node.js templates for Hestia
+- Complete end-to-end Heliohost deployment
+
+**👉 [Heliohost Installation Guide](HELIOHOST_INSTALLATION.md)**
+
+**What's Included:**
+- ✅ Heliohost VPS setup and access
+- ✅ Initial server configuration
+- ✅ Node.js, MongoDB, and PM2 installation
+- ✅ Custom Hestia templates for Node.js applications
+- ✅ Complete backend and frontend deployment
+- ✅ SSL certificate configuration via Hestia
+- ✅ Firewall and security setup
+- ✅ Automatic backup configuration
+- ✅ Maintenance and monitoring procedures
+- ✅ Comprehensive troubleshooting guide
+
+**Time Required:** 2-3 hours  
+**Skill Level:** Intermediate (step-by-step instructions provided)
+
+---
+
+### 4. 🎛️ General Hestia Control Panel Deployment
+
+**Use this if you want to:**
+- Use Hestia Control Panel (v1.9.4) on any VPS
 - Manage through a web interface
 - Prefer GUI over command line
 
@@ -75,7 +102,7 @@ Welcome! This guide helps you choose the right installation method for your need
 
 ---
 
-### 4. 💻 Local Development Setup
+### 5. 💻 Local Development Setup
 
 **Use this if you want to:**
 - Develop and test locally
@@ -98,18 +125,19 @@ Welcome! This guide helps you choose the right installation method for your need
 
 ## 📊 Comparison Table
 
-| Feature | VPS Installation | Docker | Hestia Panel | Local Dev |
-|---------|-----------------|--------|--------------|-----------|
-| **Best For** | Production | Production | Production | Development |
-| **Setup Time** | 1-2 hours | 30-45 min | 1-1.5 hours | 15-30 min |
-| **Skill Level** | Intermediate | Intermediate | Beginner | Beginner |
-| **SSL Certificate** | ✅ Included | Manual | ✅ Included | ❌ Not needed |
-| **Backups** | ✅ Automatic | Manual | Manual | ❌ Not needed |
-| **Monitoring** | ✅ Included | Manual | Partial | ❌ Not needed |
-| **Firewall** | ✅ Configured | Manual | ✅ Configured | ❌ Not needed |
-| **Updates** | Easy | Very Easy | Moderate | Very Easy |
-| **Resource Control** | Full | Full | Moderate | Full |
-| **GUI Management** | ❌ CLI only | ❌ CLI only | ✅ Yes | ❌ CLI only |
+| Feature | VPS Installation | Heliohost VPS | Docker | Hestia Panel | Local Dev |
+|---------|-----------------|---------------|--------|--------------|-----------|
+| **Best For** | Production | Production | Production | Production | Development |
+| **Setup Time** | 1-2 hours | 2-3 hours | 30-45 min | 1-1.5 hours | 15-30 min |
+| **Skill Level** | Intermediate | Intermediate | Intermediate | Beginner | Beginner |
+| **SSL Certificate** | ✅ Included | ✅ Included | Manual | ✅ Included | ❌ Not needed |
+| **Backups** | ✅ Automatic | ✅ Automatic | Manual | Manual | ❌ Not needed |
+| **Monitoring** | ✅ Included | ✅ Included | Manual | Partial | ❌ Not needed |
+| **Firewall** | ✅ Configured | ✅ Configured | Manual | ✅ Configured | ❌ Not needed |
+| **Updates** | Easy | Easy | Very Easy | Moderate | Very Easy |
+| **Resource Control** | Full | Full | Full | Moderate | Full |
+| **GUI Management** | ❌ CLI only | ✅ Hestia CP | ❌ CLI only | ✅ Yes | ❌ CLI only |
+| **Node.js Templates** | Manual | ✅ Included | N/A | Manual | N/A |
 
 ---
 
@@ -129,7 +157,11 @@ Welcome! This guide helps you choose the right installation method for your need
    - Yes, and I prefer Docker → Use [Docker Deployment](DEPLOYMENT.md#method-1-docker-deployment-recommended)
    - No, or prefer manual setup → Continue to question 4
 
-4. **Do you use Hestia Control Panel?**
+4. **Do you have Heliohost VPS?**
+   - Yes → Use [Heliohost Installation Guide](HELIOHOST_INSTALLATION.md) ⭐ Recommended
+   - No → Continue to question 5
+
+5. **Do you use Hestia Control Panel?**
    - Yes → Use [Hestia Deployment](DEPLOYMENT.md#method-2-manual-deployment-with-hestia)
    - No → Use [VPS Installation Guide](VPS_INSTALLATION.md) ⭐ **Recommended**
 

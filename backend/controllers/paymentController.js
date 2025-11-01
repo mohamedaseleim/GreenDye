@@ -286,6 +286,7 @@ exports.getInvoice = async (req, res) => {
  * Handle Stripe webhook events
  * POST /api/payments/webhook/stripe
  * Public (verified by Stripe signature)
+ * Note: StripeService.handleWebhook requires the full request object for signature verification
  */
 exports.stripeWebhook = async (req, res) => {
   try {
@@ -302,6 +303,7 @@ exports.stripeWebhook = async (req, res) => {
  * Handle PayPal webhook events
  * POST /api/payments/webhook/paypal
  * Public (should be verified by PayPal signature in production)
+ * Note: PayPalService.handleWebhook requires only the request body
  */
 exports.paypalWebhook = async (req, res) => {
   try {

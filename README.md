@@ -115,11 +115,17 @@ Choose the installation method that best fits your needs:
    - Includes security, SSL, backups, and monitoring
    - Perfect for Ubuntu 22.04 servers
 
-2. **🐳 Docker Deployment** - [Docker Guide](docs/DEPLOYMENT.md#method-1-docker-deployment-recommended)
+2. **🌐 Heliohost VPS** - [Heliohost Installation Guide](docs/HELIOHOST_INSTALLATION.md) ⭐ **New!**
+   - Complete guide specifically for Heliohost VPS
+   - Includes Hestia Control Panel configuration
+   - Node.js template setup and deployment
+   - SSL, firewall, and backup configuration
+
+3. **🐳 Docker Deployment** - [Docker Guide](docs/DEPLOYMENT.md#method-1-docker-deployment-recommended)
    - Quick production deployment
    - One-command setup
 
-3. **💻 Local Development** - [Quick Setup Guide](SETUP.md)
+4. **💻 Local Development** - [Quick Setup Guide](SETUP.md)
    - For developers and testing
    - Fast local environment setup
 
@@ -184,6 +190,14 @@ Follow our comprehensive [VPS Installation Guide](docs/VPS_INSTALLATION.md) whic
 - Security best practices
 - Automated backups
 - Monitoring and maintenance
+
+**For Heliohost VPS:**
+Use our specialized [Heliohost Installation Guide](docs/HELIOHOST_INSTALLATION.md) featuring:
+- Heliohost-specific VPS setup
+- Hestia Control Panel configuration
+- Custom Node.js templates
+- Complete deployment workflow
+- SSL, firewall, and maintenance
 
 **Quick Docker Deployment:**
 ```bash

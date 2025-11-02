@@ -187,11 +187,17 @@ exports.forgotPassword = async (req, res, next) => {
       console.log('Reset URL:', resetUrl);
     }
 
-    res.status(200).json({
+    const response = {
       success: true,
-      message: 'Password reset email sent',
-      resetToken // Remove in production
-    });
+      message: 'Password reset email sent'
+    };
+
+    // Only include resetToken in development for testing
+    if (process.env.NODE_ENV === 'development') {
+      response.resetToken = resetToken;
+    }
+
+    res.status(200).json(response);
   } catch (error) {
     if (user) {
       user.resetPasswordToken = undefined;

@@ -176,7 +176,7 @@ exports.getLeaderboard = async (req, res, next) => {
 exports.updateUserPoints = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { points } = req.body; // action parameter removed as it's not used
+    const { points } = req.body; // Note: 'action' parameter is accepted but not currently used in logic
 
     let leaderboardEntry = await LeaderboardEntry.findOne({
       user: userId,

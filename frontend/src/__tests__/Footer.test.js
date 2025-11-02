@@ -54,7 +54,7 @@ describe('Footer Component', () => {
     expect(aboutLink).toBeInTheDocument();
     expect(contactLink).toBeInTheDocument();
     
-    // Check that links use 'to' attribute (React Router) instead of 'href'
+    // Verify React Router has correctly set the href attributes for client-side navigation
     expect(coursesLink.closest('a')).toHaveAttribute('href', '/courses');
     expect(aboutLink.closest('a')).toHaveAttribute('href', '/about');
     expect(contactLink.closest('a')).toHaveAttribute('href', '/contact');
@@ -82,7 +82,7 @@ describe('Footer Component', () => {
     expect(verifyCertLink).toBeInTheDocument();
     expect(verifyTrainerLink).toBeInTheDocument();
     
-    // Check that links use 'to' attribute (React Router) instead of 'href'
+    // Verify React Router has correctly set the href attributes for client-side navigation
     expect(verifyCertLink.closest('a')).toHaveAttribute('href', '/verify/certificate');
     expect(verifyTrainerLink.closest('a')).toHaveAttribute('href', '/verify/trainer');
   });

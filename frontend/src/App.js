@@ -101,10 +101,12 @@ function App() {
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/forums" element={<Forum />} />
                   <Route path="/chat" element={<Chat />} />
+                  <Route path="/verify/certificate" element={<VerifyCertificate />} />
                   <Route
                     path="/verify/certificate/:certificateId"
                     element={<VerifyCertificate />}
                   />
+                  <Route path="/verify/trainer" element={<VerifyTrainer />} />
                   <Route
                     path="/verify/trainer/:trainerId"
                     element={<VerifyTrainer />}

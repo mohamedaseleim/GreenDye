@@ -1,7 +1,7 @@
 const { Recommendation, UserPreference } = require('../models/Recommendation');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
-const User = require('../models/User');
+// const User = require('../models/User'); // Unused import
 
 // @desc    Get personalized course recommendations
 // @route   GET /api/recommendations

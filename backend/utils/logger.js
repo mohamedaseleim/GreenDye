@@ -3,28 +3,30 @@
  * Provides consistent logging with environment awareness
  */
 
-/* eslint-disable no-console */
 const logger = {
   info: (...args) => {
     if (process.env.NODE_ENV !== 'test') {
-      console.log(...args);
+      console.log(...args); // eslint-disable-line no-console
     }
   },
 
   error: (...args) => {
-    console.error(...args);
+    if (process.env.NODE_ENV !== 'test') {
+      console.error(...args); // eslint-disable-line no-console
+    }
   },
 
   warn: (...args) => {
-    console.warn(...args);
+    if (process.env.NODE_ENV !== 'test') {
+      console.warn(...args); // eslint-disable-line no-console
+    }
   },
 
   debug: (...args) => {
     if (process.env.NODE_ENV === 'development') {
-      console.log('[DEBUG]', ...args);
+      console.log('[DEBUG]', ...args); // eslint-disable-line no-console
     }
   },
 };
-/* eslint-enable no-console */
 
 module.exports = logger;

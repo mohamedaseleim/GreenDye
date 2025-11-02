@@ -5,7 +5,7 @@ const Enrollment = require('../models/Enrollment');
 // @desc    Get forum posts
 // @route   GET /api/forums
 // @access  Public
-exports.getForumPosts = async (req, res, next) => {
+exports.getForumPosts = async (req, res, _next) => {
   try {
     const {
       courseId,
@@ -56,7 +56,7 @@ exports.getForumPosts = async (req, res, next) => {
 // @desc    Get single forum post
 // @route   GET /api/forums/:id
 // @access  Public
-exports.getForumPost = async (req, res, next) => {
+exports.getForumPost = async (req, res, _next) => {
   try {
     const post = await ForumPost.findById(req.params.id)
       .populate('author', 'name avatar role')
@@ -92,7 +92,7 @@ exports.getForumPost = async (req, res, next) => {
 // @desc    Create forum post
 // @route   POST /api/forums
 // @access  Private
-exports.createForumPost = async (req, res, next) => {
+exports.createForumPost = async (req, res, _next) => {
   try {
     const { title, content, courseId, lessonId, category, tags } = req.body;
 
@@ -153,7 +153,7 @@ exports.createForumPost = async (req, res, next) => {
 // @desc    Update forum post
 // @route   PUT /api/forums/:id
 // @access  Private
-exports.updateForumPost = async (req, res, next) => {
+exports.updateForumPost = async (req, res, _next) => {
   try {
     let post = await ForumPost.findById(req.params.id);
 
@@ -203,7 +203,7 @@ exports.updateForumPost = async (req, res, next) => {
 // @desc    Delete forum post
 // @route   DELETE /api/forums/:id
 // @access  Private
-exports.deleteForumPost = async (req, res, next) => {
+exports.deleteForumPost = async (req, res, _next) => {
   try {
     const post = await ForumPost.findById(req.params.id);
 
@@ -241,7 +241,7 @@ exports.deleteForumPost = async (req, res, next) => {
 // @desc    Add reply to forum post
 // @route   POST /api/forums/:id/replies
 // @access  Private
-exports.addReply = async (req, res, next) => {
+exports.addReply = async (req, res, _next) => {
   try {
     const { content } = req.body;
     const post = await ForumPost.findById(req.params.id);
@@ -288,7 +288,7 @@ exports.addReply = async (req, res, next) => {
 // @desc    Like forum post
 // @route   POST /api/forums/:id/like
 // @access  Private
-exports.likePost = async (req, res, next) => {
+exports.likePost = async (req, res, _next) => {
   try {
     const post = await ForumPost.findById(req.params.id);
 
@@ -335,7 +335,7 @@ exports.likePost = async (req, res, next) => {
 // @desc    Mark post as resolved
 // @route   POST /api/forums/:id/resolve
 // @access  Private
-exports.markAsResolved = async (req, res, next) => {
+exports.markAsResolved = async (req, res, _next) => {
   try {
     const post = await ForumPost.findById(req.params.id);
 

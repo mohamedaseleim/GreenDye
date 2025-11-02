@@ -82,7 +82,7 @@ exports.login = async (req, res, next) => {
 // @desc    Logout user
 // @route   GET /api/auth/logout
 // @access  Private
-exports.logout = async (req, res, next) => {
+exports.logout = async (req, res, _next) => {
   res.status(200).json({
     success: true,
     message: 'User logged out successfully',

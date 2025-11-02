@@ -5,7 +5,7 @@ const { logLearningActivity, updateLeaderboardStreak } = require('../services/le
 // @desc Update lesson progress
 // @route PUT /api/progress
 // @access Private
-exports.updateLessonProgress = asyncHandler(async (req, res, next) => {
+exports.updateLessonProgress = asyncHandler(async (req, res, _next) => {
   const { courseId, lessonId, completed, completionTime, quizScore } = req.body;
   if (!courseId || !lessonId) {
     return res.status(400).json({ success: false, error: 'Course and lesson are required' });
@@ -88,7 +88,7 @@ exports.updateLessonProgress = asyncHandler(async (req, res, next) => {
 // @desc Get progress for a course
 // @route GET /api/progress/:courseId
 // @access Private
-exports.getProgress = asyncHandler(async (req, res, next) => {
+exports.getProgress = asyncHandler(async (req, res, _next) => {
   const courseId = req.params.courseId;
   const progress = await Progress.findOne({ user: req.user.id, course: courseId }).populate({
     path: 'lessonProgress.lesson',

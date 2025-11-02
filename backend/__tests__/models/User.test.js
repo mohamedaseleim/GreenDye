@@ -104,7 +104,7 @@ describe('User Model', () => {
         password: 'password123'
       });
 
-      const token = user.getSignedJwtToken();
+      const token = user.generateAuthToken();
       expect(token).toBeDefined();
       expect(typeof token).toBe('string');
     });
@@ -118,7 +118,7 @@ describe('User Model', () => {
       });
 
       const userWithPassword = await User.findById(user._id).select('+password');
-      const isMatch = await userWithPassword.matchPassword(password);
+      const isMatch = await userWithPassword.comparePassword(password);
       expect(isMatch).toBe(true);
     });
 
@@ -130,7 +130,7 @@ describe('User Model', () => {
       });
 
       const userWithPassword = await User.findById(user._id).select('+password');
-      const isMatch = await userWithPassword.matchPassword('wrongpassword');
+      const isMatch = await userWithPassword.comparePassword('wrongpassword');
       expect(isMatch).toBe(false);
     });
   });

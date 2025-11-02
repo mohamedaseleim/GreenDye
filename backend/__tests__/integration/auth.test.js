@@ -143,7 +143,7 @@ describe('Auth API Endpoints', () => {
         password: 'password123'
       });
 
-      const token = user.getSignedJwtToken();
+      const token = user.generateAuthToken();
 
       const response = await request(app)
         .get('/api/auth/me')
@@ -180,7 +180,7 @@ describe('Auth API Endpoints', () => {
         password: 'password123'
       });
 
-      const token = user.getSignedJwtToken();
+      const token = user.generateAuthToken();
       const updates = {
         name: 'Updated Name',
         phone: '+1234567890'
@@ -219,7 +219,7 @@ describe('Auth API Endpoints', () => {
         password: 'oldpassword'
       });
 
-      const token = user.getSignedJwtToken();
+      const token = user.generateAuthToken();
       const passwordData = {
         currentPassword: 'oldpassword',
         newPassword: 'newpassword123'
@@ -241,7 +241,7 @@ describe('Auth API Endpoints', () => {
         password: 'oldpassword'
       });
 
-      const token = user.getSignedJwtToken();
+      const token = user.generateAuthToken();
       const passwordData = {
         currentPassword: 'wrongpassword',
         newPassword: 'newpassword123'

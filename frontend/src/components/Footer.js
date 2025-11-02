@@ -1,5 +1,6 @@
 import React from 'react';
 import { Box, Container, Typography, Link, Grid } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 
 const Footer = () => {
@@ -32,13 +33,13 @@ const Footer = () => {
             <Typography variant="h6" gutterBottom>
               Quick Links
             </Typography>
-            <Link href="/courses" color="inherit" display="block">
+            <Link component={RouterLink} to="/courses" color="inherit" display="block">
               {t('courses')}
             </Link>
-            <Link href="/about" color="inherit" display="block">
+            <Link component={RouterLink} to="/about" color="inherit" display="block">
               {t('about')}
             </Link>
-            <Link href="/contact" color="inherit" display="block">
+            <Link component={RouterLink} to="/contact" color="inherit" display="block">
               {t('contact')}
             </Link>
           </Grid>
@@ -46,10 +47,10 @@ const Footer = () => {
             <Typography variant="h6" gutterBottom>
               Verification
             </Typography>
-            <Link href="/verify/certificate" color="inherit" display="block">
+            <Link component={RouterLink} to="/verify/certificate" color="inherit" display="block">
               {t('verifyCertificate')}
             </Link>
-            <Link href="/verify/trainer" color="inherit" display="block">
+            <Link component={RouterLink} to="/verify/trainer" color="inherit" display="block">
               {t('verifyTrainer')}
             </Link>
           </Grid>

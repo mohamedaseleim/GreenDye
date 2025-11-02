@@ -162,8 +162,9 @@ exports.updatePassword = async (req, res, next) => {
 // @route   POST /api/auth/forgot-password
 // @access  Public
 exports.forgotPassword = async (req, res, next) => {
+  let user;
   try {
-    const user = await User.findOne({ email: req.body.email });
+    user = await User.findOne({ email: req.body.email });
 
     if (!user) {
       return res.status(404).json({
@@ -180,22 +181,29 @@ exports.forgotPassword = async (req, res, next) => {
     // Create reset url
     const resetUrl = `${process.env.FRONTEND_URL}/reset-password/${resetToken}`;
 
-    const message = `You are receiving this email because you (or someone else) has requested the reset of a password. Please make a PUT request to: \n\n ${resetUrl}`;
-
     // TODO: Send email using email service
-    console.log('Reset URL:', resetUrl);
+    // In development, the reset URL can be logged for testing purposes
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Reset URL:', resetUrl);
+    }
 
-    res.status(200).json({
+    const response = {
       success: true,
-      message: 'Password reset email sent',
-      resetToken // Remove in production
-    });
+      message: 'Password reset email sent'
+    };
+
+    // Only include resetToken in development for testing
+    if (process.env.NODE_ENV === 'development') {
+      response.resetToken = resetToken;
+    }
+
+    res.status(200).json(response);
   } catch (error) {
-    user.resetPasswordToken = undefined;
-    user.resetPasswordExpire = undefined;
-
-    await user.save({ validateBeforeSave: false });
-
+    if (user) {
+      user.resetPasswordToken = undefined;
+      user.resetPasswordExpire = undefined;
+      await user.save({ validateBeforeSave: false });
+    }
     next(error);
   }
 };

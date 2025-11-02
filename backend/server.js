@@ -182,20 +182,28 @@ const io = require('socket.io')(server, {
 });
 
 io.on('connection', (socket) => {
-  console.log('New client connected:', socket.id);
+  if (process.env.NODE_ENV === 'development') {
+    console.log('New client connected:', socket.id);
+  }
 
   socket.on('join-course', (courseId) => {
     socket.join(`course-${courseId}`);
-    console.log(`User joined course room: ${courseId}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`User joined course room: ${courseId}`);
+    }
   });
 
   socket.on('leave-course', (courseId) => {
     socket.leave(`course-${courseId}`);
-    console.log(`User left course room: ${courseId}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`User left course room: ${courseId}`);
+    }
   });
 
   socket.on('disconnect', () => {
-    console.log('Client disconnected:', socket.id);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Client disconnected:', socket.id);
+    }
   });
 });
 

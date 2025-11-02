@@ -308,7 +308,7 @@ exports.stripeWebhook = async (req, res) => {
 exports.paypalWebhook = async (req, res) => {
   try {
     const service = new PayPalService();
-    const event = await service.handleWebhook(req.body);
+    await service.handleWebhook(req.body);
     res.status(200).json({ success: true, received: true });
   } catch (error) {
     console.error('PayPal webhook error:', error);

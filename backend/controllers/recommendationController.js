@@ -1,7 +1,7 @@
 const { Recommendation, UserPreference } = require('../models/Recommendation');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
-const User = require('../models/User');
+// const User = require('../models/User'); // Unused import
 
 // @desc    Get personalized course recommendations
 // @route   GET /api/recommendations
@@ -113,7 +113,7 @@ exports.dismissRecommendation = async (req, res, next) => {
     await recommendation.save();
     
     // Update user preferences
-    let preferences = await UserPreference.findOne({ user: req.user.id });
+    const preferences = await UserPreference.findOne({ user: req.user.id });
     if (preferences) {
       if (!preferences.dismissedRecommendations.includes(recommendation.course)) {
         preferences.dismissedRecommendations.push(recommendation.course);

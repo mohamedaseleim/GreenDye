@@ -1,7 +1,7 @@
 const { ExternalLMS, DataSyncLog, SCORMPackage } = require('../models/LMSIntegration');
 const Course = require('../models/Course');
-const User = require('../models/User');
-const Enrollment = require('../models/Enrollment');
+// const User = require('../models/User'); // Unused import
+// const Enrollment = require('../models/Enrollment'); // Unused import
 
 // @desc    Create LMS integration
 // @route   POST /api/lms-integration
@@ -352,17 +352,17 @@ exports.exportCourse = async (req, res, next) => {
 };
 
 // Helper functions for sync operations
-async function syncCourses(integration, direction) {
+async function syncCourses(_integration, _direction) {
   // Placeholder - implement actual sync logic based on LMS type
   return Math.floor(Math.random() * 10) + 1;
 }
 
-async function syncUsers(integration, direction) {
+async function syncUsers(_integration, _direction) {
   // Placeholder - implement actual sync logic based on LMS type
   return Math.floor(Math.random() * 50) + 1;
 }
 
-async function syncEnrollments(integration, direction) {
+async function syncEnrollments(_integration, _direction) {
   // Placeholder - implement actual sync logic based on LMS type
   return Math.floor(Math.random() * 100) + 1;
 }

@@ -611,10 +611,10 @@ We value your feedback:
 
 ## Terms & Policies
 
-- [Terms of Service](link)
-- [Privacy Policy](link)
-- [Refund Policy](link)
-- [Code of Conduct](link)
+- [Terms of Service](TERMS_OF_SERVICE.md)
+- [Privacy Policy](PRIVACY_POLICY.md)
+- [Refund Policy](REFUND_POLICY.md)
+- [Code of Conduct](CODE_OF_CONDUCT.md)
 
 ---
 

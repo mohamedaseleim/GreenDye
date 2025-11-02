@@ -27,7 +27,7 @@ const transporter = nodemailer.createTransport({
 // @desc    Get user notifications
 // @route   GET /api/notifications
 // @access  Private
-exports.getNotifications = async (req, res, next) => {
+exports.getNotifications = async (req, res, _next) => {
   try {
     const { page = 1, limit = 20, unreadOnly = false } = req.query;
 
@@ -69,7 +69,7 @@ exports.getNotifications = async (req, res, next) => {
 // @desc    Mark notification as read
 // @route   PUT /api/notifications/:id/read
 // @access  Private
-exports.markAsRead = async (req, res, next) => {
+exports.markAsRead = async (req, res, _next) => {
   try {
     const notification = await Notification.findById(req.params.id);
 
@@ -109,7 +109,7 @@ exports.markAsRead = async (req, res, next) => {
 // @desc    Mark all notifications as read
 // @route   PUT /api/notifications/read-all
 // @access  Private
-exports.markAllAsRead = async (req, res, next) => {
+exports.markAllAsRead = async (req, res, _next) => {
   try {
     await Notification.updateMany(
       { user: req.user.id, isRead: false },
@@ -133,7 +133,7 @@ exports.markAllAsRead = async (req, res, next) => {
 // @desc    Delete notification
 // @route   DELETE /api/notifications/:id
 // @access  Private
-exports.deleteNotification = async (req, res, next) => {
+exports.deleteNotification = async (req, res, _next) => {
   try {
     const notification = await Notification.findById(req.params.id);
 
@@ -171,7 +171,7 @@ exports.deleteNotification = async (req, res, next) => {
 // @desc    Delete all read notifications
 // @route   DELETE /api/notifications/read
 // @access  Private
-exports.deleteAllRead = async (req, res, next) => {
+exports.deleteAllRead = async (req, res, _next) => {
   try {
     await Notification.deleteMany({
       user: req.user.id,
@@ -195,7 +195,7 @@ exports.deleteAllRead = async (req, res, next) => {
 // @desc    Create and send notification
 // @route   POST /api/notifications
 // @access  Private (Admin only)
-exports.createNotification = async (req, res, next) => {
+exports.createNotification = async (req, res, _next) => {
   try {
     const {
       userId,

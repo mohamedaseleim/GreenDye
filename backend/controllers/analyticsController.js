@@ -10,7 +10,7 @@ const posthog = require('../services/posthog');
 // @desc    Track analytics event
 // @route   POST /api/analytics/track
 // @access  Private
-exports.trackEvent = async (req, res, next) => {
+exports.trackEvent = async (req, res, _next) => {
   try {
     const {
       eventType,
@@ -87,7 +87,7 @@ exports.trackEvent = async (req, res, next) => {
 // @desc    Get platform statistics (Admin)
 // @route   GET /api/analytics/platform
 // @access  Private/Admin
-exports.getPlatformStats = async (req, res, next) => {
+exports.getPlatformStats = async (req, res, _next) => {
   try {
     const { startDate, endDate } = req.query;
     const dateFilter = {};
@@ -201,7 +201,7 @@ exports.getPlatformStats = async (req, res, next) => {
 // @desc    Get course analytics (Trainer/Admin)
 // @route   GET /api/analytics/course/:courseId
 // @access  Private/Trainer/Admin
-exports.getCourseAnalytics = async (req, res, next) => {
+exports.getCourseAnalytics = async (req, res, _next) => {
   try {
     const { courseId } = req.params;
 
@@ -322,7 +322,7 @@ exports.getCourseAnalytics = async (req, res, next) => {
 // @desc    Get user learning analytics
 // @route   GET /api/analytics/user
 // @access  Private
-exports.getUserAnalytics = async (req, res, next) => {
+exports.getUserAnalytics = async (req, res, _next) => {
   try {
     const userId = req.user.id;
 

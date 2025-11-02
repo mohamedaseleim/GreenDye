@@ -143,7 +143,7 @@ describe('Auth API Endpoints', () => {
         password: 'password123'
       });
 
-      const token = user.getSignedJwtToken();
+      const token = user.generateAuthToken();
 
       const response = await request(app)
         .get('/api/auth/me')
@@ -172,7 +172,7 @@ describe('Auth API Endpoints', () => {
     });
   });
 
-  describe('PUT /api/auth/update-profile', () => {
+  describe('PUT /api/auth/profile', () => {
     it('should update user profile', async () => {
       const user = await User.create({
         name: 'Test User',
@@ -180,14 +180,14 @@ describe('Auth API Endpoints', () => {
         password: 'password123'
       });
 
-      const token = user.getSignedJwtToken();
+      const token = user.generateAuthToken();
       const updates = {
         name: 'Updated Name',
         phone: '+1234567890'
       };
 
       const response = await request(app)
-        .put('/api/auth/update-profile')
+        .put('/api/auth/profile')
         .set('Authorization', `Bearer ${token}`)
         .send(updates)
         .expect(200);
@@ -203,7 +203,7 @@ describe('Auth API Endpoints', () => {
       };
 
       const response = await request(app)
-        .put('/api/auth/update-profile')
+        .put('/api/auth/profile')
         .send(updates)
         .expect(401);
 
@@ -211,7 +211,7 @@ describe('Auth API Endpoints', () => {
     });
   });
 
-  describe('PUT /api/auth/change-password', () => {
+  describe('PUT /api/auth/password', () => {
     it('should change password with correct current password', async () => {
       const user = await User.create({
         name: 'Test User',
@@ -219,14 +219,14 @@ describe('Auth API Endpoints', () => {
         password: 'oldpassword'
       });
 
-      const token = user.getSignedJwtToken();
+      const token = user.generateAuthToken();
       const passwordData = {
         currentPassword: 'oldpassword',
         newPassword: 'newpassword123'
       };
 
       const response = await request(app)
-        .put('/api/auth/change-password')
+        .put('/api/auth/password')
         .set('Authorization', `Bearer ${token}`)
         .send(passwordData)
         .expect(200);
@@ -241,14 +241,14 @@ describe('Auth API Endpoints', () => {
         password: 'oldpassword'
       });
 
-      const token = user.getSignedJwtToken();
+      const token = user.generateAuthToken();
       const passwordData = {
         currentPassword: 'wrongpassword',
         newPassword: 'newpassword123'
       };
 
       const response = await request(app)
-        .put('/api/auth/change-password')
+        .put('/api/auth/password')
         .set('Authorization', `Bearer ${token}`)
         .send(passwordData)
         .expect(401);

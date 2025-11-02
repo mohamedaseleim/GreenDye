@@ -1,5 +1,6 @@
 const Course = require('../models/Course');
 const currencyService = require('../services/currencyService');
+const logger = require('../utils/logger');
 
 // @desc    Get all courses
 // @route   GET /api/courses
@@ -47,7 +48,7 @@ exports.getCourses = async (req, res, next) => {
               courseDoc.currency = target;
             } catch (err) {
               // Log conversion errors and leave original price
-              console.error(
+              logger.error(
                 'Currency conversion failed for course',
                 courseDoc._id,
                 err.message || err
@@ -106,7 +107,7 @@ exports.getCourse = async (req, res, next) => {
           course.price = parseFloat(converted.toFixed(2));
           course.currency = target;
         } catch (err) {
-          console.error(
+          logger.error(
             'Currency conversion failed for course',
             course._id,
             err.message || err

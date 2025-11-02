@@ -1,4 +1,5 @@
 const Converter = require('currency-converter-lt');
+const logger = require('./logger');
 
 /**
  * Convert an amount from one currency to another.  If the conversion
@@ -16,7 +17,7 @@ async function convertCurrency(amount, fromCurrency, toCurrency) {
     const result = await converter.convert();
     return Number(result);
   } catch (error) {
-    console.error('Currency conversion error:', error);
+    logger.error('Currency conversion error:', error);
     return amount;
   }
 }

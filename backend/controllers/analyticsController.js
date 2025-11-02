@@ -6,6 +6,7 @@ const Enrollment = require('../models/Enrollment');
 const Certificate = require('../models/Certificate');
 const Payment = require('../models/Payment');
 const posthog = require('../services/posthog');
+const logger = require('../utils/logger');
 
 // @desc    Track analytics event
 // @route   POST /api/analytics/track
@@ -66,7 +67,7 @@ exports.trackEvent = async (req, res, _next) => {
           }
         });
       } catch (phError) {
-        console.error('PostHog capture error:', phError);
+        logger.error('PostHog capture error:', phError);
       }
     }
 
@@ -75,7 +76,7 @@ exports.trackEvent = async (req, res, _next) => {
       data: analytics
     });
   } catch (error) {
-    console.error('Track event error:', error);
+    logger.error('Track event error:', error);
     res.status(500).json({
       success: false,
       message: 'Error tracking event',
@@ -189,7 +190,7 @@ exports.getPlatformStats = async (req, res, _next) => {
       }
     });
   } catch (error) {
-    console.error('Get platform stats error:', error);
+    logger.error('Get platform stats error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching platform statistics',
@@ -310,7 +311,7 @@ exports.getCourseAnalytics = async (req, res, _next) => {
       }
     });
   } catch (error) {
-    console.error('Get course analytics error:', error);
+    logger.error('Get course analytics error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching course analytics',
@@ -392,7 +393,7 @@ exports.getUserAnalytics = async (req, res, _next) => {
       }
     });
   } catch (error) {
-    console.error('Get user analytics error:', error);
+    logger.error('Get user analytics error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching user analytics',

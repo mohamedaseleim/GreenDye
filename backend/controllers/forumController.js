@@ -1,4 +1,5 @@
 const ForumPost = require('../models/Forum');
+const logger = require('../utils/logger');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 
@@ -44,7 +45,7 @@ exports.getForumPosts = async (req, res, _next) => {
       data: posts
     });
   } catch (error) {
-    console.error('Get forum posts error:', error);
+    logger.error('Get forum posts error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching forum posts',
@@ -80,7 +81,7 @@ exports.getForumPost = async (req, res, _next) => {
       data: post
     });
   } catch (error) {
-    console.error('Get forum post error:', error);
+    logger.error('Get forum post error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching forum post',
@@ -141,7 +142,7 @@ exports.createForumPost = async (req, res, _next) => {
       data: populatedPost
     });
   } catch (error) {
-    console.error('Create forum post error:', error);
+    logger.error('Create forum post error:', error);
     res.status(500).json({
       success: false,
       message: 'Error creating forum post',
@@ -191,7 +192,7 @@ exports.updateForumPost = async (req, res, _next) => {
       data: post
     });
   } catch (error) {
-    console.error('Update forum post error:', error);
+    logger.error('Update forum post error:', error);
     res.status(500).json({
       success: false,
       message: 'Error updating forum post',
@@ -229,7 +230,7 @@ exports.deleteForumPost = async (req, res, _next) => {
       message: 'Forum post deleted successfully'
     });
   } catch (error) {
-    console.error('Delete forum post error:', error);
+    logger.error('Delete forum post error:', error);
     res.status(500).json({
       success: false,
       message: 'Error deleting forum post',
@@ -276,7 +277,7 @@ exports.addReply = async (req, res, _next) => {
       data: updatedPost.replies[updatedPost.replies.length - 1]
     });
   } catch (error) {
-    console.error('Add reply error:', error);
+    logger.error('Add reply error:', error);
     res.status(500).json({
       success: false,
       message: 'Error adding reply',
@@ -323,7 +324,7 @@ exports.likePost = async (req, res, _next) => {
       }
     });
   } catch (error) {
-    console.error('Like post error:', error);
+    logger.error('Like post error:', error);
     res.status(500).json({
       success: false,
       message: 'Error liking post',
@@ -372,7 +373,7 @@ exports.markAsResolved = async (req, res, _next) => {
       }
     });
   } catch (error) {
-    console.error('Mark as resolved error:', error);
+    logger.error('Mark as resolved error:', error);
     res.status(500).json({
       success: false,
       message: 'Error marking post as resolved',

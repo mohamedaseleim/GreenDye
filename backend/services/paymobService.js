@@ -1,4 +1,5 @@
 const axios = require('axios');
+const logger = require('../utils/logger');
 const PaymentService = require('./paymentService');
 
 /**
@@ -17,7 +18,7 @@ class PaymobService extends PaymentService {
     this.integrationId = process.env.PAYMOB_INTEGRATION_ID;
     this.iframeId = process.env.PAYMOB_IFRAME_ID;
     if (!this.apiKey || !this.integrationId || !this.iframeId) {
-      console.warn('PaymobService: missing PAYMOB_API_KEY, PAYMOB_INTEGRATION_ID or PAYMOB_IFRAME_ID environment variables');
+      logger.warn('PaymobService: missing PAYMOB_API_KEY, PAYMOB_INTEGRATION_ID or PAYMOB_IFRAME_ID environment variables');
     }
   }
 
@@ -134,7 +135,7 @@ class PaymobService extends PaymentService {
         paymentToken,
       };
     } catch (error) {
-      console.error('Error creating Paymob checkout:', error.response?.data || error.message);
+      logger.error('Error creating Paymob checkout:', error.response?.data || error.message);
       throw new Error('Failed to create Paymob checkout');
     }
   }

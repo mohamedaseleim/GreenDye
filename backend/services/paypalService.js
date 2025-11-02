@@ -1,4 +1,5 @@
 const PaymentService = require('./paymentService');
+const logger = require('../utils/logger');
 const paypal = require('@paypal/checkout-server-sdk');
 const Course = require('../models/Course');
 const Payment = require('../models/Payment');
@@ -176,7 +177,7 @@ class PayPalService extends PaymentService {
         }
       }
     } catch (error) {
-      console.error('PayPal webhook handling error:', error);
+      logger.error('PayPal webhook handling error:', error);
     }
     return body;
   }
@@ -226,7 +227,7 @@ class PayPalService extends PaymentService {
       });
       return refund.result;
     } catch (error) {
-      console.error('PayPal refund error:', error);
+      logger.error('PayPal refund error:', error);
       throw new Error('Error processing PayPal refund');
     }
   }

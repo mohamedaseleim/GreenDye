@@ -1,4 +1,5 @@
 const { Badge, UserAchievement, LeaderboardEntry } = require('../models/Gamification');
+const logger = require('../utils/logger');
 // const User = require('../models/User'); // Unused import
 const Enrollment = require('../models/Enrollment');
 const Certificate = require('../models/Certificate');
@@ -208,7 +209,7 @@ exports.updateUserPoints = async (req, res, next) => {
 
       leaderboardEntry = updatedEntry;
     } catch (e) {
-      console.error('Error updating streak via learningStreakService:', e);
+      logger.error('Error updating streak via learningStreakService:', e);
       // Fallback: directly add points and recalc level
       leaderboardEntry.points += points;
       leaderboardEntry.level = Math.floor(leaderboardEntry.points / 100) + 1;

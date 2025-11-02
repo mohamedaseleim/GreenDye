@@ -1,4 +1,5 @@
 const Payment = require('../models/Payment');
+const logger = require('../utils/logger');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const FawryService = require('../services/fawryService');
@@ -86,7 +87,7 @@ exports.createCheckout = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Checkout error:', error);
+    logger.error('Checkout error:', error);
     res.status(500).json({ success: false, message: 'Error creating checkout session', error: error.message });
   }
 };
@@ -140,13 +141,13 @@ exports.verifyPayment = async (req, res) => {
         await sendInvoiceEmail(payment.user, payment, payment.course, filePath);
       } catch (invoiceErr) {
         // log invoice errors but do not block payment verification
-        console.error('Invoice generation/email error:', invoiceErr);
+        logger.error('Invoice generation/email error:', invoiceErr);
       }
     }
 
     res.status(200).json({ success: true, data: payment });
   } catch (error) {
-    console.error('Payment verification error:', error);
+    logger.error('Payment verification error:', error);
     res.status(500).json({ success: false, message: 'Error verifying payment', error: error.message });
   }
 };
@@ -163,7 +164,7 @@ exports.getUserPayments = async (req, res) => {
       .sort('-createdAt');
     res.status(200).json({ success: true, count: payments.length, data: payments });
   } catch (error) {
-    console.error('Get payments error:', error);
+    logger.error('Get payments error:', error);
     res.status(500).json({ success: false, message: 'Error fetching payments', error: error.message });
   }
 };
@@ -235,7 +236,7 @@ exports.requestRefund = async (req, res) => {
       data: refundRequest
     });
   } catch (error) {
-    console.error('Refund request error:', error);
+    logger.error('Refund request error:', error);
     res.status(500).json({ success: false, message: 'Error processing refund request', error: error.message });
   }
 };
@@ -277,7 +278,7 @@ exports.getInvoice = async (req, res) => {
       },
     });
   } catch (error) {
-    console.error('Get invoice error:', error);
+    logger.error('Get invoice error:', error);
     res.status(500).json({ success: false, message: 'Error fetching invoice', error: error.message });
   }
 };
@@ -294,7 +295,7 @@ exports.stripeWebhook = async (req, res) => {
     const event = await service.handleWebhook(req);
     res.status(200).json({ success: true, received: true, eventType: event.type });
   } catch (error) {
-    console.error('Stripe webhook error:', error);
+    logger.error('Stripe webhook error:', error);
     res.status(400).json({ success: false, message: error.message });
   }
 };
@@ -311,7 +312,7 @@ exports.paypalWebhook = async (req, res) => {
     await service.handleWebhook(req.body);
     res.status(200).json({ success: true, received: true });
   } catch (error) {
-    console.error('PayPal webhook error:', error);
+    logger.error('PayPal webhook error:', error);
     res.status(400).json({ success: false, message: error.message });
   }
 };

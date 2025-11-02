@@ -8,21 +8,22 @@ const mongoose = require('mongoose');
 const User = require('./models/User');
 const Course = require('./models/Course');
 const Trainer = require('./models/Trainer');
+const logger = require('./utils/logger');
 
 // Connect to database
 mongoose.connect(process.env.MONGODB_URI, {
   useNewUrlParser: true,
   useUnifiedTopology: true,
 })
-.then(() => console.log('✅ Connected to MongoDB'))
+.then(() => logger.info('✅ Connected to MongoDB'))
 .catch(err => {
-  console.error('❌ MongoDB connection error:', err);
+  logger.error('❌ MongoDB connection error:', err);
   process.exit(1);
 });
 
 const seedData = async () => {
   try {
-    console.log('🌱 Seeding database with sample data...');
+    logger.info('🌱 Seeding database with sample data...');
 
     // Clear existing data (optional - comment out if you want to keep existing data)
     // await User.deleteMany({});
@@ -39,7 +40,7 @@ const seedData = async () => {
       isVerified: true,
       isActive: true
     });
-    console.log('✅ Admin user created:', adminUser.email);
+    logger.info('✅ Admin user created:', adminUser.email);
 
     // Create Trainer User
     const trainerUser = await User.create({
@@ -51,7 +52,7 @@ const seedData = async () => {
       isVerified: true,
       isActive: true
     });
-    console.log('✅ Trainer user created:', trainerUser.email);
+    logger.info('✅ Trainer user created:', trainerUser.email);
 
     // Create Student User
     const studentUser = await User.create({
@@ -63,7 +64,7 @@ const seedData = async () => {
       isVerified: true,
       isActive: true
     });
-    console.log('✅ Student user created:', studentUser.email);
+    logger.info('✅ Student user created:', studentUser.email);
 
     // Create Trainer Profile
     const trainer = await Trainer.create({
@@ -88,7 +89,7 @@ const seedData = async () => {
       isVerified: true,
       isActive: true
     });
-    console.log('✅ Trainer profile created:', trainer.trainerId);
+    logger.info('✅ Trainer profile created:', trainer.trainerId);
 
     // Create Sample Courses
     const course1 = await Course.create({
@@ -128,7 +129,7 @@ const seedData = async () => {
       publishDate: new Date(),
       deliveryMode: 'asynchronous'
     });
-    console.log('✅ Course created:', course1.title.get('en'));
+    logger.info('✅ Course created:', course1.title.get('en'));
 
     const course2 = await Course.create({
       title: {
@@ -156,18 +157,18 @@ const seedData = async () => {
       publishDate: new Date(),
       deliveryMode: 'hybrid'
     });
-    console.log('✅ Course created:', course2.title.get('en'));
+    logger.info('✅ Course created:', course2.title.get('en'));
 
-    console.log('\n✅ Database seeded successfully!');
-    console.log('\n📋 Sample Accounts:');
-    console.log('Admin: admin@greendye.com / admin123');
-    console.log('Trainer: trainer@greendye.com / trainer123');
-    console.log('Student: student@greendye.com / student123');
-    console.log('\n🚀 You can now start the application!');
+    logger.info('\n✅ Database seeded successfully!');
+    logger.info('\n📋 Sample Accounts:');
+    logger.info('Admin: admin@greendye.com / admin123');
+    logger.info('Trainer: trainer@greendye.com / trainer123');
+    logger.info('Student: student@greendye.com / student123');
+    logger.info('\n🚀 You can now start the application!');
 
     process.exit(0);
   } catch (error) {
-    console.error('❌ Error seeding database:', error);
+    logger.error('❌ Error seeding database:', error);
     process.exit(1);
   }
 };

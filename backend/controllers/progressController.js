@@ -1,4 +1,5 @@
 const asyncHandler = require('express-async-handler');
+const logger = require('../utils/logger');
 const Progress = require('../models/Progress');
 const { logLearningActivity, updateLeaderboardStreak } = require('../services/learningStreakService');
 
@@ -79,7 +80,7 @@ exports.updateLessonProgress = asyncHandler(async (req, res, _next) => {
     await updateLeaderboardStreak(req.user.id);
   } catch (err) {
     // Silently ignore errors in auxiliary services to avoid breaking progress updates
-    console.error('Error updating learning streak:', err);
+    logger.error('Error updating learning streak:', err);
   }
 
   res.status(200).json({ success: true, data: progress });

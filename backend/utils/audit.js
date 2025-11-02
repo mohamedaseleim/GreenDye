@@ -1,4 +1,5 @@
 const AuditTrail = require('../models/AuditTrail');
+const logger = require('./logger');
 
 /**
  * Log an audit entry for admin or user actions.
@@ -18,7 +19,7 @@ const logAudit = async (userId, action, targetType = null, targetId = null, meta
       metadata
     });
   } catch (err) {
-    console.error('Failed to log audit trail:', err);
+    logger.error('Failed to log audit trail:', err);
   }
 };
 

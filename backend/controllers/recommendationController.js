@@ -113,7 +113,7 @@ exports.dismissRecommendation = async (req, res, next) => {
     await recommendation.save();
     
     // Update user preferences
-    let preferences = await UserPreference.findOne({ user: req.user.id });
+    const preferences = await UserPreference.findOne({ user: req.user.id });
     if (preferences) {
       if (!preferences.dismissedRecommendations.includes(recommendation.course)) {
         preferences.dismissedRecommendations.push(recommendation.course);

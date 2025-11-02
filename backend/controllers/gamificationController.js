@@ -1,5 +1,5 @@
 const { Badge, UserAchievement, LeaderboardEntry } = require('../models/Gamification');
-const User = require('../models/User');
+// const User = require('../models/User'); // Unused import
 const Enrollment = require('../models/Enrollment');
 const Certificate = require('../models/Certificate');
 const { logLearningActivity, updateLeaderboardStreak } = require('../services/learningStreakService');
@@ -176,7 +176,7 @@ exports.getLeaderboard = async (req, res, next) => {
 exports.updateUserPoints = async (req, res, next) => {
   try {
     const userId = req.user.id;
-    const { points, action } = req.body;
+    const { points } = req.body; // action parameter removed as it's not used
 
     let leaderboardEntry = await LeaderboardEntry.findOne({
       user: userId,

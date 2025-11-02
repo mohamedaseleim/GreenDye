@@ -1,4 +1,4 @@
-const Payment = require('../models/Payment');
+// const Payment = require('../models/Payment'); // Unused - only used in JSDoc comments
 
 /**
  * Abstract base class for payment services. Each concrete payment service
@@ -24,10 +24,10 @@ class PaymentService {
    * numbers or tokens) that need to be persisted on the Payment
    * document.
    *
-   * @param {import('../models/Payment')} payment  Mongoose Payment document
+   * @param {import('../models/Payment')} _payment  Mongoose Payment document
    * @returns {Promise<Object>}  provider details including checkoutUrl
    */
-  async createCheckout(payment) {
+  async createCheckout(_payment) {
     throw new Error('createCheckout() must be implemented in subclass');
   }
 
@@ -36,10 +36,10 @@ class PaymentService {
    * webhooks).  Concrete implementations should update the Payment
    * document status and record any metadata returned by the provider.
    *
-   * @param {Object} payload  The body of the webhook or verification request
+   * @param {Object} _payload  The body of the webhook or verification request
    * @returns {Promise<void>}
    */
-  async verifyPayment(payload) {
+  async verifyPayment(_payload) {
     // optional – providers that offer webhooks should implement
     return;
   }
@@ -48,11 +48,11 @@ class PaymentService {
    * Attempt to refund a previously completed payment.  Should update
    * the Payment document status and record any refund identifiers.
    *
-   * @param {import('../models/Payment')} payment  Payment document
-   * @param {Number} amount  Amount to refund
+   * @param {import('../models/Payment')} _payment  Payment document
+   * @param {Number} _amount  Amount to refund
    * @returns {Promise<void>}
    */
-  async refundPayment(payment, amount) {
+  async refundPayment(_payment, _amount) {
     // optional – providers supporting refunds should implement
     throw new Error('refundPayment() not implemented for this provider');
   }
@@ -61,10 +61,10 @@ class PaymentService {
    * Generate or retrieve an invoice for the payment.  Providers that
    * support invoice generation should override this method.
    *
-   * @param {import('../models/Payment')} payment  Payment document
+   * @param {import('../models/Payment')} _payment  Payment document
    * @returns {Promise<Buffer|String>} invoice data or URL
    */
-  async getInvoice(payment) {
+  async getInvoice(_payment) {
     throw new Error('getInvoice() not implemented for this provider');
   }
 }

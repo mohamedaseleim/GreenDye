@@ -407,7 +407,7 @@ exports.submitQuiz = async (req, res, next) => {
 
     // Update enrollment quizScores if courseId provided
     if (courseId && enrollment) {
-      let record = enrollment.quizScores.find(
+      const record = enrollment.quizScores.find(
         (qs) => qs.quiz.toString() === quiz._id.toString()
       );
       if (record) {

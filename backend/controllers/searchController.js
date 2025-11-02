@@ -1,6 +1,6 @@
 const { SearchIndex, SearchHistory } = require('../models/SearchIndex');
 const Course = require('../models/Course');
-const User = require('../models/User');
+// const User = require('../models/User'); // Unused import
 
 // @desc    Advanced search with filters
 // @route   GET /api/search

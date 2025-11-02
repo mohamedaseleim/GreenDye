@@ -153,14 +153,10 @@ For mobile app support:
 
 ## Screenshots
 
-### PWA Installation
-![PWA Install](screenshots/pwa-install.png)
-
-### Mobile Interface
-![Mobile UI](screenshots/mobile-ui.png)
-
-### Course Player
-![Course Player](screenshots/course-player.png)
+Screenshots demonstrating the PWA installation process, mobile interface, and course player will be added soon. The mobile app provides a seamless experience for:
+- Installing the PWA on your device
+- Browsing courses with a mobile-optimized interface
+- Playing course content with an adaptive video player
 
 ## Testing
 

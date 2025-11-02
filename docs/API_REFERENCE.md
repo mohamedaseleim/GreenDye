@@ -782,9 +782,7 @@ Connect to: `ws://localhost:5000`
 
 ## Postman Collection
 
-Import our Postman collection for easy API testing:
-
-[Download Collection](link-to-postman-collection.json)
+A Postman collection for easy API testing is coming soon. In the meantime, you can use the examples provided in this documentation with any HTTP client.
 
 ## SDK & Libraries
 

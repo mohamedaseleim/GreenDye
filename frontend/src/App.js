@@ -45,9 +45,11 @@ import AdminPages from './pages/AdminPages';
 import AdminMedia from './pages/AdminMedia';
 import AdminModeration from './pages/AdminModeration';
 import AdminAnnouncements from './pages/AdminAnnouncements';
+import AdminAnalytics from './pages/AdminAnalytics';
 
 // NEW: analytics import
 import { trackPageView } from './services/analyticsService';
+import Analytics from './pages/Analytics';
 
 const theme = createTheme({
   palette: {
@@ -143,6 +145,14 @@ function App() {
                       </PrivateRoute>
                     }
                   />
+                  <Route
+                    path="/analytics"
+                    element={
+                      <PrivateRoute>
+                        <Analytics />
+                      </PrivateRoute>
+                    }
+                  />
 
                   {/* NEW: Admin-only content management */}
                   <Route
@@ -211,6 +221,16 @@ function App() {
                       <PrivateRoute>
                         <AdminRoute>
                           <AdminLessons />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/analytics"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminAnalytics />
                         </AdminRoute>
                       </PrivateRoute>
                     }

@@ -98,6 +98,11 @@ app.use('/api/progress', require('./routes/progressRoutes'));
 app.use('/api/lms-integration', require('./routes/lmsIntegrationRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 
+// Admin routes
+app.use('/api/admin/certificates', require('./routes/adminCertificateRoutes'));
+app.use('/api/admin/cms', require('./routes/adminCMSRoutes'));
+app.use('/api/admin/courses', require('./routes/adminCourseRoutes'));
+
 // NEW: refund routes for admin approval workflow
 app.use('/api/refunds', require('./routes/refundRoutes'));
 

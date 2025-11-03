@@ -10,14 +10,30 @@ const AuditTrailSchema = new mongoose.Schema({
     type: String,
     required: true
   },
+  resourceType: {
+    type: String
+  },
+  resourceId: {
+    type: mongoose.Schema.Types.ObjectId
+  },
   targetType: {
     type: String
   },
   targetId: {
     type: mongoose.Schema.Types.ObjectId
   },
+  details: {
+    type: String
+  },
   metadata: {
     type: mongoose.Schema.Types.Mixed
+  },
+  ipAddress: {
+    type: String
+  },
+  timestamp: {
+    type: Date,
+    default: Date.now
   },
   createdAt: {
     type: Date,

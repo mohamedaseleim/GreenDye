@@ -223,7 +223,7 @@ exports.downloadCertificate = async (req, res, next) => {
     doc.fontSize(16).text('has successfully completed the course', { align: 'center' }).moveDown(0.5);
 
     const courseTitle =
-      (certificate.courseName && (certificate.courseName.get?.('default') || certificate.courseName.default)) ||
+      (certificate.courseName && certificate.courseName.get && (certificate.courseName.get('default') || certificate.courseName.get('en'))) ||
       certificate.course?.title ||
       'Course';
 

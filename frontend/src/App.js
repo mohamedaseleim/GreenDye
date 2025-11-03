@@ -39,6 +39,12 @@ import PrivateRoute from './components/PrivateRoute';
 // NEW: Admin-only content management
 import AdminRoute from './components/AdminRoute';
 import AdminLessons from './pages/AdminLessons';
+import AdminDashboard from './pages/AdminDashboard';
+import AdminCertificates from './pages/AdminCertificates';
+import AdminPages from './pages/AdminPages';
+import AdminMedia from './pages/AdminMedia';
+import AdminModeration from './pages/AdminModeration';
+import AdminAnnouncements from './pages/AdminAnnouncements';
 
 // NEW: analytics import
 import { trackPageView } from './services/analyticsService';
@@ -139,6 +145,66 @@ function App() {
                   />
 
                   {/* NEW: Admin-only content management */}
+                  <Route
+                    path="/admin/dashboard"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminDashboard />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/certificates"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminCertificates />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/pages"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminPages />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/media"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminMedia />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/announcements"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminAnnouncements />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/moderation"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminModeration />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
                   <Route
                     path="/admin/lessons/:courseId"
                     element={

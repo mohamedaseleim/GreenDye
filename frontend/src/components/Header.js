@@ -94,8 +94,8 @@ const Header = () => {
               </Button>
             )}
             {isAuthenticated && user?.role === 'admin' && (
-              <Button color="inherit" component={RouterLink} to="/admin/analytics">
-                {t('adminAnalytics')}
+              <Button color="inherit" component={RouterLink} to="/admin/dashboard">
+                Admin Dashboard
               </Button>
             )}
 

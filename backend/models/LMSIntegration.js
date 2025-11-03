@@ -64,7 +64,7 @@ const ExternalLMSSchema = new mongoose.Schema({
     timestamp: Date,
     status: String,
     recordsSynced: Number,
-    errors: [String]
+    syncErrors: [String]
   },
   isActive: {
     type: Boolean,
@@ -105,7 +105,7 @@ const DataSyncLogSchema = new mongoose.Schema({
     recordsFailed: Number,
     duration: Number // milliseconds
   },
-  errors: [{
+  syncErrors: [{
     message: String,
     code: String,
     field: String

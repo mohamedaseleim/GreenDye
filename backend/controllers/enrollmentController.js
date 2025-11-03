@@ -65,6 +65,7 @@ exports.getMyEnrollments = async (req, res, next) => {
           select: 'name avatar'
         }
       })
+      .populate('quizScores.quiz', 'title description')
       .sort({ lastAccessDate: -1 });
 
     res.status(200).json({

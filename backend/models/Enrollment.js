@@ -90,6 +90,21 @@ const EnrollmentSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  toJSON: { virtuals: true },
+  toObject: { virtuals: true }
+});
+
+// Virtual field for completionStatus to match frontend expectations
+EnrollmentSchema.virtual('completionStatus').get(function() {
+  // Map status values to completion status
+  if (this.status === 'completed') {
+    return 'completed';
+  } else if (this.status === 'active') {
+    return 'in_progress';
+  }
+  // For 'dropped' and 'suspended', return 'in_progress' as default
+  return 'in_progress';
 });
 
 // Prevent duplicate enrollments

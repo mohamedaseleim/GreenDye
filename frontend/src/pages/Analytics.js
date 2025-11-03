@@ -8,7 +8,8 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  LinearProgress
+  LinearProgress,
+  Alert
 } from '@mui/material';
 import {
   School as CourseIcon,
@@ -16,33 +17,37 @@ import {
   Timer as TimeIcon,
   EmojiEvents as AchievementIcon
 } from '@mui/icons-material';
-import { useAuth } from '../contexts/AuthContext';
-import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 
 const Analytics = () => {
-  const { isAuthenticated } = useAuth();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [analyticsData, setAnalyticsData] = useState(null);
 
   useEffect(() => {
-    // Check if user is authenticated
-    if (!isAuthenticated) {
-      navigate('/login');
-      return;
-    }
-
     fetchUserAnalytics();
-  }, [isAuthenticated, navigate]);
+  }, []);
 
   const fetchUserAnalytics = async () => {
+    setLoading(true);
+    setError('');
     try {
-      setLoading(true);
-      const response = await axios.get('/api/analytics/user');
+      const response = await axios.get(
+        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/analytics/user`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
       setAnalyticsData(response.data.data);
-    } catch (error) {
-      console.error('Error fetching analytics:', error);
+    } catch (err) {
+      if (err.response?.status === 401) {
+        setError('Please login to view your analytics');
+      } else {
+        setError('Failed to load analytics data');
+      }
+      console.error('Error fetching analytics:', err);
     } finally {
       setLoading(false);
     }
@@ -67,12 +72,18 @@ const Analytics = () => {
     );
   }
 
+  if (error) {
+    return (
+      <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+        <Alert severity="error">{error}</Alert>
+      </Container>
+    );
+  }
+
   if (!analyticsData) {
     return (
       <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-        <Typography variant="h5" color="text.secondary">
-          No analytics data available
-        </Typography>
+        <Alert severity="info">No analytics data available</Alert>
       </Container>
     );
   }

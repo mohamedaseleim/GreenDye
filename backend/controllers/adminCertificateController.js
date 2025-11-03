@@ -359,7 +359,7 @@ exports.bulkUploadCertificates = async (req, res, next) => {
         results.success.push({
           certificateId: certificate.certificateId,
           userName: user.name,
-          courseName: course.title.get('en') || course.title.get('default')
+          courseName: (course.title && course.title.get) ? (course.title.get('en') || course.title.get('default')) : 'N/A'
         });
       } catch (error) {
         results.failed.push({
@@ -548,7 +548,7 @@ exports.exportCertificates = async (req, res, next) => {
       certificateId: cert.certificateId,
       userName: cert.userName,
       userEmail: cert.user?.email,
-      courseName: cert.courseName?.get?.('en') || cert.courseName?.get?.('default') || 'N/A',
+      courseName: (cert.courseName && cert.courseName.get) ? (cert.courseName.get('en') || cert.courseName.get('default')) : 'N/A',
       grade: cert.grade,
       score: cert.score,
       issueDate: cert.issueDate,

@@ -95,11 +95,12 @@ const PageSchema = new mongoose.Schema({
     type: Date,
     default: Date.now
   }
+}, {
+  timestamps: true
 });
 
-// Update timestamp on save
+// Update timestamp and publish date on save
 PageSchema.pre('save', function(next) {
-  this.updatedAt = Date.now();
   if (this.status === 'published' && !this.publishedAt) {
     this.publishedAt = Date.now();
   }

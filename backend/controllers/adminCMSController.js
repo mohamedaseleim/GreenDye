@@ -3,7 +3,7 @@ const Media = require('../models/Media');
 const Announcement = require('../models/Announcement');
 const AuditTrail = require('../models/AuditTrail');
 const Course = require('../models/Course');
-const Forum = require('../models/Forum');
+const ForumPost = require('../models/Forum');
 const path = require('path');
 const fs = require('fs').promises;
 
@@ -519,7 +519,7 @@ exports.getPendingForumPosts = async (req, res, next) => {
   try {
     const { status = 'pending' } = req.query;
 
-    const posts = await Forum.find({ status })
+    const posts = await ForumPost.find({ status })
       .populate('author', 'name email')
       .sort({ createdAt: -1 });
 
@@ -540,7 +540,7 @@ exports.moderateForumPost = async (req, res, next) => {
   try {
     const { status, reason } = req.body;
 
-    const post = await Forum.findById(req.params.id);
+    const post = await ForumPost.findById(req.params.id);
 
     if (!post) {
       return res.status(404).json({
@@ -596,7 +596,7 @@ exports.getDashboardStats = async (req, res, next) => {
       Media.countDocuments(),
       Announcement.countDocuments({ status: 'active' }),
       Course.countDocuments(),
-      Forum.countDocuments({ status: 'pending' })
+      ForumPost.countDocuments({ status: 'pending' })
     ]);
 
     res.status(200).json({

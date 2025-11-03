@@ -6,6 +6,7 @@ const Course = require('../models/Course');
 const ForumPost = require('../models/Forum');
 const path = require('path');
 const fs = require('fs').promises;
+const mongoSanitize = require('mongo-sanitize');
 
 // ========== PAGE MANAGEMENT ==========
 
@@ -14,17 +15,19 @@ const fs = require('fs').promises;
 // @access  Private/Admin
 exports.getAllPages = async (req, res, next) => {
   try {
-    const { status, template, search } = req.query;
+    const { status, template, search } = mongoSanitize(req.query);
 
     const query = {};
     if (status) query.status = status;
     if (template) query.template = template;
     if (search) {
+      // Escape regex special characters to prevent regex injection
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { slug: { $regex: search, $options: 'i' } },
-        { 'title.en': { $regex: search, $options: 'i' } },
-        { 'title.ar': { $regex: search, $options: 'i' } },
-        { 'title.fr': { $regex: search, $options: 'i' } }
+        { slug: { $regex: escapedSearch, $options: 'i' } },
+        { 'title.en': { $regex: escapedSearch, $options: 'i' } },
+        { 'title.ar': { $regex: escapedSearch, $options: 'i' } },
+        { 'title.fr': { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 
@@ -73,8 +76,9 @@ exports.getPage = async (req, res, next) => {
 // @access  Private/Admin
 exports.createPage = async (req, res, next) => {
   try {
+    const sanitizedBody = mongoSanitize(req.body);
     const pageData = {
-      ...req.body,
+      ...sanitizedBody,
       author: req.user.id,
       lastEditedBy: req.user.id
     };
@@ -227,16 +231,18 @@ exports.publishPage = async (req, res, next) => {
 // @access  Private/Admin
 exports.getAllMedia = async (req, res, next) => {
   try {
-    const { type, category, search, page = 1, limit = 20 } = req.query;
+    const { type, category, search, page = 1, limit = 20 } = mongoSanitize(req.query);
 
     const query = {};
     if (type) query.type = type;
     if (category) query.category = category;
     if (search) {
+      // Escape regex special characters to prevent regex injection
+      const escapedSearch = search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { originalName: { $regex: search, $options: 'i' } },
-        { 'title.en': { $regex: search, $options: 'i' } },
-        { tags: { $in: [new RegExp(search, 'i')] } }
+        { originalName: { $regex: escapedSearch, $options: 'i' } },
+        { 'title.en': { $regex: escapedSearch, $options: 'i' } },
+        { tags: { $in: [new RegExp(escapedSearch, 'i')] } }
       ];
     }
 
@@ -380,7 +386,7 @@ exports.deleteMedia = async (req, res, next) => {
 // @access  Private/Admin
 exports.getAllAnnouncements = async (req, res, next) => {
   try {
-    const { status, priority, type } = req.query;
+    const { status, priority, type } = mongoSanitize(req.query);
 
     const query = {};
     if (status) query.status = status;
@@ -517,7 +523,7 @@ exports.deleteAnnouncement = async (req, res, next) => {
 // @access  Private/Admin
 exports.getPendingForumPosts = async (req, res, next) => {
   try {
-    const { status = 'pending' } = req.query;
+    const { status = 'pending' } = mongoSanitize(req.query);
 
     const posts = await ForumPost.find({ status })
       .populate('author', 'name email')

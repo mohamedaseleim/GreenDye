@@ -4,6 +4,7 @@ const User = require('../models/User');
 const AuditTrail = require('../models/AuditTrail');
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
+const mongoSanitize = require('mongo-sanitize');
 
 // @desc    Get all certificates with filters and pagination (admin)
 // @route   GET /api/admin/certificates
@@ -25,11 +26,14 @@ exports.getAllCertificates = async (req, res, next) => {
 
     const query = {};
 
-    // Filter by search (name, certificateId)
+    // Filter by search (name, certificateId) - sanitize input
     if (search) {
+      const sanitizedSearch = mongoSanitize(search);
+      // Escape regex special characters
+      const escapedSearch = sanitizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { userName: { $regex: search, $options: 'i' } },
-        { certificateId: { $regex: search, $options: 'i' } }
+        { userName: { $regex: escapedSearch, $options: 'i' } },
+        { certificateId: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 
@@ -42,16 +46,16 @@ exports.getAllCertificates = async (req, res, next) => {
       query.isRevoked = isRevoked === 'true';
     }
 
-    // Filter by course
+    // Filter by course - sanitize ObjectId
     if (courseId) {
-      query.course = courseId;
+      query.course = mongoSanitize(courseId);
     }
 
-    // Filter by date range
+    // Filter by date range - sanitize dates
     if (startDate || endDate) {
       query.issueDate = {};
-      if (startDate) query.issueDate.$gte = new Date(startDate);
-      if (endDate) query.issueDate.$lte = new Date(endDate);
+      if (startDate) query.issueDate.$gte = new Date(mongoSanitize(startDate));
+      if (endDate) query.issueDate.$lte = new Date(mongoSanitize(endDate));
     }
 
     const sortOptions = {};
@@ -86,6 +90,8 @@ exports.getAllCertificates = async (req, res, next) => {
 // @access  Private/Admin
 exports.createCertificate = async (req, res, next) => {
   try {
+    // Sanitize all user inputs
+    const sanitizedInput = mongoSanitize(req.body);
     const {
       userId,
       courseId,
@@ -96,7 +102,7 @@ exports.createCertificate = async (req, res, next) => {
       expiryDate,
       instructorName,
       certificateId
-    } = req.body;
+    } = sanitizedInput;
 
     // Validate user and course exist
     const user = await User.findById(userId);
@@ -402,7 +408,7 @@ exports.revokeCertificate = async (req, res, next) => {
       });
     }
 
-    const { reason } = req.body;
+    const { reason } = mongoSanitize(req.body);
 
     certificate.isValid = false;
     certificate.isRevoked = true;
@@ -529,13 +535,13 @@ exports.exportCertificates = async (req, res, next) => {
     }
 
     if (courseId) {
-      query.course = courseId;
+      query.course = mongoSanitize(courseId);
     }
 
     if (startDate || endDate) {
       query.issueDate = {};
-      if (startDate) query.issueDate.$gte = new Date(startDate);
-      if (endDate) query.issueDate.$lte = new Date(endDate);
+      if (startDate) query.issueDate.$gte = new Date(mongoSanitize(startDate));
+      if (endDate) query.issueDate.$lte = new Date(mongoSanitize(endDate));
     }
 
     const certificates = await Certificate.find(query)

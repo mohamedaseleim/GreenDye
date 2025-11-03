@@ -96,15 +96,11 @@ const EnrollmentSchema = new mongoose.Schema({
 });
 
 // Virtual field for completionStatus to match frontend expectations
+// Maps internal status values to frontend-expected completion status values
 EnrollmentSchema.virtual('completionStatus').get(function() {
-  // Map status values to completion status
-  if (this.status === 'completed') {
-    return 'completed';
-  } else if (this.status === 'active') {
-    return 'in_progress';
-  }
-  // For 'dropped' and 'suspended', return 'in_progress' as default
-  return 'in_progress';
+  // Only 'completed' status maps to 'completed', all others map to 'in_progress'
+  // This ensures 'active', 'dropped', and 'suspended' courses are shown in the dashboard
+  return this.status === 'completed' ? 'completed' : 'in_progress';
 });
 
 // Prevent duplicate enrollments

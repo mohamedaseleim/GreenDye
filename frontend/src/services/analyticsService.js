@@ -3,6 +3,12 @@ import axios from 'axios';
 const API_BASE_URL = '/api/analytics';
 
 export const trackEvent = async (eventType, data = {}) => {
+  // Only track events if user is authenticated
+  const token = localStorage.getItem('token');
+  if (!token) {
+    return; // Silently skip tracking for unauthenticated users
+  }
+
   try {
     await axios.post(`${API_BASE_URL}/track`, {
       eventType,

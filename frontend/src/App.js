@@ -44,6 +44,7 @@ import AdminCertificates from './pages/AdminCertificates';
 import AdminPages from './pages/AdminPages';
 import AdminMedia from './pages/AdminMedia';
 import AdminModeration from './pages/AdminModeration';
+import AdminAnnouncements from './pages/AdminAnnouncements';
 
 // NEW: analytics import
 import { trackPageView } from './services/analyticsService';
@@ -180,6 +181,16 @@ function App() {
                       <PrivateRoute>
                         <AdminRoute>
                           <AdminMedia />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/announcements"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminAnnouncements />
                         </AdminRoute>
                       </PrivateRoute>
                     }

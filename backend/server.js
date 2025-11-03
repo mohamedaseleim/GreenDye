@@ -11,6 +11,7 @@ const morgan = require('morgan');
 const path = require('path');
 const connectDB = require('./config/database');
 const errorHandler = require('./middleware/errorHandler');
+const logger = require('./utils/logger');
 
 // Load environment variables
 dotenv.config();
@@ -156,7 +157,7 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 const server = app.listen(PORT, () => {
-  console.log(`
+  logger.info(`
     ╔══════════════════════════════════════════════╗
     ║   GreenDye Academy API Server Running       ║
     ║   Environment: ${process.env.NODE_ENV || 'development'}                    ║
@@ -168,7 +169,7 @@ const server = app.listen(PORT, () => {
 
 // Handle unhandled promise rejections
 process.on('unhandledRejection', (err) => {
-  console.error(`Unhandled Rejection: ${err.message}`);
+  logger.error(`Unhandled Rejection: ${err.message}`);
   server.close(() => process.exit(1));
 });
 
@@ -182,28 +183,20 @@ const io = require('socket.io')(server, {
 });
 
 io.on('connection', (socket) => {
-  if (process.env.NODE_ENV === 'development') {
-    console.log('New client connected:', socket.id);
-  }
+  logger.debug('New client connected:', socket.id);
 
   socket.on('join-course', (courseId) => {
     socket.join(`course-${courseId}`);
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`User joined course room: ${courseId}`);
-    }
+    logger.debug(`User joined course room: ${courseId}`);
   });
 
   socket.on('leave-course', (courseId) => {
     socket.leave(`course-${courseId}`);
-    if (process.env.NODE_ENV === 'development') {
-      console.log(`User left course room: ${courseId}`);
-    }
+    logger.debug(`User left course room: ${courseId}`);
   });
 
   socket.on('disconnect', () => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Client disconnected:', socket.id);
-    }
+    logger.debug('Client disconnected:', socket.id);
   });
 });
 

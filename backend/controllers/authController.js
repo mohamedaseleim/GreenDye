@@ -1,5 +1,6 @@
 const User = require('../models/User');
 const crypto = require('crypto');
+const logger = require('../utils/logger');
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -183,9 +184,7 @@ exports.forgotPassword = async (req, res, next) => {
 
     // TODO: Send email using email service
     // In development, the reset URL can be logged for testing purposes
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Reset URL:', resetUrl);
-    }
+    logger.debug('Reset URL:', resetUrl);
 
     const response = {
       success: true,

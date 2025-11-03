@@ -1,4 +1,4 @@
-
+const logger = require('../utils/logger');
 const Notification = require('../models/Notification');
 const NotificationPreferences = require('../models/NotificationPreferences');
 const nodemailer = require('nodemailer');
@@ -57,7 +57,7 @@ exports.getNotifications = async (req, res, _next) => {
       data: notifications
     });
   } catch (error) {
-    console.error('Get notifications error:', error);
+    logger.error('Get notifications error:', error);
     res.status(500).json({
       success: false,
       message: 'Error fetching notifications',
@@ -97,7 +97,7 @@ exports.markAsRead = async (req, res, _next) => {
       data: notification
     });
   } catch (error) {
-    console.error('Mark as read error:', error);
+    logger.error('Mark as read error:', error);
     res.status(500).json({
       success: false,
       message: 'Error marking notification as read',
@@ -121,7 +121,7 @@ exports.markAllAsRead = async (req, res, _next) => {
       message: 'All notifications marked as read'
     });
   } catch (error) {
-    console.error('Mark all as read error:', error);
+    logger.error('Mark all as read error:', error);
     res.status(500).json({
       success: false,
       message: 'Error marking all notifications as read',
@@ -159,7 +159,7 @@ exports.deleteNotification = async (req, res, _next) => {
       message: 'Notification deleted successfully'
     });
   } catch (error) {
-    console.error('Delete notification error:', error);
+    logger.error('Delete notification error:', error);
     res.status(500).json({
       success: false,
       message: 'Error deleting notification',
@@ -183,7 +183,7 @@ exports.deleteAllRead = async (req, res, _next) => {
       message: 'All read notifications deleted successfully'
     });
   } catch (error) {
-    console.error('Delete all read error:', error);
+    logger.error('Delete all read error:', error);
     res.status(500).json({
       success: false,
       message: 'Error deleting notifications',
@@ -234,7 +234,7 @@ exports.createNotification = async (req, res, _next) => {
       data: notification
     });
   } catch (error) {
-    console.error('Create notification error:', error);
+    logger.error('Create notification error:', error);
     res.status(500).json({
       success: false,
       message: 'Error creating notification',
@@ -293,7 +293,7 @@ async function sendEmailNotification(notification) {
     notification.emailSentAt = Date.now();
     await notification.save();
   } catch (error) {
-    console.error('Send email notification error:', error);
+    logger.error('Send email notification error:', error);
   }
 }
 
@@ -337,7 +337,7 @@ async function sendPushNotification(notification) {
     notification.pushSentAt = Date.now();
     await notification.save();
   } catch (error) {
-    console.error('Send push notification error:', error);
+    logger.error('Send push notification error:', error);
   }
 }
 
@@ -353,6 +353,6 @@ exports.createNotificationUtil = async (userId, type, titleObj, messageObj, data
       link
     });
   } catch (error) {
-    console.error('Create notification util error:', error);
+    logger.error('Create notification util error:', error);
   }
 };

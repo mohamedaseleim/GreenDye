@@ -1,4 +1,5 @@
 const RefundRequest = require('../models/RefundRequest');
+const logger = require('../utils/logger');
 const Payment = require('../models/Payment');
 // const Enrollment = require('../models/Enrollment'); // Unused import
 const StripeService = require('../services/stripeService');
@@ -17,7 +18,7 @@ exports.getRefundRequests = async (req, res) => {
       .sort('-createdAt');
     return res.status(200).json({ success: true, count: refunds.length, data: refunds });
   } catch (error) {
-    console.error('Get refund requests error:', error);
+    logger.error('Get refund requests error:', error);
     return res.status(500).json({ success: false, message: 'Error fetching refund requests', error: error.message });
   }
 };
@@ -71,7 +72,7 @@ exports.approveRefundRequest = async (req, res) => {
       data: refundRequest
     });
   } catch (error) {
-    console.error('Approve refund error:', error);
+    logger.error('Approve refund error:', error);
     return res.status(500).json({ success: false, message: 'Error approving refund', error: error.message });
   }
 };
@@ -98,7 +99,7 @@ exports.rejectRefundRequest = async (req, res) => {
       data: refundRequest
     });
   } catch (error) {
-    console.error('Reject refund error:', error);
+    logger.error('Reject refund error:', error);
     return res.status(500).json({ success: false, message: 'Error rejecting refund', error: error.message });
   }
 };

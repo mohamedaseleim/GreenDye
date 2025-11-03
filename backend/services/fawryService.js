@@ -1,4 +1,5 @@
 const axios = require('axios');
+const logger = require('../utils/logger');
 const crypto = require('crypto');
 const PaymentService = require('./paymentService');
 
@@ -20,7 +21,7 @@ class FawryService extends PaymentService {
     this.merchantCode = process.env.FAWRY_MERCHANT_CODE;
     this.securityKey = process.env.FAWRY_SECURITY_KEY;
     if (!this.merchantCode || !this.securityKey) {
-      console.warn(
+      logger.warn(
         'FawryService: missing FAWRY_MERCHANT_CODE or FAWRY_SECURITY_KEY environment variables',
       );
     }
@@ -112,7 +113,7 @@ class FawryService extends PaymentService {
         providerResponse: data,
       };
     } catch (error) {
-      console.error(
+      logger.error(
         'Error creating Fawry checkout:',
         error.response?.data || error.message,
       );

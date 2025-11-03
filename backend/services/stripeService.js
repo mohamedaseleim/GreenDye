@@ -1,4 +1,5 @@
 const PaymentService = require('./paymentService');
+const logger = require('../utils/logger');
 const Stripe = require('stripe');
 const Course = require('../models/Course');
 const Payment = require('../models/Payment');
@@ -17,7 +18,7 @@ class StripeService extends PaymentService {
     super();
     const secretKey = process.env.STRIPE_SECRET_KEY;
     if (!secretKey) {
-      console.warn('StripeService: missing STRIPE_SECRET_KEY environment variable');
+      logger.warn('StripeService: missing STRIPE_SECRET_KEY environment variable');
     }
     this.stripe = Stripe(secretKey);
     this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -215,7 +216,7 @@ class StripeService extends PaymentService {
       });
       return refund;
     } catch (error) {
-      console.error('Stripe refund error:', error);
+      logger.error('Stripe refund error:', error);
       throw new Error('Error processing Stripe refund');
     }
   }

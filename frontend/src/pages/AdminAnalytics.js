@@ -38,6 +38,8 @@ import {
 } from 'recharts';
 import axios from 'axios';
 
+const MAX_CHART_COURSES = 5;
+
 const AdminAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -289,7 +291,7 @@ const AdminAnalytics = () => {
                 Popular Courses Views
               </Typography>
               <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={popularCourses.slice(0, 5)}>
+                <BarChart data={popularCourses.slice(0, MAX_CHART_COURSES)}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="title" />
                   <YAxis />

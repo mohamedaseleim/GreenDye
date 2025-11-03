@@ -17,9 +17,8 @@ exports.register = async (req, res, next) => {
       });
     }
 
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    // Validate email format (basic check)
+    if (!email.includes('@') || !email.includes('.') || email.indexOf('@') === 0 || email.lastIndexOf('.') === email.length - 1) {
       return res.status(400).json({
         success: false,
         message: 'Please provide a valid email address'

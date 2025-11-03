@@ -29,8 +29,9 @@ This comprehensive, step-by-step guide will help you install and configure Green
 ### 1. Heliohost VPS Account
 - **VPS Plan**: Heliohost VPS with minimum 2GB RAM (4GB recommended)
 - **Operating System**: Ubuntu 22.04 LTS (should come pre-installed)
-- **Control Panel**: Hestia Control Panel v1.9.4 (included with Heliohost VPS)
+- **Control Panel**: Hestia Control Panel v1.9.4 or newer (included with Heliohost VPS)
 - **Root Access**: SSH access as root or sudo user
+- **Software**: Will install Node.js 20.x LTS and MongoDB 6.0
 
 ### 2. Domain Name
 - A registered domain name (e.g., youracademy.com)
@@ -169,27 +170,29 @@ You should see an `admin` directory. We'll use this for deployment.
 
 ## Step 3: Install Required Dependencies
 
-### 3.1 Install Node.js 18 LTS
+### 3.1 Install Node.js 20 LTS
 
 Node.js is required for running the GreenDye backend:
 
 ```bash
-# Add NodeSource repository for Node.js 18.x
-curl -fsSL https://deb.nodesource.com/setup_18.x | bash -
+# Add NodeSource repository for Node.js 20.x LTS
+curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
 
 # Install Node.js and npm
 apt-get install -y nodejs
 
 # Verify installation
-node --version  # Should show v18.x.x
-npm --version   # Should show v9.x.x or higher
+node --version  # Should show v20.x.x
+npm --version   # Should show v10.x.x or higher
 ```
 
 **Expected output:**
 ```
-v18.19.0
-9.2.0
+v20.18.0
+10.8.2
 ```
+
+**Note:** Node.js 18.x is also compatible if you prefer it. The project requires Node.js >= 16.x.
 
 ### 3.2 Install PM2 Process Manager
 
@@ -231,11 +234,11 @@ systemctl enable nginx
 ### 4.1 Install MongoDB 6.0
 
 ```bash
-# Import MongoDB GPG key
-wget -qO - https://www.mongodb.org/static/pgp/server-6.0.asc | apt-key add -
+# Import MongoDB GPG key (using modern method)
+curl -fsSL https://www.mongodb.org/static/pgp/server-6.0.asc | gpg --dearmor -o /usr/share/keyrings/mongodb-server-6.0.gpg
 
 # Add MongoDB repository for Ubuntu 22.04
-echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list
+echo "deb [ arch=amd64,arm64 signed-by=/usr/share/keyrings/mongodb-server-6.0.gpg ] https://repo.mongodb.org/apt/ubuntu jammy/mongodb-org/6.0 multiverse" | tee /etc/apt/sources.list.d/mongodb-org-6.0.list
 
 # Update package list
 apt-get update
@@ -1969,6 +1972,6 @@ Happy teaching and learning! 🌿📚🎓
 
 ---
 
-**Last Updated**: November 2024  
-**Guide Version**: 1.0  
-**Compatible with**: GreenDye v1.2.0, Hestia CP v1.9.4, Ubuntu 22.04 LTS
+**Last Updated**: November 2025  
+**Guide Version**: 1.1  
+**Compatible with**: GreenDye v1.2.0+, Hestia CP v1.9.4+, Ubuntu 22.04 LTS, Node.js 20.x LTS, MongoDB 6.0+

@@ -205,7 +205,7 @@ exports.syncData = async (req, res, next) => {
       });
     } catch (error) {
       syncLog.status = 'failed';
-      syncLog.errors = [{
+      syncLog.syncErrors = [{
         message: error.message,
         code: 'SYNC_ERROR'
       }];

@@ -58,11 +58,17 @@ self.addEventListener('fetch', (event) => {
     event.respondWith(
       fetch(event.request)
         .then((response) => {
-          // Clone the response before caching
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          // Only cache successful responses (2xx status codes)
+          if (response && response.status >= 200 && response.status < 300) {
+            const responseToCache = response.clone();
+            caches.open(CACHE_NAME)
+              .then((cache) => {
+                cache.put(event.request, responseToCache);
+              })
+              .catch((error) => {
+                console.error('Failed to cache API response:', error);
+              });
+          }
           return response;
         })
         .catch(() => {
@@ -88,9 +94,13 @@ self.addEventListener('fetch', (event) => {
           }
 
           const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
+          caches.open(CACHE_NAME)
+            .then((cache) => {
+              cache.put(event.request, responseToCache);
+            })
+            .catch((error) => {
+              console.error('Failed to cache static asset:', error);
+            });
 
           return response;
         });

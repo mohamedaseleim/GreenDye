@@ -1,5 +1,5 @@
 const asyncHandler = require('express-async-handler');
-const { exec } = require('child_process');
+const { spawn } = require('child_process');
 const { promisify } = require('util');
 const fs = require('fs').promises;
 const path = require('path');
@@ -7,7 +7,34 @@ const archiver = require('archiver');
 const extract = require('extract-zip');
 const mongoose = require('mongoose');
 
-const execPromise = promisify(exec);
+// Helper function to spawn a process and return a promise
+const spawnPromise = (command, args) => {
+  return new Promise((resolve, reject) => {
+    const process = spawn(command, args);
+    let stdout = '';
+    let stderr = '';
+
+    process.stdout.on('data', (data) => {
+      stdout += data.toString();
+    });
+
+    process.stderr.on('data', (data) => {
+      stderr += data.toString();
+    });
+
+    process.on('close', (code) => {
+      if (code === 0) {
+        resolve(stdout);
+      } else {
+        reject(new Error(`Process exited with code ${code}: ${stderr}`));
+      }
+    });
+
+    process.on('error', (error) => {
+      reject(error);
+    });
+  });
+};
 
 // Get all model names for data export
 const getAllModelNames = () => {
@@ -30,9 +57,11 @@ const createDatabaseBackup = asyncHandler(async (req, res) => {
     // Get MongoDB connection URI
     const mongoUri = process.env.MONGODB_URI;
     
-    // Execute mongodump command
-    const command = `mongodump --uri="${mongoUri}" --out="${backupPath}"`;
-    await execPromise(command);
+    // Execute mongodump command with spawn for security
+    await spawnPromise('mongodump', [
+      `--uri=${mongoUri}`,
+      `--out=${backupPath}`
+    ]);
 
     // Create a ZIP archive of the backup
     const zipPath = `${backupPath}.zip`;
@@ -193,9 +222,12 @@ const restoreDatabase = asyncHandler(async (req, res) => {
     // Get MongoDB connection URI
     const mongoUri = process.env.MONGODB_URI;
 
-    // Execute mongorestore command
-    const command = `mongorestore --uri="${mongoUri}" --drop "${dbDir}"`;
-    await execPromise(command);
+    // Execute mongorestore command with spawn for security
+    await spawnPromise('mongorestore', [
+      `--uri=${mongoUri}`,
+      '--drop',
+      dbDir
+    ]);
 
     // Clean up extracted files
     await fs.rm(extractPath, { recursive: true, force: true });
@@ -273,17 +305,52 @@ const importData = asyncHandler(async (req, res) => {
         if (mode === 'replace') {
           // Delete all existing records
           await Model.deleteMany({});
+          
+          // Insert new records
+          if (data.length > 0) {
+            await Model.insertMany(data);
+          }
+          
+          importResults[modelName] = {
+            success: true,
+            count: data.length,
+            inserted: data.length,
+            skipped: 0
+          };
+        } else {
+          // Merge mode: upsert records individually to handle duplicates
+          let inserted = 0;
+          let skipped = 0;
+          
+          for (const record of data) {
+            try {
+              // Use updateOne with upsert for merge mode
+              const { _id, ...updateData } = record;
+              if (_id) {
+                await Model.updateOne(
+                  { _id },
+                  { $set: updateData },
+                  { upsert: true }
+                );
+                inserted++;
+              } else {
+                // If no _id, create new record
+                await Model.create(record);
+                inserted++;
+              }
+            } catch (recordError) {
+              // Skip records that fail (e.g., duplicates, validation errors)
+              skipped++;
+            }
+          }
+          
+          importResults[modelName] = {
+            success: true,
+            count: data.length,
+            inserted,
+            skipped
+          };
         }
-
-        // Insert new records
-        if (data.length > 0) {
-          await Model.insertMany(data, { ordered: false });
-        }
-
-        importResults[modelName] = {
-          success: true,
-          count: data.length
-        };
       } catch (modelError) {
         importResults[modelName] = {
           success: false,

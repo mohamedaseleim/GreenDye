@@ -403,6 +403,13 @@ exports.getUserAnalytics = async (req, res, _next) => {
 };
 
 // Helper functions
+function getCountryMatchFilter(fieldPath) {
+  return {
+    [fieldPath]: { $exists: true, $ne: null },
+    $expr: { $ne: [`$${fieldPath}`, ''] }
+  };
+}
+
 function detectDeviceType(userAgent) {
   if (/mobile/i.test(userAgent)) return 'mobile';
   if (/tablet|ipad/i.test(userAgent)) return 'tablet';
@@ -459,3 +466,619 @@ async function calculateLearningStreak(userId) {
 
   return streak;
 }
+
+// @desc    Get user growth trends
+// @route   GET /api/analytics/user-growth
+// @access  Private/Admin
+exports.getUserGrowthTrends = async (req, res, _next) => {
+  try {
+    const { period = 'monthly', startDate, endDate } = req.query;
+    const dateFilter = {};
+    
+    if (startDate) dateFilter.$gte = new Date(startDate);
+    if (endDate) dateFilter.$lte = new Date(endDate);
+    
+    const matchFilter = Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {};
+    
+    let groupBy = {};
+    switch (period) {
+      case 'hourly':
+        groupBy = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+          day: { $dayOfMonth: '$createdAt' },
+          hour: { $hour: '$createdAt' }
+        };
+        break;
+      case 'daily':
+        groupBy = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+          day: { $dayOfMonth: '$createdAt' }
+        };
+        break;
+      case 'weekly':
+        groupBy = {
+          year: { $year: '$createdAt' },
+          week: { $week: '$createdAt' }
+        };
+        break;
+      case 'monthly':
+      default:
+        groupBy = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        };
+        break;
+    }
+    
+    const userGrowth = await User.aggregate([
+      { $match: matchFilter },
+      {
+        $group: {
+          _id: groupBy,
+          count: { $sum: 1 },
+          students: { $sum: { $cond: [{ $eq: ['$role', 'student'] }, 1, 0] } },
+          trainers: { $sum: { $cond: [{ $eq: ['$role', 'trainer'] }, 1, 0] } },
+          admins: { $sum: { $cond: [{ $eq: ['$role', 'admin'] }, 1, 0] } }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1, '_id.hour': 1, '_id.week': 1 } }
+    ]);
+    
+    // Calculate cumulative growth
+    let cumulative = 0;
+    const growthWithCumulative = userGrowth.map(item => {
+      cumulative += item.count;
+      return { ...item, cumulative };
+    });
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        period,
+        growth: growthWithCumulative
+      }
+    });
+  } catch (error) {
+    logger.error('Get user growth trends error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching user growth trends',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get revenue trends
+// @route   GET /api/analytics/revenue-trends
+// @access  Private/Admin
+exports.getRevenueTrends = async (req, res, _next) => {
+  try {
+    const { period = 'monthly', startDate, endDate } = req.query;
+    const dateFilter = { status: 'completed' };
+    
+    if (startDate) dateFilter.createdAt = { $gte: new Date(startDate) };
+    if (endDate) {
+      dateFilter.createdAt = dateFilter.createdAt || {};
+      dateFilter.createdAt.$lte = new Date(endDate);
+    }
+    
+    let groupBy = {};
+    switch (period) {
+      case 'daily':
+        groupBy = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' },
+          day: { $dayOfMonth: '$createdAt' }
+        };
+        break;
+      case 'weekly':
+        groupBy = {
+          year: { $year: '$createdAt' },
+          week: { $week: '$createdAt' }
+        };
+        break;
+      case 'monthly':
+      default:
+        groupBy = {
+          year: { $year: '$createdAt' },
+          month: { $month: '$createdAt' }
+        };
+        break;
+    }
+    
+    const revenueTrends = await Payment.aggregate([
+      { $match: dateFilter },
+      {
+        $group: {
+          _id: groupBy,
+          revenue: { $sum: '$amount' },
+          transactions: { $sum: 1 },
+          avgTransactionValue: { $avg: '$amount' },
+          uniqueUsers: { $addToSet: '$user' }
+        }
+      },
+      {
+        $project: {
+          _id: 1,
+          revenue: 1,
+          transactions: 1,
+          avgTransactionValue: 1,
+          uniqueUsers: { $size: '$uniqueUsers' }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1, '_id.day': 1, '_id.week': 1 } }
+    ]);
+    
+    // Calculate cumulative revenue
+    let cumulative = 0;
+    const trendsWithCumulative = revenueTrends.map(item => {
+      cumulative += item.revenue;
+      return { ...item, cumulativeRevenue: cumulative };
+    });
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        period,
+        trends: trendsWithCumulative
+      }
+    });
+  } catch (error) {
+    logger.error('Get revenue trends error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching revenue trends',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get course popularity metrics
+// @route   GET /api/analytics/course-popularity
+// @access  Private/Admin
+exports.getCoursePopularityMetrics = async (req, res, _next) => {
+  try {
+    const { startDate, endDate, limit = 20 } = req.query;
+    const dateFilter = {};
+    
+    if (startDate) dateFilter.$gte = new Date(startDate);
+    if (endDate) dateFilter.$lte = new Date(endDate);
+    
+    const enrollmentFilter = Object.keys(dateFilter).length > 0 
+      ? { createdAt: dateFilter } 
+      : {};
+    
+    // Get course metrics
+    const courseMetrics = await Enrollment.aggregate([
+      { $match: enrollmentFilter },
+      {
+        $group: {
+          _id: '$course',
+          totalEnrollments: { $sum: 1 },
+          completedEnrollments: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
+          activeEnrollments: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } },
+          avgProgress: { $avg: '$progress' }
+        }
+      },
+      {
+        $lookup: {
+          from: 'courses',
+          localField: '_id',
+          foreignField: '_id',
+          as: 'course'
+        }
+      },
+      { $unwind: '$course' },
+      {
+        $project: {
+          courseId: '$_id',
+          title: '$course.title',
+          instructor: '$course.instructor',
+          totalEnrollments: 1,
+          completedEnrollments: 1,
+          activeEnrollments: 1,
+          avgProgress: 1,
+          completionRate: {
+            $cond: [
+              { $eq: ['$totalEnrollments', 0] },
+              0,
+              { $multiply: [{ $divide: ['$completedEnrollments', '$totalEnrollments'] }, 100] }
+            ]
+          }
+        }
+      },
+      { $sort: { totalEnrollments: -1 } },
+      { $limit: parseInt(limit) }
+    ]);
+    
+    // Get enrollment trends for top courses
+    const topCourseIds = courseMetrics.slice(0, 5).map(c => c.courseId);
+    const enrollmentTrends = await Enrollment.aggregate([
+      { $match: { course: { $in: topCourseIds } } },
+      {
+        $group: {
+          _id: {
+            course: '$course',
+            year: { $year: '$createdAt' },
+            month: { $month: '$createdAt' }
+          },
+          enrollments: { $sum: 1 }
+        }
+      },
+      { $sort: { '_id.year': 1, '_id.month': 1 } },
+      {
+        $lookup: {
+          from: 'courses',
+          localField: '_id.course',
+          foreignField: '_id',
+          as: 'course'
+        }
+      },
+      { $unwind: '$course' },
+      {
+        $project: {
+          courseId: '$_id.course',
+          courseTitle: '$course.title',
+          year: '$_id.year',
+          month: '$_id.month',
+          enrollments: 1
+        }
+      }
+    ]);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        courseMetrics,
+        enrollmentTrends
+      }
+    });
+  } catch (error) {
+    logger.error('Get course popularity metrics error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching course popularity metrics',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get geographic distribution
+// @route   GET /api/analytics/geographic-distribution
+// @access  Private/Admin
+exports.getGeographicDistribution = async (req, res, _next) => {
+  try {
+    // Get user distribution by country
+    const userDistribution = await User.aggregate([
+      { $match: getCountryMatchFilter('country') },
+      {
+        $group: {
+          _id: '$country',
+          totalUsers: { $sum: 1 },
+          students: { $sum: { $cond: [{ $eq: ['$role', 'student'] }, 1, 0] } },
+          trainers: { $sum: { $cond: [{ $eq: ['$role', 'trainer'] }, 1, 0] } },
+          activeUsers: { $sum: { $cond: [{ $eq: ['$status', 'active'] }, 1, 0] } }
+        }
+      },
+      { $sort: { totalUsers: -1 } },
+      { $limit: 20 }
+    ]);
+    
+    // Get revenue distribution by country
+    const revenueDistribution = await Payment.aggregate([
+      { 
+        $match: { 
+          status: 'completed',
+          ...getCountryMatchFilter('metadata.country')
+        } 
+      },
+      {
+        $group: {
+          _id: '$metadata.country',
+          totalRevenue: { $sum: '$amount' },
+          transactions: { $sum: 1 },
+          avgTransactionValue: { $avg: '$amount' }
+        }
+      },
+      { $sort: { totalRevenue: -1 } },
+      { $limit: 20 }
+    ]);
+    
+    // Get enrollment distribution
+    const enrollmentDistribution = await Enrollment.aggregate([
+      {
+        $lookup: {
+          from: 'users',
+          localField: 'user',
+          foreignField: '_id',
+          as: 'userData'
+        }
+      },
+      { $unwind: '$userData' },
+      { $match: getCountryMatchFilter('userData.country') },
+      {
+        $group: {
+          _id: '$userData.country',
+          totalEnrollments: { $sum: 1 },
+          completedEnrollments: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } }
+        }
+      },
+      { $sort: { totalEnrollments: -1 } },
+      { $limit: 20 }
+    ]);
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        userDistribution,
+        revenueDistribution,
+        enrollmentDistribution
+      }
+    });
+  } catch (error) {
+    logger.error('Get geographic distribution error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching geographic distribution',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get peak usage times
+// @route   GET /api/analytics/peak-usage-times
+// @access  Private/Admin
+exports.getPeakUsageTimes = async (req, res, _next) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const dateFilter = {};
+    
+    if (startDate) dateFilter.$gte = new Date(startDate);
+    if (endDate) dateFilter.$lte = new Date(endDate);
+    
+    const timestampFilter = Object.keys(dateFilter).length > 0 
+      ? { timestamp: dateFilter } 
+      : {};
+    
+    // Get hourly activity distribution
+    const hourlyActivity = await Analytics.aggregate([
+      { $match: timestampFilter },
+      {
+        $group: {
+          _id: { hour: { $hour: '$timestamp' } },
+          totalEvents: { $sum: 1 },
+          uniqueUsers: { $addToSet: '$user' },
+          eventTypes: { $push: '$eventType' }
+        }
+      },
+      {
+        $project: {
+          hour: '$_id.hour',
+          totalEvents: 1,
+          uniqueUsers: { $size: '$uniqueUsers' },
+          _id: 0
+        }
+      },
+      { $sort: { hour: 1 } }
+    ]);
+    
+    // Get daily activity distribution (day of week)
+    const dailyActivity = await Analytics.aggregate([
+      { $match: timestampFilter },
+      {
+        $group: {
+          _id: { dayOfWeek: { $dayOfWeek: '$timestamp' } },
+          totalEvents: { $sum: 1 },
+          uniqueUsers: { $addToSet: '$user' }
+        }
+      },
+      {
+        $project: {
+          dayOfWeek: '$_id.dayOfWeek',
+          totalEvents: 1,
+          uniqueUsers: { $size: '$uniqueUsers' },
+          _id: 0
+        }
+      },
+      { $sort: { dayOfWeek: 1 } }
+    ]);
+    
+    // Get peak activity by event type
+    const eventTypeActivity = await Analytics.aggregate([
+      { $match: timestampFilter },
+      {
+        $group: {
+          _id: {
+            eventType: '$eventType',
+            hour: { $hour: '$timestamp' }
+          },
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } },
+      { $limit: 50 }
+    ]);
+    
+    // Day of week mapping
+    const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const dailyWithNames = dailyActivity.map(item => ({
+      ...item,
+      dayName: dayNames[item.dayOfWeek - 1]
+    }));
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        hourlyActivity,
+        dailyActivity: dailyWithNames,
+        eventTypeActivity
+      }
+    });
+  } catch (error) {
+    logger.error('Get peak usage times error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching peak usage times',
+      error: error.message
+    });
+  }
+};
+
+// @desc    Get conversion funnel
+// @route   GET /api/analytics/conversion-funnel
+// @access  Private/Admin
+exports.getConversionFunnel = async (req, res, _next) => {
+  try {
+    const { startDate, endDate } = req.query;
+    const dateFilter = {};
+    
+    if (startDate) dateFilter.$gte = new Date(startDate);
+    if (endDate) dateFilter.$lte = new Date(endDate);
+    
+    const userFilter = Object.keys(dateFilter).length > 0 
+      ? { createdAt: dateFilter } 
+      : {};
+    
+    // Stage 1: Total visitors (unique page views)
+    const visitorsResult = await Analytics.aggregate([
+      { 
+        $match: {
+          eventType: 'page_view',
+          ...(Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const visitors = visitorsResult[0]?.total || 0;
+    
+    // Stage 2: Signups (registered users)
+    const signups = await User.countDocuments(userFilter);
+    
+    // Stage 3: Course viewers (users who viewed at least one course)
+    const courseViewersResult = await Analytics.aggregate([
+      { 
+        $match: {
+          eventType: 'course_view',
+          ...(Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const courseViewers = courseViewersResult[0]?.total || 0;
+    
+    // Stage 4: Enrolled users
+    const enrolledUsersResult = await Enrollment.aggregate([
+      { 
+        $match: {
+          ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const enrolledUsers = enrolledUsersResult[0]?.total || 0;
+    
+    // Stage 5: Active learners (users with lesson completion)
+    const activeLearnersResult = await Analytics.aggregate([
+      { 
+        $match: {
+          eventType: { $in: ['lesson_complete', 'video_complete'] },
+          ...(Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const activeLearners = activeLearnersResult[0]?.total || 0;
+    
+    // Stage 6: Course completers
+    const courseCompletersResult = await Enrollment.aggregate([
+      { 
+        $match: {
+          status: 'completed',
+          ...(Object.keys(dateFilter).length > 0 ? { completionDate: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const courseCompleters = courseCompletersResult[0]?.total || 0;
+    
+    // Stage 7: Certificate earners
+    const certificateEarnersResult = await Certificate.aggregate([
+      { 
+        $match: {
+          isValid: true,
+          ...(Object.keys(dateFilter).length > 0 ? { issuedAt: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const certificateEarners = certificateEarnersResult[0]?.total || 0;
+    
+    // Calculate conversion rates
+    const funnelData = [
+      { stage: 'Visitors', count: visitors, percentage: 100 },
+      { 
+        stage: 'Signups', 
+        count: signups, 
+        percentage: visitors > 0 ? (signups / visitors * 100).toFixed(2) : 0 
+      },
+      { 
+        stage: 'Course Viewers', 
+        count: courseViewers, 
+        percentage: signups > 0 ? (courseViewers / signups * 100).toFixed(2) : 0 
+      },
+      { 
+        stage: 'Enrollments', 
+        count: enrolledUsers, 
+        percentage: courseViewers > 0 ? (enrolledUsers / courseViewers * 100).toFixed(2) : 0 
+      },
+      { 
+        stage: 'Active Learners', 
+        count: activeLearners, 
+        percentage: enrolledUsers > 0 ? (activeLearners / enrolledUsers * 100).toFixed(2) : 0 
+      },
+      { 
+        stage: 'Course Completers', 
+        count: courseCompleters, 
+        percentage: activeLearners > 0 ? (courseCompleters / activeLearners * 100).toFixed(2) : 0 
+      },
+      { 
+        stage: 'Certificate Earners', 
+        count: certificateEarners, 
+        percentage: courseCompleters > 0 ? (certificateEarners / courseCompleters * 100).toFixed(2) : 0 
+      }
+    ];
+    
+    // Calculate drop-off rates
+    const dropOffRates = funnelData.map((stage, index) => {
+      if (index === 0) return { ...stage, dropOff: 0 };
+      const previousCount = funnelData[index - 1].count;
+      const dropOff = previousCount > 0 ? ((previousCount - stage.count) / previousCount * 100).toFixed(2) : 0;
+      return { ...stage, dropOff };
+    });
+    
+    res.status(200).json({
+      success: true,
+      data: {
+        funnel: dropOffRates,
+        overallConversionRate: visitors > 0 
+          ? ((certificateEarners / visitors) * 100).toFixed(2) 
+          : 0
+      }
+    });
+  } catch (error) {
+    logger.error('Get conversion funnel error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error fetching conversion funnel',
+      error: error.message
+    });
+  }
+};

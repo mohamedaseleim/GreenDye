@@ -137,20 +137,39 @@ DELETE /api/admin/cms/announcements/:id  - Delete announcement
 
 ### 5. Content Moderation
 
-Moderate user-generated content:
+Moderate user-generated content including forum posts and course reviews:
 
 #### Features:
 - **Forum Moderation**: Approve or reject forum posts
+- **Review Moderation**: Approve, reject, flag, or remove course reviews
+- **Admin Responses**: Respond to reviews as an administrator
+- **Flag Inappropriate Content**: Mark reviews with specific violation types (spam, inappropriate, offensive, fake)
 - **Moderation Reasons**: Add notes when rejecting content
 - **Pending Queue**: View all content awaiting moderation
-- **Audit Trail**: Track all moderation actions
+- **Review Statistics**: Track review counts by status and average ratings
+- **Audit Trail**: Track all moderation actions with timestamps
 
 #### API Endpoints:
 
+**Forum Moderation:**
 ```
 GET    /api/admin/cms/moderation/forums     - Get pending forum posts
 PUT    /api/admin/cms/moderation/forums/:id - Approve/reject post
 ```
+
+**Review Moderation:**
+```
+GET    /api/admin/reviews                    - Get all reviews with filters
+GET    /api/admin/reviews/:id                - Get review details
+PUT    /api/admin/reviews/:id/approve        - Approve review
+PUT    /api/admin/reviews/:id/reject         - Reject review (requires reason)
+PUT    /api/admin/reviews/:id/flag           - Flag review as inappropriate
+DELETE /api/admin/reviews/:id                - Remove review permanently
+PUT    /api/admin/reviews/:id/respond        - Add admin response to review
+GET    /api/admin/reviews/analytics/stats    - Get review statistics
+```
+
+For detailed review moderation documentation, see [REVIEW_MODERATION.md](./REVIEW_MODERATION.md).
 
 ### 6. Course Management
 

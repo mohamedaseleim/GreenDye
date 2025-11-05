@@ -715,6 +715,57 @@ const adminService = {
     const response = await axios.get(`/api/quizzes/${id}/analytics`, getAuthHeader());
     return response.data;
   },
+
+  // ========== REVIEW MANAGEMENT ==========
+  getAllReviews: async (params = {}) => {
+    const response = await axios.get(`${API_URL}/reviews`, {
+      ...getAuthHeader(),
+      params,
+    });
+    return response.data;
+  },
+
+  getReviewDetails: async (id) => {
+    const response = await axios.get(`${API_URL}/reviews/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  approveReview: async (id, reason) => {
+    const response = await axios.put(`${API_URL}/reviews/${id}/approve`, { reason }, getAuthHeader());
+    return response.data;
+  },
+
+  rejectReview: async (id, reason) => {
+    const response = await axios.put(`${API_URL}/reviews/${id}/reject`, { reason }, getAuthHeader());
+    return response.data;
+  },
+
+  flagReview: async (id, reason, description) => {
+    const response = await axios.put(`${API_URL}/reviews/${id}/flag`, { reason, description }, getAuthHeader());
+    return response.data;
+  },
+
+  removeReview: async (id, reason) => {
+    const response = await axios.delete(`${API_URL}/reviews/${id}`, {
+      ...getAuthHeader(),
+      data: { reason }
+    });
+    return response.data;
+  },
+
+  respondToReview: async (id, response) => {
+    const res = await axios.put(`${API_URL}/reviews/${id}/respond`, { response }, getAuthHeader());
+    return res.data;
+  },
+
+  getReviewStats: async (courseId = null) => {
+    const params = courseId ? { courseId } : {};
+    const response = await axios.get(`${API_URL}/reviews/analytics/stats`, {
+      ...getAuthHeader(),
+      params,
+    });
+    return response.data;
+  },
 };
 
 export default adminService;

@@ -1,5 +1,6 @@
 const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
+const Review = require('../models/Review');
 
 // @desc    Enroll in a course
 // @route   POST /api/enrollments/enroll
@@ -268,6 +269,22 @@ exports.rateAndReview = async (req, res, next) => {
       });
     }
 
+    // Validate rating and review
+    if (!rating || rating < 0 || rating > 5) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a valid rating between 0 and 5'
+      });
+    }
+
+    if (!review || review.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: 'Please provide a review text'
+      });
+    }
+
+    // Update enrollment
     enrollment.rating = rating;
     enrollment.review = {
       text: review,
@@ -276,20 +293,36 @@ exports.rateAndReview = async (req, res, next) => {
 
     await enrollment.save();
 
-    // Update course rating
-    const course = await Course.findById(enrollment.course);
-    const enrollments = await Enrollment.find({ course: course._id, rating: { $exists: true, $ne: null } });
+    // Create or update Review record for moderation
+    let reviewRecord = await Review.findOne({ enrollment: enrollment._id });
     
-    const totalRating = enrollments.reduce((sum, e) => sum + e.rating, 0);
-    course.rating = totalRating / enrollments.length;
-    course.reviewsCount = enrollments.length;
-    
-    await course.save();
+    if (reviewRecord) {
+      // Update existing review
+      reviewRecord.rating = rating;
+      reviewRecord.reviewText = review;
+      reviewRecord.status = 'pending';
+      reviewRecord.isVisible = false;
+      await reviewRecord.save();
+    } else {
+      // Create new review record
+      reviewRecord = await Review.create({
+        enrollment: enrollment._id,
+        user: enrollment.user,
+        course: enrollment.course,
+        rating,
+        reviewText: review,
+        status: 'pending',
+        isVisible: false
+      });
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Review submitted successfully',
-      data: enrollment
+      message: 'Review submitted successfully and is pending moderation',
+      data: {
+        enrollment,
+        review: reviewRecord
+      }
     });
   } catch (error) {
     next(error);

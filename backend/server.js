@@ -105,6 +105,7 @@ app.use('/api/admin/courses', require('./routes/adminCourseRoutes'));
 app.use('/api/admin/trainers', require('./routes/adminTrainerRoutes'));
 app.use('/api/admin/payments', require('./routes/adminPaymentRoutes'));
 app.use('/api/admin/enrollments', require('./routes/adminEnrollmentRoutes'));
+app.use('/api/admin/reviews', require('./routes/adminReviewRoutes'));
 app.use('/api/admin/settings', require('./routes/systemSettingsRoutes'));
 
 // Settings public routes

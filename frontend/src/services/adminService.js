@@ -766,6 +766,85 @@ const adminService = {
     });
     return response.data;
   },
+
+  // ========== EMAIL MARKETING ==========
+  getEmailMarketingStats: async () => {
+    const response = await axios.get(`${API_URL}/email-marketing/stats`, getAuthHeader());
+    return response.data;
+  },
+
+  // Campaigns
+  getAllCampaigns: async (params = {}) => {
+    const response = await axios.get(`${API_URL}/email-marketing/campaigns`, {
+      ...getAuthHeader(),
+      params,
+    });
+    return response.data;
+  },
+
+  getCampaign: async (id) => {
+    const response = await axios.get(`${API_URL}/email-marketing/campaigns/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  createCampaign: async (data) => {
+    const response = await axios.post(`${API_URL}/email-marketing/campaigns`, data, getAuthHeader());
+    return response.data;
+  },
+
+  updateCampaign: async (id, data) => {
+    const response = await axios.put(`${API_URL}/email-marketing/campaigns/${id}`, data, getAuthHeader());
+    return response.data;
+  },
+
+  deleteCampaign: async (id) => {
+    const response = await axios.delete(`${API_URL}/email-marketing/campaigns/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  sendCampaign: async (id) => {
+    const response = await axios.post(`${API_URL}/email-marketing/campaigns/${id}/send`, {}, getAuthHeader());
+    return response.data;
+  },
+
+  getCampaignStats: async (id) => {
+    const response = await axios.get(`${API_URL}/email-marketing/campaigns/${id}/stats`, getAuthHeader());
+    return response.data;
+  },
+
+  // Newsletters
+  getAllNewsletters: async (params = {}) => {
+    const response = await axios.get(`${API_URL}/email-marketing/newsletters`, {
+      ...getAuthHeader(),
+      params,
+    });
+    return response.data;
+  },
+
+  getNewsletter: async (id) => {
+    const response = await axios.get(`${API_URL}/email-marketing/newsletters/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  createNewsletter: async (data) => {
+    const response = await axios.post(`${API_URL}/email-marketing/newsletters`, data, getAuthHeader());
+    return response.data;
+  },
+
+  updateNewsletter: async (id, data) => {
+    const response = await axios.put(`${API_URL}/email-marketing/newsletters/${id}`, data, getAuthHeader());
+    return response.data;
+  },
+
+  deleteNewsletter: async (id) => {
+    const response = await axios.delete(`${API_URL}/email-marketing/newsletters/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  publishNewsletter: async (id) => {
+    const response = await axios.post(`${API_URL}/email-marketing/newsletters/${id}/publish`, {}, getAuthHeader());
+    return response.data;
+  },
 };
 
 export default adminService;

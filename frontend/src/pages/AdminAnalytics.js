@@ -42,13 +42,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
-  PieChart,
-  Pie,
-  Cell,
   AreaChart,
   Area,
-  FunnelChart,
-  Funnel,
   LabelList
 } from 'recharts';
 import axios from 'axios';
@@ -72,18 +67,21 @@ const AdminAnalytics = () => {
 
   useEffect(() => {
     fetchAllAnalytics();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (userGrowthData) {
       fetchUserGrowth();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [growthPeriod]);
 
   useEffect(() => {
     if (revenueTrendsData) {
       fetchRevenueTrends();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [revenuePeriod]);
 
   const fetchAllAnalytics = async () => {

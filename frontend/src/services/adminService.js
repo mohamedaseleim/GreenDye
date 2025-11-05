@@ -351,8 +351,19 @@ const updatePayoutStatus = async (payoutId, data) => {
   return response.data;
 };
 
+// ========== COURSE MANAGEMENT (for enrollment) ==========
+const getAllCoursesForEnrollment = async () => {
+  const response = await axios.get('/api/courses', getAuthHeader());
+  return response.data;
+};
+
 // ========== USER MANAGEMENT ==========
 const USER_API_URL = '/api/users';
+
+const getAllUsersForEnrollment = async () => {
+  const response = await axios.get(USER_API_URL, getAuthHeader());
+  return response.data;
+};
 
 const getUsers = async (params = {}) => {
   const response = await axios.get(USER_API_URL, {
@@ -412,6 +423,67 @@ const bulkUpdateUsers = async (userIds, updates) => {
 
 const bulkDeleteUsers = async (userIds) => {
   const response = await axios.post(`${USER_API_URL}/bulk-delete`, { userIds }, getAuthHeader());
+  return response.data;
+};
+
+// ========== ENROLLMENT MANAGEMENT ==========
+const getAllEnrollments = async (params = {}) => {
+  const response = await axios.get(`${API_URL}/enrollments`, {
+    ...getAuthHeader(),
+    params,
+  });
+  return response.data;
+};
+
+const getEnrollmentDetails = async (id) => {
+  const response = await axios.get(`${API_URL}/enrollments/${id}`, getAuthHeader());
+  return response.data;
+};
+
+const getEnrollmentAnalytics = async (params = {}) => {
+  const response = await axios.get(`${API_URL}/enrollments/analytics`, {
+    ...getAuthHeader(),
+    params,
+  });
+  return response.data;
+};
+
+const manualEnrollment = async (data) => {
+  const response = await axios.post(`${API_URL}/enrollments`, data, getAuthHeader());
+  return response.data;
+};
+
+const manualUnenrollment = async (id, reason = '') => {
+  const response = await axios.delete(`${API_URL}/enrollments/${id}`, {
+    ...getAuthHeader(),
+    data: { reason },
+  });
+  return response.data;
+};
+
+const updateEnrollmentStatus = async (id, status) => {
+  const response = await axios.put(`${API_URL}/enrollments/${id}/status`, { status }, getAuthHeader());
+  return response.data;
+};
+
+// ========== REFUND MANAGEMENT ==========
+const REFUND_API_URL = '/api/refunds';
+
+const getRefundRequests = async (params = {}) => {
+  const response = await axios.get(REFUND_API_URL, {
+    ...getAuthHeader(),
+    params,
+  });
+  return response.data;
+};
+
+const approveRefund = async (id) => {
+  const response = await axios.put(`${REFUND_API_URL}/${id}/approve`, {}, getAuthHeader());
+  return response.data;
+};
+
+const rejectRefund = async (id, responseMessage) => {
+  const response = await axios.put(`${REFUND_API_URL}/${id}/reject`, { responseMessage }, getAuthHeader());
   return response.data;
 };
 
@@ -502,6 +574,21 @@ const adminService = {
   resetUserPassword,
   bulkUpdateUsers,
   bulkDeleteUsers,
+  
+  // Enrollment Management
+  getAllEnrollments,
+  getEnrollmentDetails,
+  getEnrollmentAnalytics,
+  manualEnrollment,
+  manualUnenrollment,
+  updateEnrollmentStatus,
+  getAllUsersForEnrollment,
+  getAllCoursesForEnrollment,
+  
+  // Refund Management
+  getRefundRequests,
+  approveRefund,
+  rejectRefund,
   
   // System Settings
   getSettings: async () => {

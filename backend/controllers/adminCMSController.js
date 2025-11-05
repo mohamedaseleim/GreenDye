@@ -417,8 +417,10 @@ exports.getAllAnnouncements = async (req, res, next) => {
 // @access  Private/Admin
 exports.createAnnouncement = async (req, res, next) => {
   try {
+    // Sanitize input to prevent MongoDB injection
+    const sanitizedBody = mongoSanitize(req.body);
     const announcementData = {
-      ...req.body,
+      ...sanitizedBody,
       author: req.user.id
     };
 

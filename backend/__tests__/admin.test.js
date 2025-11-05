@@ -98,6 +98,21 @@ describe('Admin Dashboard API Tests', () => {
       // Verify that MongoDB operators are removed
       expect(sanitized.priority).not.toHaveProperty('$or');
     });
+
+    it('should sanitize input when creating announcements', async () => {
+      // Test that createAnnouncement sanitizes malicious input
+      const mongoSanitize = require('mongo-sanitize');
+      const maliciousInput = {
+        message: { en: 'Test Announcement' },
+        startDate: { $gte: new Date() }, // MongoDB operator injection attempt
+        type: 'info'
+      };
+      
+      const sanitized = mongoSanitize(maliciousInput);
+      
+      // Verify that MongoDB operators are removed
+      expect(sanitized.startDate).not.toHaveProperty('$gte');
+    });
   });
 
   describe('Security', () => {

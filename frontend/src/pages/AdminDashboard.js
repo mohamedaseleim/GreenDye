@@ -18,7 +18,8 @@ import {
   School as CourseIcon,
   Forum as ForumIcon,
   CardMembership as CertificateIcon,
-  School as TrainerIcon
+  School as TrainerIcon,
+  People as UsersIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -65,6 +66,7 @@ const AdminDashboard = () => {
       '/admin/announcements',
       '/admin/courses',
       '/admin/trainers',
+      '/admin/users',
       '/admin/moderation'
     ];
     
@@ -88,7 +90,7 @@ const AdminDashboard = () => {
       </Typography>
       
       <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-        <Tabs value={activeTab} onChange={handleTabChange}>
+        <Tabs value={activeTab} onChange={handleTabChange} variant="scrollable" scrollButtons="auto">
           <Tab label="Overview" />
           <Tab label="Certificates" icon={<CertificateIcon />} iconPosition="start" />
           <Tab label="Pages" icon={<PageIcon />} iconPosition="start" />
@@ -96,6 +98,7 @@ const AdminDashboard = () => {
           <Tab label="Announcements" icon={<AnnouncementIcon />} iconPosition="start" />
           <Tab label="Courses" icon={<CourseIcon />} iconPosition="start" />
           <Tab label="Trainers" icon={<TrainerIcon />} iconPosition="start" />
+          <Tab label="Users" icon={<UsersIcon />} iconPosition="start" />
           <Tab label="Moderation" icon={<ForumIcon />} iconPosition="start" />
         </Tabs>
       </Box>
@@ -172,6 +175,30 @@ const AdminDashboard = () => {
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Total courses
+                </Typography>
+              </CardContent>
+            </Card>
+          </Grid>
+
+          {/* Users Statistics */}
+          <Grid item xs={12} sm={6} md={4}>
+            <Card>
+              <CardContent>
+                <Box display="flex" alignItems="center" mb={2}>
+                  <UsersIcon color="primary" sx={{ fontSize: 40, mr: 2 }} />
+                  <Typography variant="h6">Users</Typography>
+                </Box>
+                <Typography variant="h4" gutterBottom>
+                  {stats.users?.total || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Students: {stats.users?.students || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Trainers: {stats.users?.trainers || 0}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Admins: {stats.users?.admins || 0}
                 </Typography>
               </CardContent>
             </Card>

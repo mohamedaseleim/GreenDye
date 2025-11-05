@@ -293,6 +293,70 @@ const updatePayoutStatus = async (payoutId, data) => {
   return response.data;
 };
 
+// ========== USER MANAGEMENT ==========
+const USER_API_URL = '/api/users';
+
+const getUsers = async (params = {}) => {
+  const response = await axios.get(USER_API_URL, {
+    ...getAuthHeader(),
+    params,
+  });
+  return response.data;
+};
+
+const getUser = async (id) => {
+  const response = await axios.get(`${USER_API_URL}/${id}`, getAuthHeader());
+  return response.data;
+};
+
+const createUser = async (data) => {
+  const response = await axios.post(USER_API_URL, data, getAuthHeader());
+  return response.data;
+};
+
+const updateUser = async (id, data) => {
+  const response = await axios.put(`${USER_API_URL}/${id}`, data, getAuthHeader());
+  return response.data;
+};
+
+const deleteUser = async (id) => {
+  const response = await axios.delete(`${USER_API_URL}/${id}`, getAuthHeader());
+  return response.data;
+};
+
+const suspendUser = async (id, reason = '') => {
+  const response = await axios.put(`${USER_API_URL}/${id}/suspend`, { reason }, getAuthHeader());
+  return response.data;
+};
+
+const activateUser = async (id) => {
+  const response = await axios.put(`${USER_API_URL}/${id}/activate`, {}, getAuthHeader());
+  return response.data;
+};
+
+const getUserActivity = async (id, params = {}) => {
+  const response = await axios.get(`${USER_API_URL}/${id}/activity`, {
+    ...getAuthHeader(),
+    params,
+  });
+  return response.data;
+};
+
+const resetUserPassword = async (id, newPassword) => {
+  const response = await axios.post(`${USER_API_URL}/${id}/reset-password`, { newPassword }, getAuthHeader());
+  return response.data;
+};
+
+const bulkUpdateUsers = async (userIds, updates) => {
+  const response = await axios.post(`${USER_API_URL}/bulk-update`, { userIds, updates }, getAuthHeader());
+  return response.data;
+};
+
+const bulkDeleteUsers = async (userIds) => {
+  const response = await axios.post(`${USER_API_URL}/bulk-delete`, { userIds }, getAuthHeader());
+  return response.data;
+};
+
 const adminService = {
   // Dashboard
   getDashboardStats,
@@ -356,6 +420,19 @@ const adminService = {
   createPayout,
   getAllPayouts,
   updatePayoutStatus,
+
+  // User Management
+  getUsers,
+  getUser,
+  createUser,
+  updateUser,
+  deleteUser,
+  suspendUser,
+  activateUser,
+  getUserActivity,
+  resetUserPassword,
+  bulkUpdateUsers,
+  bulkDeleteUsers,
 };
 
 export default adminService;

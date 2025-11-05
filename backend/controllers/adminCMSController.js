@@ -599,20 +599,30 @@ exports.moderateForumPost = async (req, res, next) => {
 // @access  Private/Admin
 exports.getDashboardStats = async (req, res, next) => {
   try {
+    const User = require('../models/User');
+    
     const [
       totalPages,
       publishedPages,
       totalMedia,
       activeAnnouncements,
       totalCourses,
-      pendingForums
+      pendingForums,
+      totalUsers,
+      studentUsers,
+      trainerUsers,
+      adminUsers
     ] = await Promise.all([
       Page.countDocuments(),
       Page.countDocuments({ status: 'published' }),
       Media.countDocuments(),
       Announcement.countDocuments({ status: 'active' }),
       Course.countDocuments(),
-      ForumPost.countDocuments({ status: 'pending' })
+      ForumPost.countDocuments({ status: 'pending' }),
+      User.countDocuments(),
+      User.countDocuments({ role: 'student' }),
+      User.countDocuments({ role: 'trainer' }),
+      User.countDocuments({ role: 'admin' })
     ]);
 
     res.status(200).json({
@@ -634,6 +644,12 @@ exports.getDashboardStats = async (req, res, next) => {
         },
         moderation: {
           pendingForums
+        },
+        users: {
+          total: totalUsers,
+          students: studentUsers,
+          trainers: trainerUsers,
+          admins: adminUsers
         }
       }
     });

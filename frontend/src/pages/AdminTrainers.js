@@ -36,7 +36,6 @@ import {
 import {
   Add as AddIcon,
   Delete as DeleteIcon,
-  Edit as EditIcon,
   Refresh as RefreshIcon,
   Check as ApproveIcon,
   Close as RejectIcon,
@@ -81,12 +80,6 @@ const AdminTrainers = () => {
   const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutMethod, setPayoutMethod] = useState('bank_transfer');
   const [payoutNotes, setPayoutNotes] = useState('');
-  const [createFormData, setCreateFormData] = useState({
-    userId: '',
-    expertise: '',
-    bio: '',
-    commissionRate: 20
-  });
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {

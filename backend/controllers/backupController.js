@@ -165,10 +165,19 @@ const restoreDatabase = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Backup filename is required');
   }
+  
+  // Sanitize filename to prevent path traversal
+  const sanitizedFilename = path.basename(filename);
 
   const backupDir = path.join(__dirname, '../backups');
-  const backupPath = path.join(backupDir, filename);
+  const backupPath = path.join(backupDir, sanitizedFilename);
   const extractPath = path.join(backupDir, `extract-${Date.now()}`);
+  
+  // Verify file is within backup directory
+  if (!backupPath.startsWith(backupDir)) {
+    res.status(403);
+    throw new Error('Access denied');
+  }
 
   try {
     // Verify backup file exists
@@ -195,7 +204,7 @@ const restoreDatabase = asyncHandler(async (req, res) => {
       success: true,
       message: 'Database restored successfully',
       data: {
-        filename,
+        filename: sanitizedFilename,
         timestamp: new Date()
       }
     });
@@ -227,10 +236,19 @@ const importData = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Export filename is required');
   }
+  
+  // Sanitize filename to prevent path traversal
+  const sanitizedFilename = path.basename(filename);
 
   const exportDir = path.join(__dirname, '../exports');
-  const exportPath = path.join(exportDir, filename);
+  const exportPath = path.join(exportDir, sanitizedFilename);
   const extractPath = path.join(exportDir, `extract-${Date.now()}`);
+  
+  // Verify file is within export directory
+  if (!exportPath.startsWith(exportDir)) {
+    res.status(403);
+    throw new Error('Access denied');
+  }
 
   try {
     // Verify export file exists
@@ -284,7 +302,7 @@ const importData = asyncHandler(async (req, res) => {
       success: true,
       message: `Data import completed: ${successCount} collections successful, ${failureCount} failed`,
       data: {
-        filename,
+        filename: sanitizedFilename,
         mode,
         timestamp: new Date(),
         results: importResults
@@ -378,14 +396,24 @@ const listBackups = asyncHandler(async (req, res) => {
 // @access  Admin
 const downloadBackup = asyncHandler(async (req, res) => {
   const { filename } = req.params;
+  
+  // Sanitize filename to prevent path traversal
+  const sanitizedFilename = path.basename(filename);
+  
   const backupDir = path.join(__dirname, '../backups');
-  const filePath = path.join(backupDir, filename);
+  const filePath = path.join(backupDir, sanitizedFilename);
+  
+  // Verify file is within backup directory
+  if (!filePath.startsWith(backupDir)) {
+    res.status(403);
+    throw new Error('Access denied');
+  }
 
   try {
     // Verify file exists
     await fs.access(filePath);
 
-    res.download(filePath, filename);
+    res.download(filePath, sanitizedFilename);
   } catch (error) {
     res.status(404).json({
       success: false,
@@ -399,14 +427,24 @@ const downloadBackup = asyncHandler(async (req, res) => {
 // @access  Admin
 const downloadExport = asyncHandler(async (req, res) => {
   const { filename } = req.params;
+  
+  // Sanitize filename to prevent path traversal
+  const sanitizedFilename = path.basename(filename);
+  
   const exportDir = path.join(__dirname, '../exports');
-  const filePath = path.join(exportDir, filename);
+  const filePath = path.join(exportDir, sanitizedFilename);
+  
+  // Verify file is within export directory
+  if (!filePath.startsWith(exportDir)) {
+    res.status(403);
+    throw new Error('Access denied');
+  }
 
   try {
     // Verify file exists
     await fs.access(filePath);
 
-    res.download(filePath, filename);
+    res.download(filePath, sanitizedFilename);
   } catch (error) {
     res.status(404).json({
       success: false,
@@ -425,11 +463,20 @@ const deleteBackupFile = asyncHandler(async (req, res) => {
     res.status(400);
     throw new Error('Invalid type. Must be "backup" or "export"');
   }
+  
+  // Sanitize filename to prevent path traversal
+  const sanitizedFilename = path.basename(filename);
 
   const baseDir = type === 'backup' 
     ? path.join(__dirname, '../backups')
     : path.join(__dirname, '../exports');
-  const filePath = path.join(baseDir, filename);
+  const filePath = path.join(baseDir, sanitizedFilename);
+  
+  // Verify file is within the appropriate directory
+  if (!filePath.startsWith(baseDir)) {
+    res.status(403);
+    throw new Error('Access denied');
+  }
 
   try {
     // Verify file exists
@@ -441,7 +488,7 @@ const deleteBackupFile = asyncHandler(async (req, res) => {
     res.status(200).json({
       success: true,
       message: `${type} file deleted successfully`,
-      data: { filename }
+      data: { filename: sanitizedFilename }
     });
   } catch (error) {
     res.status(404).json({

@@ -48,6 +48,7 @@ import AdminAnnouncements from './pages/AdminAnnouncements';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminTrainers from './pages/AdminTrainers';
 import AdminUsers from './pages/AdminUsers';
+import AdminCourses from './pages/AdminCourses';
 
 // NEW: analytics import
 import { trackPageView } from './services/analyticsService';
@@ -253,6 +254,16 @@ function App() {
                       <PrivateRoute>
                         <AdminRoute>
                           <AdminUsers />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/courses"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminCourses />
                         </AdminRoute>
                       </PrivateRoute>
                     }

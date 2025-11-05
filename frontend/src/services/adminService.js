@@ -645,6 +645,73 @@ const adminService = {
     const response = await axios.post(`${API_URL}/settings/email-templates/test`, { templateType, testEmail }, getAuthHeader());
     return response.data;
   },
+
+  // ========== LESSON MANAGEMENT ==========
+  getLessons: async (courseId) => {
+    const response = await axios.get(`/api/lessons?courseId=${courseId}`, getAuthHeader());
+    return response.data;
+  },
+
+  getLesson: async (id) => {
+    const response = await axios.get(`/api/lessons/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  createLesson: async (data) => {
+    const response = await axios.post('/api/lessons', data, getAuthHeader());
+    return response.data;
+  },
+
+  updateLesson: async (id, data) => {
+    const response = await axios.put(`/api/lessons/${id}`, data, getAuthHeader());
+    return response.data;
+  },
+
+  deleteLesson: async (id) => {
+    const response = await axios.delete(`/api/lessons/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  reorderLessons: async (orderedIds) => {
+    const response = await axios.put('/api/lessons/reorder', { orderedIds }, getAuthHeader());
+    return response.data;
+  },
+
+  // ========== QUIZ MANAGEMENT ==========
+  getQuizzes: async (courseId, lessonId = null) => {
+    const params = { courseId };
+    if (lessonId) params.lessonId = lessonId;
+    const response = await axios.get('/api/quizzes', {
+      ...getAuthHeader(),
+      params,
+    });
+    return response.data;
+  },
+
+  getQuiz: async (id) => {
+    const response = await axios.get(`/api/quizzes/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  createQuiz: async (data) => {
+    const response = await axios.post('/api/quizzes', data, getAuthHeader());
+    return response.data;
+  },
+
+  updateQuiz: async (id, data) => {
+    const response = await axios.put(`/api/quizzes/${id}`, data, getAuthHeader());
+    return response.data;
+  },
+
+  deleteQuiz: async (id) => {
+    const response = await axios.delete(`/api/quizzes/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  getQuizAnalytics: async (id) => {
+    const response = await axios.get(`/api/quizzes/${id}/analytics`, getAuthHeader());
+    return response.data;
+  },
 };
 
 export default adminService;

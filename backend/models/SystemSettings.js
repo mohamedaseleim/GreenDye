@@ -137,6 +137,7 @@ const SystemSettingsSchema = new mongoose.Schema({
     },
     dateFormat: {
       type: String,
+      enum: ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'],
       default: 'MM/DD/YYYY'
     }
   },
@@ -202,18 +203,31 @@ SystemSettingsSchema.statics.getSettings = async function() {
 SystemSettingsSchema.statics.updateSettings = async function(updates, userId) {
   const settings = await this.getSettings();
   
+  // Deep merge helper function
+  const deepMerge = (target, source) => {
+    const result = { ...target };
+    for (const key in source) {
+      if (source[key] !== null && typeof source[key] === 'object' && !Array.isArray(source[key])) {
+        result[key] = deepMerge(result[key] || {}, source[key]);
+      } else {
+        result[key] = source[key];
+      }
+    }
+    return result;
+  };
+  
   // Deep merge updates
   if (updates.general) {
-    settings.general = { ...settings.general.toObject(), ...updates.general };
+    settings.general = deepMerge(settings.general.toObject(), updates.general);
   }
   if (updates.emailTemplates) {
-    settings.emailTemplates = { ...settings.emailTemplates.toObject(), ...updates.emailTemplates };
+    settings.emailTemplates = deepMerge(settings.emailTemplates.toObject(), updates.emailTemplates);
   }
   if (updates.notifications) {
-    settings.notifications = { ...settings.notifications.toObject(), ...updates.notifications };
+    settings.notifications = deepMerge(settings.notifications.toObject(), updates.notifications);
   }
   if (updates.localization) {
-    settings.localization = { ...settings.localization.toObject(), ...updates.localization };
+    settings.localization = deepMerge(settings.localization.toObject(), updates.localization);
   }
   
   settings.updatedBy = userId;

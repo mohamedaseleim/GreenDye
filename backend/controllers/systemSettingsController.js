@@ -165,7 +165,7 @@ exports.deleteApiKey = asyncHandler(async (req, res) => {
     throw new Error('API key not found');
   }
   
-  apiKey.deleteOne();
+  settings.apiKeys.pull(apiKey);
   settings.updatedBy = req.user._id;
   await settings.save();
   

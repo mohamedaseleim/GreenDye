@@ -397,7 +397,7 @@ exports.getReviewStats = async (req, res) => {
       { $group: { _id: null, avgRating: { $avg: '$rating' } } }
     ]);
     const avgRating = avgRatingResult.length > 0 
-      ? avgRatingResult[0].avgRating.toFixed(2) 
+      ? parseFloat(avgRatingResult[0].avgRating.toFixed(2))
       : 0;
 
     // Flagged reviews count

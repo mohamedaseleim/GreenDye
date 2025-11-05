@@ -87,6 +87,8 @@ const ReviewSchema = new mongoose.Schema({
 ReviewSchema.index({ course: 1 });
 ReviewSchema.index({ user: 1 });
 ReviewSchema.index({ status: 1 });
+// Unique index ensures one review per enrollment
+// This constraint is also validated at the application level in enrollmentController
 ReviewSchema.index({ enrollment: 1 }, { unique: true });
 
 // Update updatedAt on save

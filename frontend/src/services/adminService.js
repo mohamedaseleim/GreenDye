@@ -502,6 +502,62 @@ const adminService = {
   resetUserPassword,
   bulkUpdateUsers,
   bulkDeleteUsers,
+  
+  // System Settings
+  getSettings: async () => {
+    const response = await axios.get(`${API_URL}/settings`, getAuthHeader());
+    return response.data;
+  },
+  
+  updateGeneralSettings: async (data) => {
+    const response = await axios.put(`${API_URL}/settings/general`, data, getAuthHeader());
+    return response.data;
+  },
+  
+  updateEmailTemplates: async (data) => {
+    const response = await axios.put(`${API_URL}/settings/email-templates`, data, getAuthHeader());
+    return response.data;
+  },
+  
+  updateNotificationSettings: async (data) => {
+    const response = await axios.put(`${API_URL}/settings/notifications`, data, getAuthHeader());
+    return response.data;
+  },
+  
+  updateLocalizationSettings: async (data) => {
+    const response = await axios.put(`${API_URL}/settings/localization`, data, getAuthHeader());
+    return response.data;
+  },
+  
+  getApiKeys: async () => {
+    const response = await axios.get(`${API_URL}/settings/api-keys`, getAuthHeader());
+    return response.data;
+  },
+  
+  createApiKey: async (data) => {
+    const response = await axios.post(`${API_URL}/settings/api-keys`, data, getAuthHeader());
+    return response.data;
+  },
+  
+  updateApiKey: async (keyId, data) => {
+    const response = await axios.put(`${API_URL}/settings/api-keys/${keyId}`, data, getAuthHeader());
+    return response.data;
+  },
+  
+  deleteApiKey: async (keyId) => {
+    const response = await axios.delete(`${API_URL}/settings/api-keys/${keyId}`, getAuthHeader());
+    return response.data;
+  },
+  
+  regenerateApiKey: async (keyId) => {
+    const response = await axios.post(`${API_URL}/settings/api-keys/${keyId}/regenerate`, {}, getAuthHeader());
+    return response.data;
+  },
+  
+  testEmailTemplate: async (templateType, testEmail) => {
+    const response = await axios.post(`${API_URL}/settings/email-templates/test`, { templateType, testEmail }, getAuthHeader());
+    return response.data;
+  },
 };
 
 export default adminService;

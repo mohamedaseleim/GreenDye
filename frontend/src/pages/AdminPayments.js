@@ -67,6 +67,7 @@ const AdminPayments = () => {
       return;
     }
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, page, rowsPerPage, filters]);
 
   const getAuthHeaders = () => ({

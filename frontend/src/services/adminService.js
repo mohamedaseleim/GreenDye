@@ -294,8 +294,10 @@ const updatePayoutStatus = async (payoutId, data) => {
 };
 
 // ========== USER MANAGEMENT ==========
+const USER_API_URL = '/api/users';
+
 const getUsers = async (params = {}) => {
-  const response = await axios.get('/api/users', {
+  const response = await axios.get(USER_API_URL, {
     ...getAuthHeader(),
     params,
   });
@@ -303,37 +305,37 @@ const getUsers = async (params = {}) => {
 };
 
 const getUser = async (id) => {
-  const response = await axios.get(`/api/users/${id}`, getAuthHeader());
+  const response = await axios.get(`${USER_API_URL}/${id}`, getAuthHeader());
   return response.data;
 };
 
 const createUser = async (data) => {
-  const response = await axios.post('/api/users', data, getAuthHeader());
+  const response = await axios.post(USER_API_URL, data, getAuthHeader());
   return response.data;
 };
 
 const updateUser = async (id, data) => {
-  const response = await axios.put(`/api/users/${id}`, data, getAuthHeader());
+  const response = await axios.put(`${USER_API_URL}/${id}`, data, getAuthHeader());
   return response.data;
 };
 
 const deleteUser = async (id) => {
-  const response = await axios.delete(`/api/users/${id}`, getAuthHeader());
+  const response = await axios.delete(`${USER_API_URL}/${id}`, getAuthHeader());
   return response.data;
 };
 
 const suspendUser = async (id, reason = '') => {
-  const response = await axios.put(`/api/users/${id}/suspend`, { reason }, getAuthHeader());
+  const response = await axios.put(`${USER_API_URL}/${id}/suspend`, { reason }, getAuthHeader());
   return response.data;
 };
 
 const activateUser = async (id) => {
-  const response = await axios.put(`/api/users/${id}/activate`, {}, getAuthHeader());
+  const response = await axios.put(`${USER_API_URL}/${id}/activate`, {}, getAuthHeader());
   return response.data;
 };
 
 const getUserActivity = async (id, params = {}) => {
-  const response = await axios.get(`/api/users/${id}/activity`, {
+  const response = await axios.get(`${USER_API_URL}/${id}/activity`, {
     ...getAuthHeader(),
     params,
   });
@@ -341,17 +343,17 @@ const getUserActivity = async (id, params = {}) => {
 };
 
 const resetUserPassword = async (id, newPassword) => {
-  const response = await axios.post(`/api/users/${id}/reset-password`, { newPassword }, getAuthHeader());
+  const response = await axios.post(`${USER_API_URL}/${id}/reset-password`, { newPassword }, getAuthHeader());
   return response.data;
 };
 
 const bulkUpdateUsers = async (userIds, updates) => {
-  const response = await axios.post('/api/users/bulk-update', { userIds, updates }, getAuthHeader());
+  const response = await axios.post(`${USER_API_URL}/bulk-update`, { userIds, updates }, getAuthHeader());
   return response.data;
 };
 
 const bulkDeleteUsers = async (userIds) => {
-  const response = await axios.post('/api/users/bulk-delete', { userIds }, getAuthHeader());
+  const response = await axios.post(`${USER_API_URL}/bulk-delete`, { userIds }, getAuthHeader());
   return response.data;
 };
 

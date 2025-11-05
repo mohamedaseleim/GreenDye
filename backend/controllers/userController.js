@@ -373,12 +373,12 @@ exports.bulkDeleteUsers = async (req, res, next) => {
     }
 
     // Prevent deleting admin users in bulk (safety measure)
-    const adminUsers = await User.find({ 
+    const adminCount = await User.countDocuments({ 
       _id: { $in: userIds }, 
       role: 'admin' 
     });
 
-    if (adminUsers.length > 0) {
+    if (adminCount > 0) {
       return res.status(403).json({
         success: false,
         message: 'Cannot bulk delete admin users for security reasons'

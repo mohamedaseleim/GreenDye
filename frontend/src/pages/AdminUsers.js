@@ -135,14 +135,17 @@ const AdminUsers = () => {
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm('Are you sure you want to delete this user? This action cannot be undone.')) {
-      return;
-    }
+  const [deleteDialog, setDeleteDialog] = useState({ open: false, userId: null });
 
+  const handleDeleteUser = async (userId) => {
+    setDeleteDialog({ open: true, userId });
+  };
+
+  const confirmDeleteUser = async () => {
     try {
-      await adminService.deleteUser(userId);
+      await adminService.deleteUser(deleteDialog.userId);
       toast.success('User deleted successfully');
+      setDeleteDialog({ open: false, userId: null });
       fetchUsers();
     } catch (error) {
       console.error('Error deleting user:', error);
@@ -478,6 +481,22 @@ const AdminUsers = () => {
         onClose={() => setBulkActionDialog({ open: false, action: null })}
         onConfirm={handleBulkAction}
       />
+
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={deleteDialog.open} onClose={() => setDeleteDialog({ open: false, userId: null })}>
+        <DialogTitle>Confirm Delete</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Are you sure you want to delete this user? This action cannot be undone.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDeleteDialog({ open: false, userId: null })}>Cancel</Button>
+          <Button onClick={confirmDeleteUser} variant="contained" color="error">
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };
@@ -646,8 +665,6 @@ const BulkActionDialog = ({ open, action, count, onClose, onConfirm }) => {
       onConfirm('delete');
     } else if (action === 'suspend') {
       onConfirm('update', { status: 'suspended', isActive: false });
-    } else if (action === 'update') {
-      onConfirm('update', bulkData);
     }
   };
 

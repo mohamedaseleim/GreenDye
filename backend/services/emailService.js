@@ -1,5 +1,5 @@
 const nodemailer = require('nodemailer');
-const logger = require('./logger');
+const logger = require('../utils/logger');
 
 /**
  * Create email transporter using SMTP configuration from environment variables

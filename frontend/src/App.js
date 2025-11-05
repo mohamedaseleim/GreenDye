@@ -50,6 +50,7 @@ import AdminTrainers from './pages/AdminTrainers';
 import AdminUsers from './pages/AdminUsers';
 import AdminCourses from './pages/AdminCourses';
 import AdminPayments from './pages/AdminPayments';
+import AdminEnrollments from './pages/AdminEnrollments';
 import AdminSettings from './pages/AdminSettings';
 
 // NEW: analytics import
@@ -246,6 +247,16 @@ function App() {
                       <PrivateRoute>
                         <AdminRoute>
                           <AdminPayments />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/enrollments"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminEnrollments />
                         </AdminRoute>
                       </PrivateRoute>
                     }

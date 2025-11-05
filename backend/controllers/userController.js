@@ -1,6 +1,5 @@
 const User = require('../models/User');
 const AuditTrail = require('../models/AuditTrail');
-const crypto = require('crypto');
 
 // @desc    Get all users with filtering, sorting, and pagination
 // @route   GET /api/users

@@ -33,7 +33,6 @@ import {
   Block as BlockIcon,
   CheckCircle as CheckCircleIcon,
   Delete as DeleteIcon,
-  Visibility as ViewIcon,
   VpnKey as KeyIcon,
   History as HistoryIcon
 } from '@mui/icons-material';
@@ -72,6 +71,7 @@ const AdminUsers = () => {
       return;
     }
     fetchUsers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, page, rowsPerPage, filters]);
 
   const fetchUsers = async () => {

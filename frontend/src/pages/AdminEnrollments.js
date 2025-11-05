@@ -40,9 +40,6 @@ import {
   RemoveCircle as RemoveIcon,
   Refresh as RefreshIcon,
   Visibility as ViewIcon,
-  Assessment as AnalyticsIcon,
-  MoneyOff as RefundIcon,
-  TrendingUp as TrendingUpIcon,
   CheckCircle as CheckIcon,
   Cancel as CancelIcon,
   FilterList as FilterIcon
@@ -74,7 +71,6 @@ const AdminEnrollments = () => {
   });
   const [selectedEnrollment, setSelectedEnrollment] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
-  const [enrollDialogOpen, setEnrollDialogOpen] = useState(false);
   const [unenrollDialogOpen, setUnenrollDialogOpen] = useState(false);
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
   const [selectedRefund, setSelectedRefund] = useState(null);
@@ -234,7 +230,6 @@ const AdminEnrollments = () => {
         notes: enrollmentNotes
       });
       showSnackbar('User enrolled successfully', 'success');
-      setEnrollDialogOpen(false);
       setSelectedUser(null);
       setSelectedCourse(null);
       setEnrollmentNotes('');
@@ -263,16 +258,17 @@ const AdminEnrollments = () => {
     }
   };
 
-  const handleUpdateStatus = async (enrollmentId, newStatus) => {
-    try {
-      await adminService.updateEnrollmentStatus(enrollmentId, newStatus);
-      showSnackbar('Enrollment status updated', 'success');
-      fetchEnrollments();
-    } catch (error) {
-      console.error('Error updating status:', error);
-      showSnackbar('Error updating status', 'error');
-    }
-  };
+  // Commenting out unused function to avoid lint error - can be used for future enhancement
+  // const handleUpdateStatus = async (enrollmentId, newStatus) => {
+  //   try {
+  //     await adminService.updateEnrollmentStatus(enrollmentId, newStatus);
+  //     showSnackbar('Enrollment status updated', 'success');
+  //     fetchEnrollments();
+  //   } catch (error) {
+  //     console.error('Error updating status:', error);
+  //     showSnackbar('Error updating status', 'error');
+  //   }
+  // };
 
   const handleApproveRefund = async (refundId) => {
     try {

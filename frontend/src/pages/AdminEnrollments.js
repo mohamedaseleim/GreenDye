@@ -47,7 +47,6 @@ import {
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { format } from 'date-fns';
-import axios from 'axios';
 import adminService from '../services/adminService';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 
@@ -93,12 +92,6 @@ const AdminEnrollments = () => {
     fetchData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, page, rowsPerPage, filters, activeTab]);
-
-  const getAuthHeaders = () => ({
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  });
 
   const fetchData = async () => {
     try {
@@ -163,8 +156,8 @@ const AdminEnrollments = () => {
 
   const fetchUsers = async () => {
     try {
-      const response = await axios.get('/api/users', getAuthHeaders());
-      setUsers(response.data.data || []);
+      const response = await adminService.getAllUsersForEnrollment();
+      setUsers(response.data || []);
     } catch (error) {
       console.error('Error fetching users:', error);
     }
@@ -172,8 +165,8 @@ const AdminEnrollments = () => {
 
   const fetchCourses = async () => {
     try {
-      const response = await axios.get('/api/courses', getAuthHeaders());
-      setCourses(response.data.data || []);
+      const response = await adminService.getAllCoursesForEnrollment();
+      setCourses(response.data || []);
     } catch (error) {
       console.error('Error fetching courses:', error);
     }

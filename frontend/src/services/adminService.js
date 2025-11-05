@@ -351,8 +351,19 @@ const updatePayoutStatus = async (payoutId, data) => {
   return response.data;
 };
 
+// ========== COURSE MANAGEMENT (for enrollment) ==========
+const getAllCoursesForEnrollment = async () => {
+  const response = await axios.get('/api/courses', getAuthHeader());
+  return response.data;
+};
+
 // ========== USER MANAGEMENT ==========
 const USER_API_URL = '/api/users';
+
+const getAllUsersForEnrollment = async () => {
+  const response = await axios.get(USER_API_URL, getAuthHeader());
+  return response.data;
+};
 
 const getUsers = async (params = {}) => {
   const response = await axios.get(USER_API_URL, {
@@ -571,6 +582,8 @@ const adminService = {
   manualEnrollment,
   manualUnenrollment,
   updateEnrollmentStatus,
+  getAllUsersForEnrollment,
+  getAllCoursesForEnrollment,
   
   // Refund Management
   getRefundRequests,

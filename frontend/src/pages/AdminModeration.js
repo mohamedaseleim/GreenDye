@@ -64,21 +64,6 @@ const AdminModeration = () => {
   const [openResponseDialog, setOpenResponseDialog] = useState(false);
   const [responseText, setResponseText] = useState('');
 
-  useEffect(() => {
-    if (!user || user.role !== 'admin') {
-      navigate('/');
-      return;
-    }
-    fetchPendingPosts();
-    fetchReviews();
-  }, [user, navigate]);
-
-  useEffect(() => {
-    if (currentTab === 1) {
-      fetchReviews();
-    }
-  }, [reviewFilter]);
-
   const fetchPendingPosts = async () => {
     try {
       setPostsLoading(true);
@@ -104,6 +89,23 @@ const AdminModeration = () => {
       setReviewsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!user || user.role !== 'admin') {
+      navigate('/');
+      return;
+    }
+    fetchPendingPosts();
+    fetchReviews();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user, navigate]);
+
+  useEffect(() => {
+    if (currentTab === 1) {
+      fetchReviews();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [reviewFilter, currentTab]);
 
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);

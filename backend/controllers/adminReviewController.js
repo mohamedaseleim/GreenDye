@@ -1,5 +1,4 @@
 const Review = require('../models/Review');
-const Enrollment = require('../models/Enrollment');
 const Course = require('../models/Course');
 const logger = require('../utils/logger');
 const mongoSanitize = require('mongo-sanitize');
@@ -459,14 +458,3 @@ async function recalculateCourseRating(courseId) {
     logger.error('Recalculate course rating error:', error);
   }
 }
-
-module.exports = {
-  getAllReviews,
-  getReviewDetails,
-  approveReview,
-  rejectReview,
-  flagReview,
-  removeReview,
-  respondToReview,
-  getReviewStats
-};

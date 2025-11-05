@@ -207,6 +207,291 @@ GET /api/payments/:id/invoice
 
 ---
 
+## Admin Payment Management Endpoints
+
+**Note:** All admin payment endpoints require admin role authorization.
+
+### Get All Transactions
+
+```http
+GET /api/admin/payments
+```
+
+**Headers:** Authorization required (Admin only)
+
+**Query Parameters:**
+- `status` - Filter by payment status (completed, pending, failed, refunded)
+- `paymentMethod` - Filter by payment method (stripe, paypal, fawry, paymob)
+- `currency` - Filter by currency (USD, EUR, EGP, SAR, NGN)
+- `startDate` - Filter transactions after this date (ISO 8601 format)
+- `endDate` - Filter transactions before this date (ISO 8601 format)
+- `page` - Page number (default: 1)
+- `limit` - Results per page (default: 20)
+
+**Response:**
+```json
+{
+  "success": true,
+  "count": 20,
+  "total": 150,
+  "page": 1,
+  "pages": 8,
+  "data": [
+    {
+      "_id": "payment_id",
+      "user": {
+        "name": "User Name",
+        "email": "user@example.com"
+      },
+      "course": {
+        "title": "Course Name"
+      },
+      "amount": 99.99,
+      "currency": "USD",
+      "paymentMethod": "stripe",
+      "status": "completed",
+      "transactionId": "txn_123456",
+      "createdAt": "2025-01-01T00:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Get Payment Statistics
+
+```http
+GET /api/admin/payments/stats
+```
+
+**Headers:** Authorization required (Admin only)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "payments": {
+      "total": 500,
+      "completed": 450,
+      "pending": 30,
+      "failed": 15,
+      "refunded": 5
+    },
+    "revenue": {
+      "today": 1250.00,
+      "thisMonth": 45000.00,
+      "lastMonth": 38000.00
+    },
+    "refunds": {
+      "pending": 3,
+      "total": 12
+    }
+  }
+}
+```
+
+### Get Revenue Analytics
+
+```http
+GET /api/admin/payments/analytics/revenue
+```
+
+**Headers:** Authorization required (Admin only)
+
+**Query Parameters:**
+- `startDate` - Start date for analytics period (ISO 8601 format)
+- `endDate` - End date for analytics period (ISO 8601 format)
+- `groupBy` - Time grouping: 'day', 'week', or 'month' (default: 'month')
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "overall": {
+      "totalRevenue": 125000.00,
+      "totalTransactions": 450,
+      "averageTransaction": 277.78
+    },
+    "revenueByCurrency": [
+      {
+        "_id": "USD",
+        "totalRevenue": 95000.00,
+        "totalTransactions": 300,
+        "averageTransaction": 316.67
+      }
+    ],
+    "revenueOverTime": [
+      {
+        "_id": { "year": 2025, "month": 1 },
+        "revenue": 45000.00,
+        "transactions": 150
+      }
+    ],
+    "revenueByMethod": [
+      {
+        "_id": "stripe",
+        "revenue": 75000.00,
+        "transactions": 280
+      }
+    ],
+    "topCourses": [
+      {
+        "courseId": "course_id",
+        "title": "Course Name",
+        "revenue": 15000.00,
+        "enrollments": 150
+      }
+    ],
+    "refunds": {
+      "totalRefunded": 2500.00,
+      "refundCount": 12
+    }
+  }
+}
+```
+
+### Get Payment Gateway Configuration
+
+```http
+GET /api/admin/payments/gateway-config
+```
+
+**Headers:** Authorization required (Admin only)
+
+**Response:**
+```json
+{
+  "success": true,
+  "data": {
+    "stripe": {
+      "enabled": true,
+      "configured": true
+    },
+    "paypal": {
+      "enabled": true,
+      "configured": true
+    },
+    "fawry": {
+      "enabled": false,
+      "configured": false
+    },
+    "paymob": {
+      "enabled": true,
+      "configured": true
+    }
+  }
+}
+```
+
+### Export Transactions
+
+```http
+GET /api/admin/payments/export
+```
+
+**Headers:** Authorization required (Admin only)
+
+**Query Parameters:**
+- `format` - Export format: 'json' or 'csv' (default: 'json')
+- `startDate` - Filter start date (ISO 8601 format)
+- `endDate` - Filter end date (ISO 8601 format)
+
+**Response:** 
+- JSON: Array of transaction objects
+- CSV: File download with CSV content
+
+### Get Refund Requests
+
+```http
+GET /api/refunds
+```
+
+**Headers:** Authorization required (Admin only)
+
+**Query Parameters:**
+- `status` - Filter by status: 'pending', 'approved', or 'rejected'
+
+**Response:**
+```json
+{
+  "success": true,
+  "count": 5,
+  "data": [
+    {
+      "_id": "refund_request_id",
+      "payment": {
+        "_id": "payment_id",
+        "amount": 99.99,
+        "currency": "USD"
+      },
+      "user": {
+        "name": "User Name",
+        "email": "user@example.com"
+      },
+      "reason": "Course not as expected",
+      "status": "pending",
+      "createdAt": "2025-01-15T10:00:00.000Z"
+    }
+  ]
+}
+```
+
+### Approve Refund Request
+
+```http
+PUT /api/refunds/:id/approve
+```
+
+**Headers:** Authorization required (Admin only)
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Refund approved and processed",
+  "data": {
+    "_id": "refund_request_id",
+    "status": "approved",
+    "refundAmount": 99.99,
+    "processedAt": "2025-01-15T12:00:00.000Z",
+    "processedBy": "admin_user_id"
+  }
+}
+```
+
+### Reject Refund Request
+
+```http
+PUT /api/refunds/:id/reject
+```
+
+**Headers:** Authorization required (Admin only)
+
+**Request Body:**
+```json
+{
+  "responseMessage": "Refund window expired"
+}
+```
+
+**Response:**
+```json
+{
+  "success": true,
+  "message": "Refund rejected",
+  "data": {
+    "_id": "refund_request_id",
+    "status": "rejected",
+    "responseMessage": "Refund window expired",
+    "processedAt": "2025-01-15T12:00:00.000Z",
+    "processedBy": "admin_user_id"
+  }
+}
+```
+
+---
+
 ## Analytics Endpoints
 
 ### Track Event

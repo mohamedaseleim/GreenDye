@@ -59,6 +59,7 @@ A comprehensive e-learning platform for GreenDye Academy, supporting multi-langu
 - **Analytics Dashboard**: Comprehensive analytics for students, trainers, and admins
 - **Content Management**: Easy content updates through admin panel
 - **Payment Integration**: Multiple payment gateways (Stripe, PayPal, Fawry, Paymob)
+- **Admin Payment Management**: Transaction tracking, refund approval, revenue analytics, and gateway configuration
 - **Multi-Currency Support**: USD, EUR, EGP, SAR, NGN
 - **Refund System**: Automated refund processing with policy management
 - **Invoice Generation**: Automatic invoice creation for all payments

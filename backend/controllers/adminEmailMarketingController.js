@@ -4,13 +4,14 @@ const User = require('../models/User');
 const ErrorResponse = require('../utils/errorResponse');
 const { sendBulkEmails, sendNewsletter, createEmailTemplate } = require('../services/emailService');
 const logger = require('../utils/logger');
+const mongoSanitize = require('mongo-sanitize');
 
 // @desc    Get all email campaigns
 // @route   GET /api/admin/email-marketing/campaigns
 // @access  Private/Admin
 exports.getAllCampaigns = async (req, res, next) => {
   try {
-    const { status, page = 1, limit = 10 } = req.query;
+    const { status, page = 1, limit = 10 } = mongoSanitize(req.query);
     
     const query = {};
     if (status) query.status = status;
@@ -63,9 +64,10 @@ exports.getCampaign = async (req, res, next) => {
 // @access  Private/Admin
 exports.createCampaign = async (req, res, next) => {
   try {
-    req.body.createdBy = req.user.id;
+    const sanitizedBody = mongoSanitize(req.body);
+    sanitizedBody.createdBy = req.user.id;
     
-    const campaign = await EmailCampaign.create(req.body);
+    const campaign = await EmailCampaign.create(sanitizedBody);
     
     res.status(201).json({
       success: true,
@@ -91,9 +93,10 @@ exports.updateCampaign = async (req, res, next) => {
       return next(new ErrorResponse('Cannot update a sent campaign', 400));
     }
     
+    const sanitizedBody = mongoSanitize(req.body);
     campaign = await EmailCampaign.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      sanitizedBody,
       { new: true, runValidators: true }
     );
     
@@ -246,7 +249,7 @@ exports.getCampaignStats = async (req, res, next) => {
 // @access  Private/Admin
 exports.getAllNewsletters = async (req, res, next) => {
   try {
-    const { status, page = 1, limit = 10 } = req.query;
+    const { status, page = 1, limit = 10 } = mongoSanitize(req.query);
     
     const query = {};
     if (status) query.status = status;
@@ -298,9 +301,10 @@ exports.getNewsletter = async (req, res, next) => {
 // @access  Private/Admin
 exports.createNewsletter = async (req, res, next) => {
   try {
-    req.body.createdBy = req.user.id;
+    const sanitizedBody = mongoSanitize(req.body);
+    sanitizedBody.createdBy = req.user.id;
     
-    const newsletter = await EmailNewsletter.create(req.body);
+    const newsletter = await EmailNewsletter.create(sanitizedBody);
     
     res.status(201).json({
       success: true,
@@ -322,9 +326,10 @@ exports.updateNewsletter = async (req, res, next) => {
       return next(new ErrorResponse('Newsletter not found', 404));
     }
     
+    const sanitizedBody = mongoSanitize(req.body);
     newsletter = await EmailNewsletter.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      sanitizedBody,
       { new: true, runValidators: true }
     );
     

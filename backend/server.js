@@ -104,6 +104,10 @@ app.use('/api/admin/cms', require('./routes/adminCMSRoutes'));
 app.use('/api/admin/courses', require('./routes/adminCourseRoutes'));
 app.use('/api/admin/trainers', require('./routes/adminTrainerRoutes'));
 app.use('/api/admin/payments', require('./routes/adminPaymentRoutes'));
+app.use('/api/admin/settings', require('./routes/systemSettingsRoutes'));
+
+// Settings public routes
+app.use('/api/settings', require('./routes/systemSettingsRoutes'));
 
 // NEW: refund routes for admin approval workflow
 app.use('/api/refunds', require('./routes/refundRoutes'));
@@ -147,6 +151,8 @@ app.get('/api/docs', (req, res) => {
       lmsIntegration: '/api/lms-integration - External LMS integrations',
       refunds: '/api/refunds - Refund requests (admin approval workflow)',
       adminTrainers: '/api/admin/trainers - Admin trainer management (CRUD, applications, payouts, metrics)',
+      adminSettings: '/api/admin/settings - System settings management (general, email templates, notifications, localization, API keys)',
+      settings: '/api/settings/public - Public system settings',
     },
   });
 });

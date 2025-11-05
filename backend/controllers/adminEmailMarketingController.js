@@ -161,8 +161,14 @@ exports.sendCampaign = async (req, res, next) => {
           isActive: true
         }).select('name email');
       } else {
+        // Filter by role (students, trainers, admins)
+        const roleMap = {
+          'students': 'student',
+          'trainers': 'trainer',
+          'admins': 'admin'
+        };
         recipients = await User.find({
-          role: campaign.recipientType === 'students' ? 'student' : campaign.recipientType.slice(0, -1),
+          role: roleMap[campaign.recipientType] || 'student',
           isActive: true
         }).select('name email');
       }

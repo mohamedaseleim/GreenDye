@@ -129,6 +129,15 @@ const AdminEmailMarketing = () => {
     }
   };
 
+  // Helper function to display send results
+  const showSendResults = (results, type) => {
+    if (results.successful > 0) {
+      toast.success(`${type} sent successfully! Sent: ${results.successful}, Failed: ${results.failed}`);
+    } else {
+      toast.error(`Failed to send ${type}. All ${results.failed} emails failed.`);
+    }
+  };
+
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
   };
@@ -182,7 +191,7 @@ const AdminEmailMarketing = () => {
 
     try {
       const result = await adminService.sendCampaign(campaignId);
-      toast.success(`Campaign sent successfully! Sent: ${result.data.results.successful}, Failed: ${result.data.results.failed}`);
+      showSendResults(result.data.results, 'Campaign');
       fetchData();
     } catch (error) {
       console.error('Error sending campaign:', error);
@@ -235,7 +244,7 @@ const AdminEmailMarketing = () => {
 
     try {
       const result = await adminService.publishNewsletter(newsletterId);
-      toast.success(`Newsletter published successfully! Sent: ${result.data.results.successful}, Failed: ${result.data.results.failed}`);
+      showSendResults(result.data.results, 'Newsletter');
       fetchData();
     } catch (error) {
       console.error('Error publishing newsletter:', error);
@@ -246,12 +255,13 @@ const AdminEmailMarketing = () => {
   // Common handlers
   const handleDelete = async () => {
     try {
-      if (selectedItem.recipientType !== undefined) {
-        // It's a campaign
+      // Check if it's a campaign (has recipientType) or newsletter (has title without recipientType)
+      const isCampaign = selectedItem.recipientType !== undefined;
+      
+      if (isCampaign) {
         await adminService.deleteCampaign(selectedItem._id);
         toast.success('Campaign deleted successfully');
       } else {
-        // It's a newsletter
         await adminService.deleteNewsletter(selectedItem._id);
         toast.success('Newsletter deleted successfully');
       }
@@ -706,7 +716,7 @@ const AdminEmailMarketing = () => {
         <DialogTitle>Confirm Delete</DialogTitle>
         <DialogContent>
           <Typography>
-            Are you sure you want to delete this {selectedItem?.recipientType !== undefined ? 'campaign' : 'newsletter'}?
+            Are you sure you want to delete this {selectedItem && selectedItem.recipientType !== undefined ? 'campaign' : 'newsletter'}?
             This action cannot be undone.
           </Typography>
         </DialogContent>

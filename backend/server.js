@@ -11,6 +11,7 @@ const morgan = require('morgan');
 const path = require('path');
 const connectDB = require('./config/database');
 const errorHandler = require('./middleware/errorHandler');
+const { checkIPBlacklist } = require('./middleware/security');
 const logger = require('./utils/logger');
 
 // Load environment variables
@@ -71,6 +72,9 @@ if (process.env.NODE_ENV === 'development') {
   app.use(morgan('dev'));
 }
 
+// IP Blacklist checking (apply to all routes)
+app.use(checkIPBlacklist);
+
 // Static files
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // Serve generated invoices
@@ -109,6 +113,7 @@ app.use('/api/admin/reviews', require('./routes/adminReviewRoutes'));
 app.use('/api/admin/settings', require('./routes/systemSettingsRoutes'));
 app.use('/api/admin/email-marketing', require('./routes/adminEmailMarketingRoutes'));
 app.use('/api/admin/backup', require('./routes/backupRoutes'));
+app.use('/api/admin/security', require('./routes/adminSecurityRoutes'));
 
 // Settings public routes
 app.use('/api/settings', require('./routes/systemSettingsRoutes'));

@@ -53,6 +53,7 @@ import AdminPayments from './pages/AdminPayments';
 import AdminEnrollments from './pages/AdminEnrollments';
 import AdminSettings from './pages/AdminSettings';
 import AdminEmailMarketing from './pages/AdminEmailMarketing';
+import AdminBackup from './pages/AdminBackup';
 
 // NEW: analytics import
 import { trackPageView } from './services/analyticsService';
@@ -298,6 +299,16 @@ function App() {
                       <PrivateRoute>
                         <AdminRoute>
                           <AdminCourses />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/backup"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminBackup />
                         </AdminRoute>
                       </PrivateRoute>
                     }

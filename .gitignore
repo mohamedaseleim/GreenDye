@@ -35,6 +35,12 @@ build/
 uploads/
 !uploads/.gitkeep
 
+# Backups and Exports
+backend/backups/
+backend/exports/
+!backend/backups/.gitkeep
+!backend/exports/.gitkeep
+
 # Testing
 coverage/
 .nyc_output/

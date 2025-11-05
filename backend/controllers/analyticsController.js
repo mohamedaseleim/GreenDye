@@ -403,6 +403,13 @@ exports.getUserAnalytics = async (req, res, _next) => {
 };
 
 // Helper functions
+function getCountryMatchFilter(fieldPath) {
+  return {
+    [fieldPath]: { $exists: true, $ne: null },
+    $expr: { $ne: [`$${fieldPath}`, ''] }
+  };
+}
+
 function detectDeviceType(userAgent) {
   if (/mobile/i.test(userAgent)) return 'mobile';
   if (/tablet|ipad/i.test(userAgent)) return 'tablet';
@@ -745,7 +752,7 @@ exports.getGeographicDistribution = async (req, res, _next) => {
   try {
     // Get user distribution by country
     const userDistribution = await User.aggregate([
-      { $match: { country: { $exists: true, $ne: null }, $expr: { $ne: ['$country', ''] } } },
+      { $match: getCountryMatchFilter('country') },
       {
         $group: {
           _id: '$country',
@@ -761,7 +768,12 @@ exports.getGeographicDistribution = async (req, res, _next) => {
     
     // Get revenue distribution by country
     const revenueDistribution = await Payment.aggregate([
-      { $match: { status: 'completed', 'metadata.country': { $exists: true, $ne: null }, $expr: { $ne: ['$metadata.country', ''] } } },
+      { 
+        $match: { 
+          status: 'completed',
+          ...getCountryMatchFilter('metadata.country')
+        } 
+      },
       {
         $group: {
           _id: '$metadata.country',
@@ -785,7 +797,7 @@ exports.getGeographicDistribution = async (req, res, _next) => {
         }
       },
       { $unwind: '$userData' },
-      { $match: { 'userData.country': { $exists: true, $ne: null }, $expr: { $ne: ['$userData.country', ''] } } },
+      { $match: getCountryMatchFilter('userData.country') },
       {
         $group: {
           _id: '$userData.country',
@@ -930,75 +942,117 @@ exports.getConversionFunnel = async (req, res, _next) => {
       : {};
     
     // Stage 1: Total visitors (unique page views)
-    const visitors = await Analytics.distinct('user', {
-      eventType: 'page_view',
-      ...(Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {})
-    });
+    const visitorsResult = await Analytics.aggregate([
+      { 
+        $match: {
+          eventType: 'page_view',
+          ...(Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const visitors = visitorsResult[0]?.total || 0;
     
     // Stage 2: Signups (registered users)
     const signups = await User.countDocuments(userFilter);
     
     // Stage 3: Course viewers (users who viewed at least one course)
-    const courseViewers = await Analytics.distinct('user', {
-      eventType: 'course_view',
-      ...(Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {})
-    });
+    const courseViewersResult = await Analytics.aggregate([
+      { 
+        $match: {
+          eventType: 'course_view',
+          ...(Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const courseViewers = courseViewersResult[0]?.total || 0;
     
     // Stage 4: Enrolled users
-    const enrolledUsers = await Enrollment.distinct('user', {
-      ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {})
-    });
+    const enrolledUsersResult = await Enrollment.aggregate([
+      { 
+        $match: {
+          ...(Object.keys(dateFilter).length > 0 ? { createdAt: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const enrolledUsers = enrolledUsersResult[0]?.total || 0;
     
     // Stage 5: Active learners (users with lesson completion)
-    const activeLearners = await Analytics.distinct('user', {
-      eventType: { $in: ['lesson_complete', 'video_complete'] },
-      ...(Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {})
-    });
+    const activeLearnersResult = await Analytics.aggregate([
+      { 
+        $match: {
+          eventType: { $in: ['lesson_complete', 'video_complete'] },
+          ...(Object.keys(dateFilter).length > 0 ? { timestamp: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const activeLearners = activeLearnersResult[0]?.total || 0;
     
     // Stage 6: Course completers
-    const courseCompleters = await Enrollment.distinct('user', {
-      status: 'completed',
-      ...(Object.keys(dateFilter).length > 0 ? { completionDate: dateFilter } : {})
-    });
+    const courseCompletersResult = await Enrollment.aggregate([
+      { 
+        $match: {
+          status: 'completed',
+          ...(Object.keys(dateFilter).length > 0 ? { completionDate: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const courseCompleters = courseCompletersResult[0]?.total || 0;
     
     // Stage 7: Certificate earners
-    const certificateEarners = await Certificate.distinct('user', {
-      isValid: true,
-      ...(Object.keys(dateFilter).length > 0 ? { issuedAt: dateFilter } : {})
-    });
+    const certificateEarnersResult = await Certificate.aggregate([
+      { 
+        $match: {
+          isValid: true,
+          ...(Object.keys(dateFilter).length > 0 ? { issuedAt: dateFilter } : {})
+        }
+      },
+      { $group: { _id: '$user' } },
+      { $count: 'total' }
+    ]);
+    const certificateEarners = certificateEarnersResult[0]?.total || 0;
     
     // Calculate conversion rates
     const funnelData = [
-      { stage: 'Visitors', count: visitors.length, percentage: 100 },
+      { stage: 'Visitors', count: visitors, percentage: 100 },
       { 
         stage: 'Signups', 
         count: signups, 
-        percentage: visitors.length > 0 ? (signups / visitors.length * 100).toFixed(2) : 0 
+        percentage: visitors > 0 ? (signups / visitors * 100).toFixed(2) : 0 
       },
       { 
         stage: 'Course Viewers', 
-        count: courseViewers.length, 
-        percentage: signups > 0 ? (courseViewers.length / signups * 100).toFixed(2) : 0 
+        count: courseViewers, 
+        percentage: signups > 0 ? (courseViewers / signups * 100).toFixed(2) : 0 
       },
       { 
         stage: 'Enrollments', 
-        count: enrolledUsers.length, 
-        percentage: courseViewers.length > 0 ? (enrolledUsers.length / courseViewers.length * 100).toFixed(2) : 0 
+        count: enrolledUsers, 
+        percentage: courseViewers > 0 ? (enrolledUsers / courseViewers * 100).toFixed(2) : 0 
       },
       { 
         stage: 'Active Learners', 
-        count: activeLearners.length, 
-        percentage: enrolledUsers.length > 0 ? (activeLearners.length / enrolledUsers.length * 100).toFixed(2) : 0 
+        count: activeLearners, 
+        percentage: enrolledUsers > 0 ? (activeLearners / enrolledUsers * 100).toFixed(2) : 0 
       },
       { 
         stage: 'Course Completers', 
-        count: courseCompleters.length, 
-        percentage: activeLearners.length > 0 ? (courseCompleters.length / activeLearners.length * 100).toFixed(2) : 0 
+        count: courseCompleters, 
+        percentage: activeLearners > 0 ? (courseCompleters / activeLearners * 100).toFixed(2) : 0 
       },
       { 
         stage: 'Certificate Earners', 
-        count: certificateEarners.length, 
-        percentage: courseCompleters.length > 0 ? (certificateEarners.length / courseCompleters.length * 100).toFixed(2) : 0 
+        count: certificateEarners, 
+        percentage: courseCompleters > 0 ? (certificateEarners / courseCompleters * 100).toFixed(2) : 0 
       }
     ];
     
@@ -1014,8 +1068,8 @@ exports.getConversionFunnel = async (req, res, _next) => {
       success: true,
       data: {
         funnel: dropOffRates,
-        overallConversionRate: visitors.length > 0 
-          ? ((certificateEarners.length / visitors.length) * 100).toFixed(2) 
+        overallConversionRate: visitors > 0 
+          ? ((certificateEarners / visitors) * 100).toFixed(2) 
           : 0
       }
     });

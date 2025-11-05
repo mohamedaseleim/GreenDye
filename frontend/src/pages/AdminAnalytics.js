@@ -70,20 +70,6 @@ const AdminAnalytics = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  useEffect(() => {
-    if (userGrowthData) {
-      fetchUserGrowth();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [growthPeriod]);
-
-  useEffect(() => {
-    if (revenueTrendsData) {
-      fetchRevenueTrends();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [revenuePeriod]);
-
   const fetchAllAnalytics = async () => {
     setLoading(true);
     setError('');
@@ -129,40 +115,6 @@ const AdminAnalytics = () => {
       console.error('Error fetching analytics:', err);
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchUserGrowth = async () => {
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      const response = await axios.get(
-        `${apiUrl}/api/analytics/user-growth?period=${growthPeriod}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
-      setUserGrowthData(response.data.data);
-    } catch (err) {
-      console.error('Error fetching user growth:', err);
-    }
-  };
-
-  const fetchRevenueTrends = async () => {
-    try {
-      const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      const response = await axios.get(
-        `${apiUrl}/api/analytics/revenue-trends?period=${revenuePeriod}`,
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('token')}`,
-          },
-        }
-      );
-      setRevenueTrendsData(response.data.data);
-    } catch (err) {
-      console.error('Error fetching revenue trends:', err);
     }
   };
 
@@ -223,20 +175,73 @@ const AdminAnalytics = () => {
     });
   };
 
-  const handleGrowthPeriodChange = (event, newPeriod) => {
+  const handleGrowthPeriodChange = async (event, newPeriod) => {
     if (newPeriod !== null) {
       setGrowthPeriod(newPeriod);
+      // Fetch new data with the updated period
+      try {
+        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const response = await axios.get(
+          `${apiUrl}/api/analytics/user-growth?period=${newPeriod}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        );
+        setUserGrowthData(response.data.data);
+      } catch (err) {
+        setError('Failed to load user growth data');
+        console.error('Error fetching user growth:', err);
+      }
     }
   };
 
-  const handleRevenuePeriodChange = (event, newPeriod) => {
+  const handleRevenuePeriodChange = async (event, newPeriod) => {
     if (newPeriod !== null) {
       setRevenuePeriod(newPeriod);
+      // Fetch new data with the updated period
+      try {
+        const apiUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
+        const response = await axios.get(
+          `${apiUrl}/api/analytics/revenue-trends?period=${newPeriod}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        );
+        setRevenueTrendsData(response.data.data);
+      } catch (err) {
+        setError('Failed to load revenue trends data');
+        console.error('Error fetching revenue trends:', err);
+      }
     }
   };
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+  };
+
+  const formatEnrollmentTrendsData = (enrollmentTrends) => {
+    if (!enrollmentTrends || enrollmentTrends.length === 0) return [];
+    
+    // Group data by month for x-axis
+    const monthlyData = {};
+    enrollmentTrends.forEach(item => {
+      const monthKey = `${item.year}-${String(item.month).padStart(2, '0')}`;
+      if (!monthlyData[monthKey]) {
+        monthlyData[monthKey] = { month: monthKey };
+      }
+      monthlyData[monthKey][item.courseTitle] = item.enrollments;
+    });
+    
+    return Object.values(monthlyData);
+  };
+
+  const getUniqueCourseNames = (enrollmentTrends) => {
+    if (!enrollmentTrends || enrollmentTrends.length === 0) return [];
+    return [...new Set(enrollmentTrends.map(item => item.courseTitle))];
   };
 
   if (loading) {
@@ -618,18 +623,17 @@ const AdminAnalytics = () => {
               <Paper sx={{ p: 3 }}>
                 <Typography variant="h6" gutterBottom>Enrollment Trends (Top Courses)</Typography>
                 <ResponsiveContainer width="100%" height={400}>
-                  <LineChart data={coursePopularityData.enrollmentTrends}>
+                  <LineChart data={formatEnrollmentTrendsData(coursePopularityData.enrollmentTrends)}>
                     <CartesianGrid strokeDasharray="3 3" />
-                    <XAxis dataKey={(item) => `${item.year}-${String(item.month).padStart(2, '0')}`} />
+                    <XAxis dataKey="month" />
                     <YAxis />
                     <Tooltip />
                     <Legend />
-                    {[...new Set(coursePopularityData.enrollmentTrends.map(item => item.courseTitle))].map((title, index) => (
+                    {getUniqueCourseNames(coursePopularityData.enrollmentTrends).map((title, index) => (
                       <Line 
                         key={title} 
                         type="monotone" 
-                        dataKey="enrollments" 
-                        data={coursePopularityData.enrollmentTrends.filter(item => item.courseTitle === title)}
+                        dataKey={title} 
                         stroke={COLORS[index % COLORS.length]} 
                         name={title}
                       />

@@ -1,6 +1,9 @@
 const User = require('../models/User');
 const crypto = require('crypto');
 const logger = require('../utils/logger');
+const { logFailedLogin } = require('../services/securityService');
+const { logActivity } = require('../services/securityService');
+const { getClientIP, getUserAgent } = require('../middleware/security');
 
 // @desc    Register user
 // @route   POST /api/auth/register
@@ -65,6 +68,8 @@ exports.register = async (req, res, next) => {
 exports.login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
+    const ipAddress = getClientIP(req);
+    const userAgent = getUserAgent(req);
 
     // Validate email & password
     if (!email || !password) {
@@ -78,6 +83,8 @@ exports.login = async (req, res, next) => {
     const user = await User.findOne({ email }).select('+password');
 
     if (!user) {
+      // Log failed login attempt - user not found
+      await logFailedLogin(email, ipAddress, userAgent, 'user_not_found');
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
@@ -88,15 +95,38 @@ exports.login = async (req, res, next) => {
     const isMatch = await user.comparePassword(password);
 
     if (!isMatch) {
+      // Log failed login attempt - invalid credentials
+      await logFailedLogin(email, ipAddress, userAgent, 'invalid_credentials');
       return res.status(401).json({
         success: false,
         message: 'Invalid credentials'
       });
     }
 
+    // Check if account is disabled
+    if (!user.isActive || user.status === 'suspended') {
+      // Log failed login attempt - account disabled
+      await logFailedLogin(email, ipAddress, userAgent, user.status === 'suspended' ? 'account_suspended' : 'account_disabled');
+      return res.status(401).json({
+        success: false,
+        message: 'Your account has been disabled. Please contact support.'
+      });
+    }
+
     // Update last login
     user.lastLogin = Date.now();
     await user.save();
+
+    // Log successful login activity
+    await logActivity({
+      user: user._id,
+      email: user.email,
+      action: 'User logged in successfully',
+      actionType: 'login',
+      ipAddress,
+      userAgent,
+      status: 'success'
+    });
 
     sendTokenResponse(user, 200, res);
   } catch (error) {

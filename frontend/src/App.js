@@ -46,6 +46,7 @@ import AdminMedia from './pages/AdminMedia';
 import AdminModeration from './pages/AdminModeration';
 import AdminAnnouncements from './pages/AdminAnnouncements';
 import AdminAnalytics from './pages/AdminAnalytics';
+import AdminTrainers from './pages/AdminTrainers';
 
 // NEW: analytics import
 import { trackPageView } from './services/analyticsService';
@@ -231,6 +232,16 @@ function App() {
                       <PrivateRoute>
                         <AdminRoute>
                           <AdminAnalytics />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/trainers"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminTrainers />
                         </AdminRoute>
                       </PrivateRoute>
                     }

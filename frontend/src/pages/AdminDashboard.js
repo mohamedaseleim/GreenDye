@@ -17,7 +17,8 @@ import {
   Announcement as AnnouncementIcon,
   School as CourseIcon,
   Forum as ForumIcon,
-  CardMembership as CertificateIcon
+  CardMembership as CertificateIcon,
+  School as TrainerIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -63,6 +64,7 @@ const AdminDashboard = () => {
       '/admin/media',
       '/admin/announcements',
       '/admin/courses',
+      '/admin/trainers',
       '/admin/moderation'
     ];
     
@@ -93,6 +95,7 @@ const AdminDashboard = () => {
           <Tab label="Media" icon={<MediaIcon />} iconPosition="start" />
           <Tab label="Announcements" icon={<AnnouncementIcon />} iconPosition="start" />
           <Tab label="Courses" icon={<CourseIcon />} iconPosition="start" />
+          <Tab label="Trainers" icon={<TrainerIcon />} iconPosition="start" />
           <Tab label="Moderation" icon={<ForumIcon />} iconPosition="start" />
         </Tabs>
       </Box>

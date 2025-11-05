@@ -6,7 +6,6 @@ const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const Payment = require('../models/Payment');
 const Analytics = require('../models/Analytics');
-const Certificate = require('../models/Certificate');
 
 describe('Advanced Analytics API Tests', () => {
   let adminToken;

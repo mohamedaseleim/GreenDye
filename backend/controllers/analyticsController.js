@@ -745,7 +745,7 @@ exports.getGeographicDistribution = async (req, res, _next) => {
   try {
     // Get user distribution by country
     const userDistribution = await User.aggregate([
-      { $match: { country: { $exists: true, $ne: null, $ne: '' } } },
+      { $match: { country: { $exists: true, $ne: null }, $expr: { $ne: ['$country', ''] } } },
       {
         $group: {
           _id: '$country',
@@ -761,7 +761,7 @@ exports.getGeographicDistribution = async (req, res, _next) => {
     
     // Get revenue distribution by country
     const revenueDistribution = await Payment.aggregate([
-      { $match: { status: 'completed', 'metadata.country': { $exists: true, $ne: null, $ne: '' } } },
+      { $match: { status: 'completed', 'metadata.country': { $exists: true, $ne: null }, $expr: { $ne: ['$metadata.country', ''] } } },
       {
         $group: {
           _id: '$metadata.country',
@@ -785,7 +785,7 @@ exports.getGeographicDistribution = async (req, res, _next) => {
         }
       },
       { $unwind: '$userData' },
-      { $match: { 'userData.country': { $exists: true, $ne: null, $ne: '' } } },
+      { $match: { 'userData.country': { $exists: true, $ne: null }, $expr: { $ne: ['$userData.country', ''] } } },
       {
         $group: {
           _id: '$userData.country',

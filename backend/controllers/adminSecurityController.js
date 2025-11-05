@@ -210,7 +210,8 @@ exports.getIPBlacklist = async (req, res, next) => {
 
     const query = {};
     if (isActive !== undefined) {
-      query.isActive = isActive === 'true';
+      // Ensure boolean value to prevent injection
+      query.isActive = isActive === 'true' || isActive === true;
     }
 
     const blacklist = await IPBlacklist.find(query)
@@ -247,8 +248,17 @@ exports.addIPToBlacklist = async (req, res, next) => {
       });
     }
 
-    // Check if IP already exists
-    const existing = await IPBlacklist.findOne({ ipAddress });
+    // Validate IP address format (basic validation)
+    const ipRegex = /^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$/;
+    if (!ipRegex.test(ipAddress)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid IP address format'
+      });
+    }
+
+    // Check if IP already exists - use string matching to prevent injection
+    const existing = await IPBlacklist.findOne({ ipAddress: String(ipAddress) });
     if (existing) {
       return res.status(400).json({
         success: false,

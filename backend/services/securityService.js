@@ -2,6 +2,7 @@ const ActivityLog = require('../models/ActivityLog');
 const FailedLoginAttempt = require('../models/FailedLoginAttempt');
 const SecurityAlert = require('../models/SecurityAlert');
 const IPBlacklist = require('../models/IPBlacklist');
+const mongoose = require('mongoose');
 const logger = require('../utils/logger');
 
 /**
@@ -111,20 +112,39 @@ const getRecentActivity = async (limit = 50, filters = {}) => {
   try {
     const query = {};
     
-    if (filters.user) query.user = filters.user;
-    if (filters.actionType) query.actionType = filters.actionType;
-    if (filters.status) query.status = filters.status;
-    if (filters.ipAddress) query.ipAddress = filters.ipAddress;
+    // Sanitize and validate filters to prevent injection
+    if (filters.user && mongoose.Types.ObjectId.isValid(filters.user)) {
+      query.user = filters.user;
+    }
+    if (filters.actionType && typeof filters.actionType === 'string') {
+      query.actionType = filters.actionType;
+    }
+    if (filters.status && typeof filters.status === 'string') {
+      query.status = filters.status;
+    }
+    if (filters.ipAddress && typeof filters.ipAddress === 'string') {
+      query.ipAddress = filters.ipAddress;
+    }
     
     if (filters.startDate || filters.endDate) {
       query.timestamp = {};
-      if (filters.startDate) query.timestamp.$gte = new Date(filters.startDate);
-      if (filters.endDate) query.timestamp.$lte = new Date(filters.endDate);
+      if (filters.startDate) {
+        const startDate = new Date(filters.startDate);
+        if (!isNaN(startDate.getTime())) {
+          query.timestamp.$gte = startDate;
+        }
+      }
+      if (filters.endDate) {
+        const endDate = new Date(filters.endDate);
+        if (!isNaN(endDate.getTime())) {
+          query.timestamp.$lte = endDate;
+        }
+      }
     }
 
     const activities = await ActivityLog.find(query)
       .sort({ timestamp: -1 })
-      .limit(limit)
+      .limit(Math.min(parseInt(limit) || 50, 1000)) // Cap at 1000
       .populate('user', 'name email role')
       .lean();
 
@@ -142,14 +162,31 @@ const getSecurityAlerts = async (filters = {}) => {
   try {
     const query = {};
     
-    if (filters.status) query.status = filters.status;
-    if (filters.severity) query.severity = filters.severity;
-    if (filters.type) query.type = filters.type;
+    // Sanitize and validate filters
+    if (filters.status && typeof filters.status === 'string') {
+      query.status = filters.status;
+    }
+    if (filters.severity && typeof filters.severity === 'string') {
+      query.severity = filters.severity;
+    }
+    if (filters.type && typeof filters.type === 'string') {
+      query.type = filters.type;
+    }
     
     if (filters.startDate || filters.endDate) {
       query.createdAt = {};
-      if (filters.startDate) query.createdAt.$gte = new Date(filters.startDate);
-      if (filters.endDate) query.createdAt.$lte = new Date(filters.endDate);
+      if (filters.startDate) {
+        const startDate = new Date(filters.startDate);
+        if (!isNaN(startDate.getTime())) {
+          query.createdAt.$gte = startDate;
+        }
+      }
+      if (filters.endDate) {
+        const endDate = new Date(filters.endDate);
+        if (!isNaN(endDate.getTime())) {
+          query.createdAt.$lte = endDate;
+        }
+      }
     }
 
     const alerts = await SecurityAlert.find(query)
@@ -172,13 +209,28 @@ const getFailedLoginAttempts = async (filters = {}) => {
   try {
     const query = {};
     
-    if (filters.email) query.email = filters.email;
-    if (filters.ipAddress) query.ipAddress = filters.ipAddress;
+    // Sanitize and validate filters
+    if (filters.email && typeof filters.email === 'string') {
+      query.email = filters.email;
+    }
+    if (filters.ipAddress && typeof filters.ipAddress === 'string') {
+      query.ipAddress = filters.ipAddress;
+    }
     
     if (filters.startDate || filters.endDate) {
       query.attemptedAt = {};
-      if (filters.startDate) query.attemptedAt.$gte = new Date(filters.startDate);
-      if (filters.endDate) query.attemptedAt.$lte = new Date(filters.endDate);
+      if (filters.startDate) {
+        const startDate = new Date(filters.startDate);
+        if (!isNaN(startDate.getTime())) {
+          query.attemptedAt.$gte = startDate;
+        }
+      }
+      if (filters.endDate) {
+        const endDate = new Date(filters.endDate);
+        if (!isNaN(endDate.getTime())) {
+          query.attemptedAt.$lte = endDate;
+        }
+      }
     }
 
     const attempts = await FailedLoginAttempt.find(query)

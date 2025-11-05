@@ -119,10 +119,13 @@ exports.updatePage = async (req, res, next) => {
       });
     }
 
+    // Sanitize input to prevent MongoDB injection
+    const sanitizedBody = mongoSanitize(req.body);
+
     // Update fields
-    Object.keys(req.body).forEach(key => {
+    Object.keys(sanitizedBody).forEach(key => {
       if (key !== '_id' && key !== 'author') {
-        page[key] = req.body[key];
+        page[key] = sanitizedBody[key];
       }
     });
 
@@ -307,7 +310,9 @@ exports.updateMedia = async (req, res, next) => {
       });
     }
 
-    const { title, description, altText, tags, category } = req.body;
+    // Sanitize input to prevent MongoDB injection
+    const sanitizedBody = mongoSanitize(req.body);
+    const { title, description, altText, tags, category } = sanitizedBody;
 
     if (title) media.title = title;
     if (description) media.description = description;
@@ -453,9 +458,12 @@ exports.updateAnnouncement = async (req, res, next) => {
       });
     }
 
-    Object.keys(req.body).forEach(key => {
+    // Sanitize input to prevent MongoDB injection
+    const sanitizedBody = mongoSanitize(req.body);
+
+    Object.keys(sanitizedBody).forEach(key => {
       if (key !== '_id' && key !== 'author') {
-        announcement[key] = req.body[key];
+        announcement[key] = sanitizedBody[key];
       }
     });
 

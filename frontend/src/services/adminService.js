@@ -210,6 +210,89 @@ const moderateForumPost = async (id, status, reason = '') => {
   return response.data;
 };
 
+// ========== TRAINER MANAGEMENT ==========
+const getAllTrainers = async (params = {}) => {
+  const response = await axios.get(`${API_URL}/trainers`, {
+    ...getAuthHeader(),
+    params,
+  });
+  return response.data;
+};
+
+const getTrainerById = async (id) => {
+  const response = await axios.get(`${API_URL}/trainers/${id}`, getAuthHeader());
+  return response.data;
+};
+
+const createTrainer = async (data) => {
+  const response = await axios.post(`${API_URL}/trainers`, data, getAuthHeader());
+  return response.data;
+};
+
+const updateTrainer = async (id, data) => {
+  const response = await axios.put(`${API_URL}/trainers/${id}`, data, getAuthHeader());
+  return response.data;
+};
+
+const deleteTrainer = async (id) => {
+  const response = await axios.delete(`${API_URL}/trainers/${id}`, getAuthHeader());
+  return response.data;
+};
+
+const approveTrainer = async (id, notes = '') => {
+  const response = await axios.put(`${API_URL}/trainers/${id}/approve`, { notes }, getAuthHeader());
+  return response.data;
+};
+
+const rejectTrainer = async (id, notes = '') => {
+  const response = await axios.put(`${API_URL}/trainers/${id}/reject`, { notes }, getAuthHeader());
+  return response.data;
+};
+
+const getPendingApplications = async (params = {}) => {
+  const response = await axios.get(`${API_URL}/trainers/applications/pending`, {
+    ...getAuthHeader(),
+    params,
+  });
+  return response.data;
+};
+
+const updateVerificationStatus = async (id, isVerified, notes = '') => {
+  const response = await axios.put(`${API_URL}/trainers/${id}/verification`, { isVerified, notes }, getAuthHeader());
+  return response.data;
+};
+
+const getTrainerMetrics = async (id) => {
+  const response = await axios.get(`${API_URL}/trainers/${id}/metrics`, getAuthHeader());
+  return response.data;
+};
+
+const getTrainerPayouts = async (id, params = {}) => {
+  const response = await axios.get(`${API_URL}/trainers/${id}/payouts`, {
+    ...getAuthHeader(),
+    params,
+  });
+  return response.data;
+};
+
+const createPayout = async (id, data) => {
+  const response = await axios.post(`${API_URL}/trainers/${id}/payouts`, data, getAuthHeader());
+  return response.data;
+};
+
+const getAllPayouts = async (params = {}) => {
+  const response = await axios.get(`${API_URL}/trainers/payouts`, {
+    ...getAuthHeader(),
+    params,
+  });
+  return response.data;
+};
+
+const updatePayoutStatus = async (payoutId, data) => {
+  const response = await axios.put(`${API_URL}/trainers/payouts/${payoutId}`, data, getAuthHeader());
+  return response.data;
+};
+
 const adminService = {
   // Dashboard
   getDashboardStats,
@@ -257,6 +340,22 @@ const adminService = {
   // Moderation
   getPendingForumPosts,
   moderateForumPost,
+  
+  // Trainers
+  getAllTrainers,
+  getTrainerById,
+  createTrainer,
+  updateTrainer,
+  deleteTrainer,
+  approveTrainer,
+  rejectTrainer,
+  getPendingApplications,
+  updateVerificationStatus,
+  getTrainerMetrics,
+  getTrainerPayouts,
+  createPayout,
+  getAllPayouts,
+  updatePayoutStatus,
 };
 
 export default adminService;

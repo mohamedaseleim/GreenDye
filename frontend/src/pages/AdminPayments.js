@@ -25,7 +25,8 @@ import {
   DialogTitle,
   DialogContent,
   DialogActions,
-  Alert
+  Alert,
+  Snackbar
 } from '@mui/material';
 import {
   Payment as PaymentIcon,
@@ -60,6 +61,10 @@ const AdminPayments = () => {
   });
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [detailsOpen, setDetailsOpen] = useState(false);
+  const [rejectDialogOpen, setRejectDialogOpen] = useState(false);
+  const [selectedRefund, setSelectedRefund] = useState(null);
+  const [rejectReason, setRejectReason] = useState('');
+  const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -79,13 +84,14 @@ const AdminPayments = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      await Promise.all([
-        fetchTransactions(),
-        fetchStats(),
-        activeTab === 1 && fetchRevenueAnalytics(),
-        activeTab === 2 && fetchRefundRequests(),
-        activeTab === 3 && fetchGatewayConfig()
-      ]);
+      const promises = [fetchTransactions(), fetchStats()];
+      
+      // Add conditional fetches based on active tab
+      if (activeTab === 1) promises.push(fetchRevenueAnalytics());
+      if (activeTab === 2) promises.push(fetchRefundRequests());
+      if (activeTab === 3) promises.push(fetchGatewayConfig());
+      
+      await Promise.all(promises);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
@@ -147,30 +153,46 @@ const AdminPayments = () => {
     }
   };
 
+  const showSnackbar = (message, severity = 'success') => {
+    setSnackbar({ open: true, message, severity });
+  };
+
+  const handleCloseSnackbar = () => {
+    setSnackbar({ ...snackbar, open: false });
+  };
+
   const handleApproveRefund = async (refundId) => {
     try {
       await axios.put(`/api/refunds/${refundId}/approve`, {}, getAuthHeaders());
-      alert('Refund approved successfully');
+      showSnackbar('Refund approved successfully', 'success');
       fetchRefundRequests();
       fetchStats();
     } catch (error) {
       console.error('Error approving refund:', error);
-      alert('Error approving refund: ' + (error.response?.data?.message || error.message));
+      showSnackbar('Error approving refund: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
-  const handleRejectRefund = async (refundId) => {
+  const handleRejectRefundClick = (refund) => {
+    setSelectedRefund(refund);
+    setRejectReason('');
+    setRejectDialogOpen(true);
+  };
+
+  const handleRejectRefundConfirm = async () => {
     try {
-      const reason = prompt('Enter rejection reason (optional):');
-      await axios.put(`/api/refunds/${refundId}/reject`, {
-        responseMessage: reason
+      await axios.put(`/api/refunds/${selectedRefund._id}/reject`, {
+        responseMessage: rejectReason
       }, getAuthHeaders());
-      alert('Refund rejected');
+      showSnackbar('Refund rejected', 'success');
+      setRejectDialogOpen(false);
+      setSelectedRefund(null);
+      setRejectReason('');
       fetchRefundRequests();
       fetchStats();
     } catch (error) {
       console.error('Error rejecting refund:', error);
-      alert('Error rejecting refund: ' + (error.response?.data?.message || error.message));
+      showSnackbar('Error rejecting refund: ' + (error.response?.data?.message || error.message), 'error');
     }
   };
 
@@ -188,9 +210,10 @@ const AdminPayments = () => {
       document.body.appendChild(link);
       link.click();
       link.remove();
+      showSnackbar('Transactions exported successfully', 'success');
     } catch (error) {
       console.error('Error exporting transactions:', error);
-      alert('Error exporting transactions');
+      showSnackbar('Error exporting transactions', 'error');
     }
   };
 
@@ -221,9 +244,11 @@ const AdminPayments = () => {
 
   const handleTabChange = (event, newValue) => {
     setActiveTab(newValue);
+    // Fetch data for the selected tab if not already loaded
     if (newValue === 1 && !revenueData) {
       fetchRevenueAnalytics();
-    } else if (newValue === 2 && refundRequests.length === 0) {
+    } else if (newValue === 2) {
+      // Always refetch refund requests to ensure latest data
       fetchRefundRequests();
     } else if (newValue === 3 && !gatewayConfig) {
       fetchGatewayConfig();
@@ -632,7 +657,7 @@ const AdminPayments = () => {
                           <Button
                             size="small"
                             color="error"
-                            onClick={() => handleRejectRefund(request._id)}
+                            onClick={() => handleRejectRefundClick(request)}
                           >
                             Reject
                           </Button>
@@ -769,6 +794,43 @@ const AdminPayments = () => {
           <Button onClick={() => setDetailsOpen(false)}>Close</Button>
         </DialogActions>
       </Dialog>
+
+      {/* Reject Refund Dialog */}
+      <Dialog open={rejectDialogOpen} onClose={() => setRejectDialogOpen(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Reject Refund Request</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2" color="text.secondary" gutterBottom>
+            Provide a reason for rejecting this refund request (optional):
+          </Typography>
+          <TextField
+            fullWidth
+            multiline
+            rows={3}
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            placeholder="Enter rejection reason..."
+            sx={{ mt: 2 }}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRejectDialogOpen(false)}>Cancel</Button>
+          <Button onClick={handleRejectRefundConfirm} color="error" variant="contained">
+            Reject Refund
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Snackbar for notifications */}
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={6000}
+        onClose={handleCloseSnackbar}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+      >
+        <Alert onClose={handleCloseSnackbar} severity={snackbar.severity} sx={{ width: '100%' }}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Container>
   );
 };

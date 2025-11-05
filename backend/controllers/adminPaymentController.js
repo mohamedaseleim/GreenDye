@@ -176,18 +176,28 @@ exports.getRevenueAnalytics = async (req, res) => {
     ]);
 
     // Refund statistics
-    const refundStats = await Payment.aggregate([
-      {
-        $match: {
-          status: 'refunded',
-          ...(startDate || endDate ? {
-            refundedAt: {
-              ...(startDate && { $gte: new Date(startDate) }),
-              ...(endDate && { $lte: new Date(endDate) })
-            }
-          } : {})
+    const refundMatch = { status: 'refunded' };
+    if (startDate || endDate) {
+      // Use refundedAt if available, otherwise fall back to completedAt
+      refundMatch.$or = [
+        {
+          refundedAt: {
+            ...(startDate && { $gte: new Date(startDate) }),
+            ...(endDate && { $lte: new Date(endDate) })
+          }
+        },
+        {
+          refundedAt: { $exists: false },
+          completedAt: {
+            ...(startDate && { $gte: new Date(startDate) }),
+            ...(endDate && { $lte: new Date(endDate) })
+          }
         }
-      },
+      ];
+    }
+    
+    const refundStats = await Payment.aggregate([
+      { $match: refundMatch },
       {
         $group: {
           _id: null,
@@ -414,13 +424,22 @@ exports.exportTransactions = async (req, res) => {
     }));
 
     if (format === 'csv') {
-      // Convert to CSV
-      const headers = Object.keys(exportData[0] || {}).join(',');
+      // Define CSV headers
+      const headerFields = [
+        'transactionId', 'invoiceNumber', 'date', 'userName', 
+        'userEmail', 'courseTitle', 'amount', 'currency', 
+        'paymentMethod', 'status'
+      ];
+      const headers = headerFields.join(',');
+      
+      // Convert to CSV rows
       const rows = exportData.map(row => 
-        Object.values(row).map(val => 
-          typeof val === 'string' && val.includes(',') ? `"${val}"` : val
-        ).join(',')
+        headerFields.map(field => {
+          const val = row[field] || '';
+          return typeof val === 'string' && val.includes(',') ? `"${val}"` : val;
+        }).join(',')
       );
+      
       const csv = [headers, ...rows].join('\n');
 
       res.setHeader('Content-Type', 'text/csv');

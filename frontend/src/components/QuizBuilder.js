@@ -155,6 +155,7 @@ export default function QuizBuilder({ open, onClose, quiz, courseId, lessonId, o
     setFormData((prev) => {
       const updatedQuestions = [...prev.questions];
       const options = [...updatedQuestions[questionIndex].options];
+      const questionType = updatedQuestions[questionIndex].type;
 
       if (nested) {
         options[optionIndex] = {
@@ -170,8 +171,8 @@ export default function QuizBuilder({ open, onClose, quiz, courseId, lessonId, o
           [field]: value,
         };
 
-        // If setting as correct, uncheck other options for multiple-choice
-        if (field === 'isCorrect' && value === true) {
+        // Only uncheck other options for multiple-choice questions
+        if (field === 'isCorrect' && value === true && questionType === 'multiple-choice') {
           options.forEach((opt, i) => {
             if (i !== optionIndex) {
               opt.isCorrect = false;
@@ -254,7 +255,10 @@ export default function QuizBuilder({ open, onClose, quiz, courseId, lessonId, o
               label="Passing Score (%)"
               type="number"
               value={formData.passingScore}
-              onChange={(e) => handleInputChange('passingScore', parseInt(e.target.value, 10))}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                handleInputChange('passingScore', isNaN(value) ? 70 : Math.min(100, Math.max(0, value)));
+              }}
               sx={{ flex: 1 }}
             />
 
@@ -262,7 +266,10 @@ export default function QuizBuilder({ open, onClose, quiz, courseId, lessonId, o
               label="Time Limit (minutes)"
               type="number"
               value={formData.timeLimit}
-              onChange={(e) => handleInputChange('timeLimit', parseInt(e.target.value, 10))}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                handleInputChange('timeLimit', isNaN(value) ? 0 : Math.max(0, value));
+              }}
               sx={{ flex: 1 }}
               helperText="0 = no limit"
             />
@@ -271,7 +278,10 @@ export default function QuizBuilder({ open, onClose, quiz, courseId, lessonId, o
               label="Attempts Allowed"
               type="number"
               value={formData.attemptsAllowed}
-              onChange={(e) => handleInputChange('attemptsAllowed', parseInt(e.target.value, 10))}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                handleInputChange('attemptsAllowed', isNaN(value) ? 1 : value);
+              }}
               sx={{ flex: 1 }}
               helperText="-1 = unlimited"
             />
@@ -397,9 +407,10 @@ export default function QuizBuilder({ open, onClose, quiz, courseId, lessonId, o
                     label="Points"
                     type="number"
                     value={question.points}
-                    onChange={(e) =>
-                      handleQuestionChange(qIndex, 'points', parseInt(e.target.value, 10))
-                    }
+                    onChange={(e) => {
+                      const value = parseInt(e.target.value, 10);
+                      handleQuestionChange(qIndex, 'points', isNaN(value) ? 1 : Math.max(1, value));
+                    }}
                     sx={{ flex: 1 }}
                   />
                 </Box>

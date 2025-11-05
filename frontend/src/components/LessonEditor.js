@@ -209,7 +209,10 @@ export default function LessonEditor({ open, onClose, lesson, courseId, onSave }
               label="Order"
               type="number"
               value={formData.order}
-              onChange={(e) => handleInputChange('order', parseInt(e.target.value, 10))}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                handleInputChange('order', isNaN(value) ? 0 : value);
+              }}
               margin="normal"
             />
           </Box>
@@ -267,9 +270,10 @@ export default function LessonEditor({ open, onClose, lesson, courseId, onSave }
                   label="Duration (seconds)"
                   type="number"
                   value={formData.content.video?.duration || 0}
-                  onChange={(e) =>
-                    handleContentChange('video', 'duration', parseInt(e.target.value, 10))
-                  }
+                  onChange={(e) => {
+                    const value = parseInt(e.target.value, 10);
+                    handleContentChange('video', 'duration', isNaN(value) ? 0 : value);
+                  }}
                   margin="normal"
                 />
               </Box>
@@ -359,7 +363,10 @@ export default function LessonEditor({ open, onClose, lesson, courseId, onSave }
               label="Duration (minutes)"
               type="number"
               value={formData.duration}
-              onChange={(e) => handleInputChange('duration', parseInt(e.target.value, 10))}
+              onChange={(e) => {
+                const value = parseInt(e.target.value, 10);
+                handleInputChange('duration', isNaN(value) ? 0 : value);
+              }}
               margin="normal"
               helperText="Estimated time to complete this lesson"
             />

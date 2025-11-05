@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import {
@@ -51,7 +51,7 @@ export default function AdminLessons() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
       const [lessonsRes, quizzesRes] = await Promise.all([
@@ -65,12 +65,11 @@ export default function AdminLessons() {
       showSnackbar('Failed to load lessons', 'error');
       setLoading(false);
     }
-  };
+  }, [courseId]);
 
   useEffect(() => {
     if (courseId) loadData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [courseId]);
+  }, [courseId, loadData]);
 
   function showSnackbar(message, severity = 'success') {
     setSnackbar({ open: true, message, severity });

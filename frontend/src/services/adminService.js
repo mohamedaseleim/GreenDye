@@ -648,7 +648,10 @@ const adminService = {
 
   // ========== LESSON MANAGEMENT ==========
   getLessons: async (courseId) => {
-    const response = await axios.get(`/api/lessons?courseId=${courseId}`, getAuthHeader());
+    const response = await axios.get('/api/lessons', {
+      ...getAuthHeader(),
+      params: { courseId },
+    });
     return response.data;
   },
 

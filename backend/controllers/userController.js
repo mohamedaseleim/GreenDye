@@ -6,6 +6,8 @@ const AuditTrail = require('../models/AuditTrail');
 // @access  Private/Admin
 exports.getUsers = async (req, res, next) => {
   try {
+    const mongoSanitize = require('mongo-sanitize');
+    
     const {
       role,
       status,
@@ -16,24 +18,44 @@ exports.getUsers = async (req, res, next) => {
       limit = 10
     } = req.query;
 
-    // Build query
+    // Build query with sanitized inputs
     const query = {};
     
-    if (role) query.role = role;
-    if (status) query.status = status;
-    if (isActive !== undefined) query.isActive = isActive === 'true';
+    // Validate and sanitize role
+    const validRoles = ['student', 'trainer', 'admin'];
+    if (role && validRoles.includes(role)) {
+      query.role = role;
+    }
+    
+    // Validate and sanitize status
+    const validStatuses = ['active', 'inactive', 'suspended'];
+    if (status && validStatuses.includes(status)) {
+      query.status = status;
+    }
+    
+    if (isActive !== undefined) {
+      query.isActive = isActive === 'true';
+    }
+    
+    // Sanitize search input and escape regex special characters
     if (search) {
+      const sanitizedSearch = mongoSanitize(search);
+      const escapedSearch = String(sanitizedSearch).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { email: { $regex: search, $options: 'i' } }
+        { name: { $regex: escapedSearch, $options: 'i' } },
+        { email: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
+
+    // Validate sort parameter
+    const validSortFields = ['createdAt', '-createdAt', 'name', '-name', 'email', '-email', 'role', '-role'];
+    const sanitizedSort = validSortFields.includes(sort) ? sort : '-createdAt';
 
     // Execute query with pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
     const users = await User.find(query)
       .select('-password')
-      .sort(sort)
+      .sort(sanitizedSort)
       .limit(parseInt(limit))
       .skip(skip);
 
@@ -309,6 +331,8 @@ exports.resetUserPassword = async (req, res, next) => {
 // @access  Private/Admin
 exports.bulkUpdateUsers = async (req, res, next) => {
   try {
+    const mongoSanitize = require('mongo-sanitize');
+    
     const { userIds, updates } = req.body;
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {
@@ -325,14 +349,17 @@ exports.bulkUpdateUsers = async (req, res, next) => {
       });
     }
 
+    // Sanitize updates object to prevent NoSQL injection
+    const sanitizedUpdates = mongoSanitize(updates);
+    
     // Remove sensitive fields from bulk updates
-    delete updates.password;
-    delete updates.email;
-    delete updates._id;
+    delete sanitizedUpdates.password;
+    delete sanitizedUpdates.email;
+    delete sanitizedUpdates._id;
 
     const result = await User.updateMany(
       { _id: { $in: userIds } },
-      { $set: updates },
+      { $set: sanitizedUpdates },
       { runValidators: true }
     );
 

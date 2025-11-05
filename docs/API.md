@@ -212,3 +212,227 @@ Response includes:
   "data": [ ... ]
 }
 ```
+
+## Advanced Analytics (Admin Only)
+
+### User Growth Trends
+- **GET** `/api/analytics/user-growth?period=monthly&startDate=2023-01-01&endDate=2023-12-31`
+- Headers: `Authorization: Bearer <token>` (Admin only)
+- Query Parameters:
+  - `period` - Time period: `hourly`, `daily`, `weekly`, `monthly` (default: `monthly`)
+  - `startDate` - Start date (ISO format, optional)
+  - `endDate` - End date (ISO format, optional)
+- Response:
+```json
+{
+  "success": true,
+  "data": {
+    "period": "monthly",
+    "growth": [
+      {
+        "_id": { "year": 2023, "month": 1 },
+        "count": 50,
+        "cumulative": 150,
+        "students": 45,
+        "trainers": 3,
+        "admins": 2
+      }
+    ]
+  }
+}
+```
+
+### Revenue Trends
+- **GET** `/api/analytics/revenue-trends?period=monthly&startDate=2023-01-01&endDate=2023-12-31`
+- Headers: `Authorization: Bearer <token>` (Admin only)
+- Query Parameters:
+  - `period` - Time period: `daily`, `weekly`, `monthly` (default: `monthly`)
+  - `startDate` - Start date (ISO format, optional)
+  - `endDate` - End date (ISO format, optional)
+- Response:
+```json
+{
+  "success": true,
+  "data": {
+    "period": "monthly",
+    "trends": [
+      {
+        "_id": { "year": 2023, "month": 1 },
+        "revenue": 5000.00,
+        "transactions": 50,
+        "avgTransactionValue": 100.00,
+        "cumulativeRevenue": 5000.00,
+        "uniqueUsers": 45
+      }
+    ]
+  }
+}
+```
+
+### Course Popularity Metrics
+- **GET** `/api/analytics/course-popularity?limit=20&startDate=2023-01-01&endDate=2023-12-31`
+- Headers: `Authorization: Bearer <token>` (Admin only)
+- Query Parameters:
+  - `limit` - Maximum number of courses to return (default: 20)
+  - `startDate` - Start date (ISO format, optional)
+  - `endDate` - End date (ISO format, optional)
+- Response:
+```json
+{
+  "success": true,
+  "data": {
+    "courseMetrics": [
+      {
+        "courseId": "course_id",
+        "title": "Course Title",
+        "totalEnrollments": 100,
+        "completedEnrollments": 80,
+        "activeEnrollments": 20,
+        "avgProgress": 75.5,
+        "completionRate": 80.0
+      }
+    ],
+    "enrollmentTrends": [
+      {
+        "courseId": "course_id",
+        "courseTitle": "Course Title",
+        "year": 2023,
+        "month": 1,
+        "enrollments": 50
+      }
+    ]
+  }
+}
+```
+
+### Geographic Distribution
+- **GET** `/api/analytics/geographic-distribution`
+- Headers: `Authorization: Bearer <token>` (Admin only)
+- Response:
+```json
+{
+  "success": true,
+  "data": {
+    "userDistribution": [
+      {
+        "_id": "USA",
+        "totalUsers": 500,
+        "students": 450,
+        "trainers": 45,
+        "activeUsers": 475
+      }
+    ],
+    "revenueDistribution": [
+      {
+        "_id": "USA",
+        "totalRevenue": 50000.00,
+        "transactions": 500,
+        "avgTransactionValue": 100.00
+      }
+    ],
+    "enrollmentDistribution": [
+      {
+        "_id": "USA",
+        "totalEnrollments": 1000,
+        "completedEnrollments": 800
+      }
+    ]
+  }
+}
+```
+
+### Peak Usage Times
+- **GET** `/api/analytics/peak-usage-times?startDate=2023-01-01&endDate=2023-12-31`
+- Headers: `Authorization: Bearer <token>` (Admin only)
+- Query Parameters:
+  - `startDate` - Start date (ISO format, optional)
+  - `endDate` - End date (ISO format, optional)
+- Response:
+```json
+{
+  "success": true,
+  "data": {
+    "hourlyActivity": [
+      {
+        "hour": 14,
+        "totalEvents": 5000,
+        "uniqueUsers": 450
+      }
+    ],
+    "dailyActivity": [
+      {
+        "dayOfWeek": 2,
+        "dayName": "Monday",
+        "totalEvents": 10000,
+        "uniqueUsers": 1000
+      }
+    ],
+    "eventTypeActivity": [
+      {
+        "_id": { "eventType": "lesson_complete", "hour": 14 },
+        "count": 500
+      }
+    ]
+  }
+}
+```
+
+### Conversion Funnel
+- **GET** `/api/analytics/conversion-funnel?startDate=2023-01-01&endDate=2023-12-31`
+- Headers: `Authorization: Bearer <token>` (Admin only)
+- Query Parameters:
+  - `startDate` - Start date (ISO format, optional)
+  - `endDate` - End date (ISO format, optional)
+- Response:
+```json
+{
+  "success": true,
+  "data": {
+    "funnel": [
+      {
+        "stage": "Visitors",
+        "count": 10000,
+        "percentage": 100,
+        "dropOff": 0
+      },
+      {
+        "stage": "Signups",
+        "count": 5000,
+        "percentage": 50.00,
+        "dropOff": 50.00
+      },
+      {
+        "stage": "Course Viewers",
+        "count": 4000,
+        "percentage": 80.00,
+        "dropOff": 20.00
+      },
+      {
+        "stage": "Enrollments",
+        "count": 2000,
+        "percentage": 50.00,
+        "dropOff": 50.00
+      },
+      {
+        "stage": "Active Learners",
+        "count": 1500,
+        "percentage": 75.00,
+        "dropOff": 25.00
+      },
+      {
+        "stage": "Course Completers",
+        "count": 1000,
+        "percentage": 66.67,
+        "dropOff": 33.33
+      },
+      {
+        "stage": "Certificate Earners",
+        "count": 900,
+        "percentage": 90.00,
+        "dropOff": 10.00
+      }
+    ],
+    "overallConversionRate": 9.00
+  }
+}
+```

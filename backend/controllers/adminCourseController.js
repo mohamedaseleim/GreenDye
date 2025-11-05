@@ -2,6 +2,7 @@ const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const Analytics = require('../models/Analytics');
 const logger = require('../utils/logger');
+const mongoSanitize = require('mongo-sanitize');
 
 // @desc    Get all courses (admin view with filters)
 // @route   GET /api/admin/courses
@@ -21,21 +22,25 @@ exports.getAdminCourses = async (req, res, next) => {
 
     const query = {};
 
-    if (category) query.category = category;
-    if (level) query.level = level;
-    if (approvalStatus) query.approvalStatus = approvalStatus;
+    // Sanitize all query parameters to prevent NoSQL injection
+    if (category) query.category = mongoSanitize(category);
+    if (level) query.level = mongoSanitize(level);
+    if (approvalStatus) query.approvalStatus = mongoSanitize(approvalStatus);
     if (isPublished !== undefined) query.isPublished = isPublished === 'true';
-    if (instructor) query.instructor = instructor;
+    if (instructor) query.instructor = mongoSanitize(instructor);
     
-    // Search functionality
+    // Search functionality - sanitize search input to prevent NoSQL injection
     if (search) {
+      const sanitizedSearch = mongoSanitize(search);
+      // Escape regex special characters
+      const escapedSearch = sanitizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
-        { 'title.en': { $regex: search, $options: 'i' } },
-        { 'title.ar': { $regex: search, $options: 'i' } },
-        { 'title.fr': { $regex: search, $options: 'i' } },
-        { 'description.en': { $regex: search, $options: 'i' } },
-        { 'description.ar': { $regex: search, $options: 'i' } },
-        { 'description.fr': { $regex: search, $options: 'i' } }
+        { 'title.en': { $regex: escapedSearch, $options: 'i' } },
+        { 'title.ar': { $regex: escapedSearch, $options: 'i' } },
+        { 'title.fr': { $regex: escapedSearch, $options: 'i' } },
+        { 'description.en': { $regex: escapedSearch, $options: 'i' } },
+        { 'description.ar': { $regex: escapedSearch, $options: 'i' } },
+        { 'description.fr': { $regex: escapedSearch, $options: 'i' } }
       ];
     }
 
@@ -393,14 +398,17 @@ exports.bulkUpdateCourses = async (req, res, next) => {
       });
     }
 
+    // Sanitize inputs to prevent NoSQL injection
+    const sanitizedUpdates = mongoSanitize(updates);
+    
     // Prevent updating certain protected fields
-    delete updates._id;
-    delete updates.instructor;
-    delete updates.createdAt;
+    delete sanitizedUpdates._id;
+    delete sanitizedUpdates.instructor;
+    delete sanitizedUpdates.createdAt;
 
     const result = await Course.updateMany(
       { _id: { $in: courseIds } },
-      { $set: updates }
+      { $set: sanitizedUpdates }
     );
 
     res.status(200).json({

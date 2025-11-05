@@ -22,7 +22,8 @@ import {
   People as UsersIcon,
   Payment as PaymentIcon,
   Settings as SettingsIcon,
-  LibraryBooks as EnrollmentIcon
+  LibraryBooks as EnrollmentIcon,
+  Email as EmailIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -73,6 +74,7 @@ const AdminDashboard = () => {
       '/admin/moderation',
       '/admin/payments',
       '/admin/enrollments',
+      '/admin/email-marketing',
       '/admin/settings'
     ];
     
@@ -108,6 +110,7 @@ const AdminDashboard = () => {
           <Tab label="Moderation" icon={<ForumIcon />} iconPosition="start" />
           <Tab label="Payments" icon={<PaymentIcon />} iconPosition="start" />
           <Tab label="Enrollments" icon={<EnrollmentIcon />} iconPosition="start" />
+          <Tab label="Email Marketing" icon={<EmailIcon />} iconPosition="start" />
           <Tab label="Settings" icon={<SettingsIcon />} iconPosition="start" />
         </Tabs>
       </Box>

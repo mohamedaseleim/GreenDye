@@ -53,6 +53,20 @@ const CourseSchema = new mongoose.Schema({
     // Added SAR and NGN to support multi‑currency pricing
     enum: ['USD', 'EUR', 'EGP', 'SAR', 'NGN']
   },
+  discount: {
+    percentage: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 100
+    },
+    startDate: Date,
+    endDate: Date,
+    isActive: {
+      type: Boolean,
+      default: false
+    }
+  },
   duration: {
     type: Number, // in hours
     required: [true, 'Please provide course duration']

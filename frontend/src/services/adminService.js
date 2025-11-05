@@ -196,6 +196,64 @@ const deleteAdminCourse = async (id) => {
   return response.data;
 };
 
+const getPendingCourses = async (params = {}) => {
+  const response = await axios.get(`${API_URL}/courses/pending`, {
+    ...getAuthHeader(),
+    params,
+  });
+  return response.data;
+};
+
+const approveCourse = async (id) => {
+  const response = await axios.put(`${API_URL}/courses/${id}/approve`, {}, getAuthHeader());
+  return response.data;
+};
+
+const rejectCourse = async (id) => {
+  const response = await axios.put(`${API_URL}/courses/${id}/reject`, {}, getAuthHeader());
+  return response.data;
+};
+
+const setCoursePricing = async (id, pricingData) => {
+  const response = await axios.put(`${API_URL}/courses/${id}/pricing`, pricingData, getAuthHeader());
+  return response.data;
+};
+
+const getCourseAnalytics = async (id) => {
+  const response = await axios.get(`${API_URL}/courses/${id}/analytics`, getAuthHeader());
+  return response.data;
+};
+
+const getCourseCategories = async () => {
+  const response = await axios.get(`${API_URL}/courses/categories`, getAuthHeader());
+  return response.data;
+};
+
+const updateCourseCategory = async (id, category) => {
+  const response = await axios.put(`${API_URL}/courses/${id}/category`, { category }, getAuthHeader());
+  return response.data;
+};
+
+const getCourseTags = async () => {
+  const response = await axios.get(`${API_URL}/courses/tags`, getAuthHeader());
+  return response.data;
+};
+
+const updateCourseTags = async (id, tags) => {
+  const response = await axios.put(`${API_URL}/courses/${id}/tags`, { tags }, getAuthHeader());
+  return response.data;
+};
+
+const bulkUpdateCourses = async (courseIds, updates) => {
+  const response = await axios.put(`${API_URL}/courses/bulk-update`, { courseIds, updates }, getAuthHeader());
+  return response.data;
+};
+
+const getCourseStatistics = async () => {
+  const response = await axios.get(`${API_URL}/courses/statistics`, getAuthHeader());
+  return response.data;
+};
+
 // ========== MODERATION ==========
 const getPendingForumPosts = async (params = {}) => {
   const response = await axios.get(`${API_URL}/cms/moderation/forums`, {
@@ -400,6 +458,17 @@ const adminService = {
   createAdminCourse,
   updateAdminCourse,
   deleteAdminCourse,
+  getPendingCourses,
+  approveCourse,
+  rejectCourse,
+  setCoursePricing,
+  getCourseAnalytics,
+  getCourseCategories,
+  updateCourseCategory,
+  getCourseTags,
+  updateCourseTags,
+  bulkUpdateCourses,
+  getCourseStatistics,
   
   // Moderation
   getPendingForumPosts,

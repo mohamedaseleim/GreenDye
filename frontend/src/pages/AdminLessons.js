@@ -51,11 +51,7 @@ export default function AdminLessons() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' });
 
-  useEffect(() => {
-    if (courseId) loadData();
-  }, [courseId]);
-
-  async function loadData() {
+  const loadData = async () => {
     try {
       setLoading(true);
       const [lessonsRes, quizzesRes] = await Promise.all([
@@ -69,7 +65,12 @@ export default function AdminLessons() {
       showSnackbar('Failed to load lessons', 'error');
       setLoading(false);
     }
-  }
+  };
+
+  useEffect(() => {
+    if (courseId) loadData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [courseId]);
 
   function showSnackbar(message, severity = 'success') {
     setSnackbar({ open: true, message, severity });

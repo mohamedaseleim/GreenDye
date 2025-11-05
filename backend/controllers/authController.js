@@ -138,11 +138,35 @@ exports.login = async (req, res, next) => {
 // @route   GET /api/auth/logout
 // @access  Private
 exports.logout = async (req, res, _next) => {
-  res.status(200).json({
-    success: true,
-    message: 'User logged out successfully',
-    data: {}
-  });
+  try {
+    const ipAddress = getClientIP(req);
+    const userAgent = getUserAgent(req);
+
+    // Log logout activity if user is authenticated
+    if (req.user) {
+      await logActivity({
+        user: req.user._id,
+        email: req.user.email,
+        action: 'User logged out',
+        actionType: 'logout',
+        ipAddress,
+        userAgent,
+        status: 'success'
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: 'User logged out successfully',
+      data: {}
+    });
+  } catch (error) {
+    logger.error('Logout error:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error logging out'
+    });
+  }
 };
 
 // @desc    Get current logged in user

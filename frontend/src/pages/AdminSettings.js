@@ -40,7 +40,6 @@ import {
   Delete as DeleteIcon,
   Add as AddIcon,
   Refresh as RefreshIcon,
-  Send as SendIcon,
   ContentCopy as CopyIcon,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
@@ -50,10 +49,8 @@ const AdminSettings = () => {
   const [activeTab, setActiveTab] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState(null);
   const [apiKeys, setApiKeys] = useState([]);
   const [openApiKeyDialog, setOpenApiKeyDialog] = useState(false);
-  const [selectedApiKey, setSelectedApiKey] = useState(null);
   const [newApiKey, setNewApiKey] = useState({
     name: '',
     description: '',
@@ -115,7 +112,6 @@ const AdminSettings = () => {
     try {
       setLoading(true);
       const response = await adminService.getSettings();
-      setSettings(response.data);
       
       if (response.data.general) {
         setGeneralSettings(response.data.general);

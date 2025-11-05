@@ -200,7 +200,7 @@ SystemSettingsSchema.statics.getSettings = async function() {
 };
 
 SystemSettingsSchema.statics.updateSettings = async function(updates, userId) {
-  let settings = await this.getSettings();
+  const settings = await this.getSettings();
   
   // Deep merge updates
   if (updates.general) {

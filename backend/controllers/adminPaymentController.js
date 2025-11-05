@@ -32,6 +32,15 @@ exports.getAllTransactions = async (req, res) => {
       if (endDate) filter.createdAt.$lte = new Date(endDate);
     }
 
+    // Validate and sanitize sortBy to prevent injection
+    const allowedSortFields = [
+      'createdAt', '-createdAt',
+      'completedAt', '-completedAt',
+      'amount', '-amount',
+      'status', '-status'
+    ];
+    const safeSortBy = allowedSortFields.includes(sortBy) ? sortBy : '-createdAt';
+
     // Pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -39,7 +48,7 @@ exports.getAllTransactions = async (req, res) => {
     const payments = await Payment.find(filter)
       .populate('user', 'name email')
       .populate('course', 'title')
-      .sort(sortBy)
+      .sort(safeSortBy)
       .skip(skip)
       .limit(parseInt(limit));
 

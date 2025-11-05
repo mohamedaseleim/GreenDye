@@ -103,6 +103,7 @@ app.use('/api/admin/certificates', require('./routes/adminCertificateRoutes'));
 app.use('/api/admin/cms', require('./routes/adminCMSRoutes'));
 app.use('/api/admin/courses', require('./routes/adminCourseRoutes'));
 app.use('/api/admin/trainers', require('./routes/adminTrainerRoutes'));
+app.use('/api/admin/payments', require('./routes/adminPaymentRoutes'));
 
 // NEW: refund routes for admin approval workflow
 app.use('/api/refunds', require('./routes/refundRoutes'));

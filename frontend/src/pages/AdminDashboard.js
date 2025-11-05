@@ -19,7 +19,8 @@ import {
   Forum as ForumIcon,
   CardMembership as CertificateIcon,
   School as TrainerIcon,
-  People as UsersIcon
+  People as UsersIcon,
+  Payment as PaymentIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -67,7 +68,8 @@ const AdminDashboard = () => {
       '/admin/courses',
       '/admin/trainers',
       '/admin/users',
-      '/admin/moderation'
+      '/admin/moderation',
+      '/admin/payments'
     ];
     
     if (routes[newValue] !== '/admin/dashboard') {
@@ -100,6 +102,7 @@ const AdminDashboard = () => {
           <Tab label="Trainers" icon={<TrainerIcon />} iconPosition="start" />
           <Tab label="Users" icon={<UsersIcon />} iconPosition="start" />
           <Tab label="Moderation" icon={<ForumIcon />} iconPosition="start" />
+          <Tab label="Payments" icon={<PaymentIcon />} iconPosition="start" />
         </Tabs>
       </Box>
 

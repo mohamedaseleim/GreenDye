@@ -49,6 +49,7 @@ import AdminAnalytics from './pages/AdminAnalytics';
 import AdminTrainers from './pages/AdminTrainers';
 import AdminUsers from './pages/AdminUsers';
 import AdminCourses from './pages/AdminCourses';
+import AdminPayments from './pages/AdminPayments';
 
 // NEW: analytics import
 import { trackPageView } from './services/analyticsService';
@@ -234,6 +235,16 @@ function App() {
                       <PrivateRoute>
                         <AdminRoute>
                           <AdminAnalytics />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/payments"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <AdminPayments />
                         </AdminRoute>
                       </PrivateRoute>
                     }

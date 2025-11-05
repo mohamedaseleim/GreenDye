@@ -3,6 +3,7 @@ const Course = require('../models/Course');
 const User = require('../models/User');
 const Payment = require('../models/Payment');
 const logger = require('../utils/logger');
+const mongoSanitize = require('mongo-sanitize');
 
 // @desc    Get all enrollments with filters and pagination
 // @route   GET /api/admin/enrollments
@@ -21,11 +22,17 @@ exports.getAllEnrollments = async (req, res) => {
       order = 'desc'
     } = req.query;
 
+    // Sanitize inputs to prevent NoSQL injection
+    const sanitizedStatus = status ? mongoSanitize(status) : null;
+    const sanitizedCourseId = courseId ? mongoSanitize(courseId) : null;
+    const sanitizedUserId = userId ? mongoSanitize(userId) : null;
+    const sanitizedSortBy = mongoSanitize(sortBy);
+
     // Build filter object
     const filter = {};
-    if (status) filter.status = status;
-    if (courseId) filter.course = courseId;
-    if (userId) filter.user = userId;
+    if (sanitizedStatus) filter.status = sanitizedStatus;
+    if (sanitizedCourseId) filter.course = sanitizedCourseId;
+    if (sanitizedUserId) filter.user = sanitizedUserId;
     
     // Date range filter
     if (startDate || endDate) {
@@ -43,7 +50,7 @@ exports.getAllEnrollments = async (req, res) => {
       .populate('user', 'name email avatar')
       .populate('course', 'title thumbnail price category')
       .populate('certificate', 'certificateId issueDate')
-      .sort({ [sortBy]: sortOrder })
+      .sort({ [sanitizedSortBy]: sortOrder })
       .skip(skip)
       .limit(parseInt(limit));
 
@@ -75,6 +82,9 @@ exports.getEnrollmentAnalytics = async (req, res) => {
   try {
     const { startDate, endDate, courseId } = req.query;
 
+    // Sanitize inputs
+    const sanitizedCourseId = courseId ? mongoSanitize(courseId) : null;
+
     // Build filter for date range
     const filter = {};
     if (startDate || endDate) {
@@ -82,7 +92,7 @@ exports.getEnrollmentAnalytics = async (req, res) => {
       if (startDate) filter.createdAt.$gte = new Date(startDate);
       if (endDate) filter.createdAt.$lte = new Date(endDate);
     }
-    if (courseId) filter.course = courseId;
+    if (sanitizedCourseId) filter.course = sanitizedCourseId;
 
     // Total enrollments
     const totalEnrollments = await Enrollment.countDocuments(filter);
@@ -237,8 +247,14 @@ exports.manualEnrollment = async (req, res) => {
       });
     }
 
+    // Sanitize inputs to prevent NoSQL injection
+    const sanitizedUserId = mongoSanitize(userId);
+    const sanitizedCourseId = mongoSanitize(courseId);
+    const sanitizedStatus = mongoSanitize(status);
+    const sanitizedNotes = notes ? mongoSanitize(notes) : '';
+
     // Check if user exists
-    const user = await User.findById(userId);
+    const user = await User.findById(sanitizedUserId);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -247,7 +263,7 @@ exports.manualEnrollment = async (req, res) => {
     }
 
     // Check if course exists
-    const course = await Course.findById(courseId);
+    const course = await Course.findById(sanitizedCourseId);
     if (!course) {
       return res.status(404).json({
         success: false,
@@ -257,8 +273,8 @@ exports.manualEnrollment = async (req, res) => {
 
     // Check if already enrolled
     const existingEnrollment = await Enrollment.findOne({
-      user: userId,
-      course: courseId
+      user: sanitizedUserId,
+      course: sanitizedCourseId
     });
 
     if (existingEnrollment) {
@@ -271,11 +287,11 @@ exports.manualEnrollment = async (req, res) => {
 
     // Create enrollment
     const enrollment = await Enrollment.create({
-      user: userId,
-      course: courseId,
-      status,
-      notes: notes ? [{ 
-        content: `Admin enrollment: ${notes}`,
+      user: sanitizedUserId,
+      course: sanitizedCourseId,
+      status: sanitizedStatus,
+      notes: sanitizedNotes ? [{ 
+        content: `Admin enrollment: ${sanitizedNotes}`,
         createdAt: Date.now()
       }] : []
     });
@@ -289,7 +305,7 @@ exports.manualEnrollment = async (req, res) => {
       .populate('user', 'name email avatar')
       .populate('course', 'title thumbnail price category');
 
-    logger.info(`Manual enrollment created by admin ${req.user.id} for user ${userId} in course ${courseId}`);
+    logger.info(`Manual enrollment created by admin ${req.user.id} for user ${sanitizedUserId} in course ${sanitizedCourseId}`);
 
     res.status(201).json({
       success: true,
@@ -381,9 +397,13 @@ exports.updateEnrollmentStatus = async (req, res) => {
     const { id } = req.params;
     const { status } = req.body;
 
+    // Sanitize inputs
+    const sanitizedId = mongoSanitize(id);
+    const sanitizedStatus = mongoSanitize(status);
+
     // Validate status
     const validStatuses = ['active', 'completed', 'dropped', 'suspended'];
-    if (!validStatuses.includes(status)) {
+    if (!validStatuses.includes(sanitizedStatus)) {
       return res.status(400).json({
         success: false,
         message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
@@ -392,10 +412,10 @@ exports.updateEnrollmentStatus = async (req, res) => {
 
     // Find and update enrollment
     const enrollment = await Enrollment.findByIdAndUpdate(
-      id,
+      sanitizedId,
       { 
-        status,
-        ...(status === 'completed' && { completionDate: Date.now() })
+        status: sanitizedStatus,
+        ...(sanitizedStatus === 'completed' && { completionDate: Date.now() })
       },
       { new: true, runValidators: true }
     )
@@ -409,7 +429,7 @@ exports.updateEnrollmentStatus = async (req, res) => {
       });
     }
 
-    logger.info(`Enrollment ${id} status updated to ${status} by admin ${req.user.id}`);
+    logger.info(`Enrollment ${sanitizedId} status updated to ${sanitizedStatus} by admin ${req.user.id}`);
 
     res.status(200).json({
       success: true,

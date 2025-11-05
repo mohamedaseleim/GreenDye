@@ -100,7 +100,7 @@ exports.generateCertificate = async (req, res, next) => {
       user: userId,
       course: courseId,
       userName: user.name,
-      courseName: { default: course.title }, // keep Map<string,string> structure; adjust if you set locales elsewhere
+      courseName: course.title, // Map<string,string> from course.title
       grade: grade || 'Pass',
       score: typeof score === 'number' ? score : 100,
       metadata: {

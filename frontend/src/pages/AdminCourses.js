@@ -49,6 +49,7 @@ import { toast } from 'react-toastify';
 import adminService from '../services/adminService';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { COURSE_CATEGORIES, getCourseTitle, getApprovalStatusColor } from '../utils/courseUtils';
 
 const AdminCourses = () => {
   const { user } = useAuth();
@@ -300,24 +301,7 @@ const AdminCourses = () => {
     setPage(0);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'approved':
-        return 'success';
-      case 'pending':
-        return 'warning';
-      case 'rejected':
-        return 'error';
-      case 'draft':
-        return 'default';
-      default:
-        return 'default';
-    }
-  };
 
-  const getCourseTitle = (course) => {
-    return course.title?.en || course.title?.ar || course.title?.fr || 'Untitled Course';
-  };
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -411,13 +395,11 @@ const AdminCourses = () => {
                       label="Category"
                     >
                       <MenuItem value="">All</MenuItem>
-                      <MenuItem value="technology">Technology</MenuItem>
-                      <MenuItem value="business">Business</MenuItem>
-                      <MenuItem value="health">Health</MenuItem>
-                      <MenuItem value="language">Language</MenuItem>
-                      <MenuItem value="arts">Arts</MenuItem>
-                      <MenuItem value="science">Science</MenuItem>
-                      <MenuItem value="other">Other</MenuItem>
+                      {COURSE_CATEGORIES.map((cat) => (
+                        <MenuItem key={cat.value} value={cat.value}>
+                          {cat.label}
+                        </MenuItem>
+                      ))}
                     </Select>
                   </FormControl>
                 </Grid>
@@ -533,7 +515,7 @@ const AdminCourses = () => {
                         <Chip 
                           label={course.approvalStatus} 
                           size="small" 
-                          color={getStatusColor(course.approvalStatus)}
+                          color={getApprovalStatusColor(course.approvalStatus)}
                         />
                         {course.isPublished && (
                           <Chip 
@@ -846,13 +828,11 @@ const AdminCourses = () => {
                 onChange={(e) => setSelectedCategory(e.target.value)}
                 label="Category"
               >
-                <MenuItem value="technology">Technology</MenuItem>
-                <MenuItem value="business">Business</MenuItem>
-                <MenuItem value="health">Health</MenuItem>
-                <MenuItem value="language">Language</MenuItem>
-                <MenuItem value="arts">Arts</MenuItem>
-                <MenuItem value="science">Science</MenuItem>
-                <MenuItem value="other">Other</MenuItem>
+                {COURSE_CATEGORIES.map((cat) => (
+                  <MenuItem key={cat.value} value={cat.value}>
+                    {cat.label}
+                  </MenuItem>
+                ))}
               </Select>
             </FormControl>
           </Box>

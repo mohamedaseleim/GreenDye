@@ -110,7 +110,7 @@ exports.setCoursePricing = async (req, res, next) => {
     if (price !== undefined) course.price = price;
     if (currency) course.currency = currency;
     
-    // Handle discount as a field (add to schema if not exists)
+    // Update discount information
     if (discount !== undefined) {
       course.discount = {
         percentage: discount.percentage || 0,
@@ -393,10 +393,9 @@ exports.bulkUpdateCourses = async (req, res, next) => {
       });
     }
 
-    // Prevent updating certain fields
+    // Prevent updating certain protected fields
     delete updates._id;
     delete updates.instructor;
-    delete updates.enrolled;
     delete updates.createdAt;
 
     const result = await Course.updateMany(

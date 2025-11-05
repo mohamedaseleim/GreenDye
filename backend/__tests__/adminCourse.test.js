@@ -14,7 +14,11 @@ describe('Admin Course Management API Tests', () => {
   let trainerUser;
 
   beforeAll(async () => {
-    // Connect to test database
+    // Connect to test database - require explicit test database configuration
+    if (!process.env.MONGO_URI_TEST && !process.env.MONGO_URI) {
+      throw new Error('MONGO_URI_TEST or MONGO_URI must be set for tests');
+    }
+    
     if (mongoose.connection.readyState === 0) {
       await mongoose.connect(process.env.MONGO_URI_TEST || process.env.MONGO_URI);
     }

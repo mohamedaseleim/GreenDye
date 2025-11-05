@@ -121,6 +121,59 @@ const TrainerSchema = new mongoose.Schema({
     type: Number,
     min: 0
   },
+  // Application and verification status
+  applicationStatus: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'under_review'],
+    default: 'pending'
+  },
+  applicationDate: {
+    type: Date,
+    default: Date.now
+  },
+  reviewedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  reviewDate: {
+    type: Date
+  },
+  reviewNotes: {
+    type: String
+  },
+  // Commission and payout fields
+  commissionRate: {
+    type: Number,
+    default: 20, // Default 20% commission
+    min: 0,
+    max: 100
+  },
+  totalEarnings: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  pendingPayout: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  totalPaidOut: {
+    type: Number,
+    default: 0,
+    min: 0
+  },
+  lastPayoutDate: {
+    type: Date
+  },
+  payoutMethod: {
+    type: String,
+    enum: ['bank_transfer', 'paypal', 'stripe', 'other'],
+    default: 'bank_transfer'
+  },
+  payoutDetails: {
+    type: mongoose.Schema.Types.Mixed // Can store bank account, PayPal email, etc.
+  },
   createdAt: {
     type: Date,
     default: Date.now
@@ -141,5 +194,6 @@ TrainerSchema.pre('save', function(next) {
 TrainerSchema.index({ trainerId: 1 });
 TrainerSchema.index({ user: 1 });
 TrainerSchema.index({ isVerified: 1, isActive: 1 });
+TrainerSchema.index({ applicationStatus: 1 });
 
 module.exports = mongoose.model('Trainer', TrainerSchema);

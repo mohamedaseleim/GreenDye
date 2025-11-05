@@ -102,6 +102,7 @@ app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/admin/certificates', require('./routes/adminCertificateRoutes'));
 app.use('/api/admin/cms', require('./routes/adminCMSRoutes'));
 app.use('/api/admin/courses', require('./routes/adminCourseRoutes'));
+app.use('/api/admin/trainers', require('./routes/adminTrainerRoutes'));
 
 // NEW: refund routes for admin approval workflow
 app.use('/api/refunds', require('./routes/refundRoutes'));
@@ -143,7 +144,8 @@ app.get('/api/docs', (req, res) => {
       search: '/api/search - Advanced search functionality',
       progress: '/api/progress - Progress tracking',
       lmsIntegration: '/api/lms-integration - External LMS integrations',
-      refunds: '/api/refunds - Refund requests (admin approval workflow)', // Added refund docs
+      refunds: '/api/refunds - Refund requests (admin approval workflow)',
+      adminTrainers: '/api/admin/trainers - Admin trainer management (CRUD, applications, payouts, metrics)',
     },
   });
 });

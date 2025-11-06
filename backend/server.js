@@ -121,6 +121,9 @@ app.use('/api/settings', require('./routes/systemSettingsRoutes'));
 // NEW: refund routes for admin approval workflow
 app.use('/api/refunds', require('./routes/refundRoutes'));
 
+// Public page routes
+app.use('/api/pages', require('./routes/pageRoutes'));
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({

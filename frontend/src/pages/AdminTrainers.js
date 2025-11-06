@@ -80,6 +80,17 @@ const AdminTrainers = () => {
   const [payoutAmount, setPayoutAmount] = useState('');
   const [payoutMethod, setPayoutMethod] = useState('bank_transfer');
   const [payoutNotes, setPayoutNotes] = useState('');
+  
+  // Create trainer form data
+  const [users, setUsers] = useState([]);
+  const [loadingUsers, setLoadingUsers] = useState(false);
+  const [createFormData, setCreateFormData] = useState({
+    userId: '',
+    fullName: '',
+    bio: '',
+    expertise: '',
+    commissionRate: 20
+  });
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -230,6 +241,80 @@ const AdminTrainers = () => {
     }
   };
 
+  const handleOpenCreateDialog = async () => {
+    setOpenCreateDialog(true);
+    await fetchUsers();
+  };
+
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const response = await adminService.getUsers({ role: 'student', limit: 100 });
+      setUsers(response.data || []);
+    } catch (error) {
+      toast.error('Failed to load users');
+      console.error('Error:', error);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
+
+  const handleCreateTrainer = async () => {
+    if (!createFormData.userId) {
+      toast.error('Please select a user');
+      return;
+    }
+    
+    if (!createFormData.fullName) {
+      toast.error('Please enter full name');
+      return;
+    }
+
+    try {
+      const requestData = {
+        userId: createFormData.userId,
+        fullName: createFormData.fullName,
+        commissionRate: parseFloat(createFormData.commissionRate) || 20
+      };
+
+      // Add optional fields if provided
+      if (createFormData.bio) {
+        requestData.bio = { en: createFormData.bio };
+      }
+      if (createFormData.expertise) {
+        requestData.expertise = createFormData.expertise.split(',').map(e => e.trim()).filter(e => e);
+      }
+
+      await adminService.createTrainer(requestData);
+      toast.success('Trainer profile created successfully');
+      
+      // Reset form
+      setCreateFormData({
+        userId: '',
+        fullName: '',
+        bio: '',
+        expertise: '',
+        commissionRate: 20
+      });
+      setOpenCreateDialog(false);
+      fetchTrainers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create trainer profile');
+      console.error('Error:', error);
+    }
+  };
+
+  const handleCloseCreateDialog = () => {
+    setOpenCreateDialog(false);
+    setCreateFormData({
+      userId: '',
+      fullName: '',
+      bio: '',
+      expertise: '',
+      commissionRate: 20
+    });
+  };
+
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
@@ -280,7 +365,7 @@ const AdminTrainers = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => setOpenCreateDialog(true)}
+            onClick={handleOpenCreateDialog}
           >
             Add Trainer
           </Button>
@@ -735,22 +820,104 @@ const AdminTrainers = () => {
         </DialogActions>
       </Dialog>
 
-      {/* Create Trainer Dialog - Simplified */}
+      {/* Create Trainer Dialog */}
       <Dialog 
         open={openCreateDialog} 
-        onClose={() => setOpenCreateDialog(false)}
-        maxWidth="sm"
+        onClose={handleCloseCreateDialog}
+        maxWidth="md"
         fullWidth
       >
         <DialogTitle>Create Trainer Profile</DialogTitle>
         <DialogContent>
-          <Alert severity="info" sx={{ mt: 2, mb: 2 }}>
-            This is a simplified create form. For full trainer profile creation, 
-            navigate to user management and promote a user to trainer role.
-          </Alert>
+          <Box sx={{ mt: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <FormControl fullWidth>
+                  <InputLabel>Select User</InputLabel>
+                  <Select
+                    value={createFormData.userId}
+                    label="Select User"
+                    onChange={(e) => {
+                      const selectedUser = users.find(u => u._id === e.target.value);
+                      setCreateFormData({
+                        ...createFormData,
+                        userId: e.target.value,
+                        fullName: selectedUser?.name || ''
+                      });
+                    }}
+                    disabled={loadingUsers}
+                  >
+                    {loadingUsers ? (
+                      <MenuItem value="">
+                        <CircularProgress size={20} sx={{ mr: 1 }} />
+                        Loading users...
+                      </MenuItem>
+                    ) : users.length === 0 ? (
+                      <MenuItem value="">No users available</MenuItem>
+                    ) : (
+                      users.map((user) => (
+                        <MenuItem key={user._id} value={user._id}>
+                          {user.name} ({user.email})
+                        </MenuItem>
+                      ))
+                    )}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Full Name"
+                  value={createFormData.fullName}
+                  onChange={(e) => setCreateFormData({ ...createFormData, fullName: e.target.value })}
+                  required
+                  helperText="Trainer's full name for profile"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="Bio (Optional)"
+                  value={createFormData.bio}
+                  onChange={(e) => setCreateFormData({ ...createFormData, bio: e.target.value })}
+                  helperText="Brief description about the trainer"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Expertise (Optional)"
+                  value={createFormData.expertise}
+                  onChange={(e) => setCreateFormData({ ...createFormData, expertise: e.target.value })}
+                  placeholder="e.g., Web Development, Machine Learning, Data Science"
+                  helperText="Comma-separated list of expertise areas"
+                />
+              </Grid>
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Commission Rate (%)"
+                  value={createFormData.commissionRate}
+                  onChange={(e) => setCreateFormData({ ...createFormData, commissionRate: e.target.value })}
+                  inputProps={{ min: 0, max: 100, step: 1 }}
+                  helperText="Percentage commission for the trainer (default: 20%)"
+                />
+              </Grid>
+            </Grid>
+          </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setOpenCreateDialog(false)}>Close</Button>
+          <Button onClick={handleCloseCreateDialog}>Cancel</Button>
+          <Button 
+            onClick={handleCreateTrainer}
+            variant="contained"
+            disabled={!createFormData.userId || !createFormData.fullName}
+          >
+            Create Trainer
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>

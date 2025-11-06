@@ -246,42 +246,6 @@ const VerifyTrainer = () => {
                   </Grid>
                 )}
 
-                {/* Rating */}
-                {trainer.rating !== undefined && trainer.rating !== null && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Rating
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {trainer.rating.toFixed(1)} / 5.0 ⭐
-                    </Typography>
-                  </Grid>
-                )}
-
-                {/* Courses Count */}
-                {trainer.coursesCount !== undefined && trainer.coursesCount !== null && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Courses Taught
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {trainer.coursesCount} {trainer.coursesCount === 1 ? 'Course' : 'Courses'}
-                    </Typography>
-                  </Grid>
-                )}
-
-                {/* Students Count */}
-                {trainer.studentsCount !== undefined && trainer.studentsCount !== null && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Students Trained
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {trainer.studentsCount} {trainer.studentsCount === 1 ? 'Student' : 'Students'}
-                    </Typography>
-                  </Grid>
-                )}
-
                 {/* Verification Date */}
                 {trainer.verificationDate && (
                   <Grid item xs={12} sm={6}>
@@ -335,34 +299,6 @@ const VerifyTrainer = () => {
                             secondary={`${cert.organization} ${
                               cert.year ? `(${cert.year})` : ''
                             }`}
-                          />
-                        </ListItem>
-                      ))}
-                    </List>
-                  </Grid>
-                )}
-
-                {/* Accreditations */}
-                {trainer.accreditations && trainer.accreditations.length > 0 && (
-                  <Grid item xs={12}>
-                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                      <Verified color="primary" />
-                      <Typography variant="subtitle1" fontWeight="medium">
-                        Accreditations
-                      </Typography>
-                    </Box>
-                    <List>
-                      {trainer.accreditations.map((accred, index) => (
-                        <ListItem key={index} sx={{ py: 1 }}>
-                          <ListItemText
-                            primary={accred.organization}
-                            secondary={
-                              <>
-                                {accred.accreditationNumber && `Number: ${accred.accreditationNumber}`}
-                                {accred.issueDate && ` | Issued: ${new Date(accred.issueDate).toLocaleDateString()}`}
-                                {accred.expiryDate && ` | Expires: ${new Date(accred.expiryDate).toLocaleDateString()}`}
-                              </>
-                            }
                           />
                         </ListItem>
                       ))}

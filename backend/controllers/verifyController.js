@@ -211,11 +211,8 @@ exports.verifyTrainer = async (req, res, next) => {
         qualifications: trainer.qualifications,
         certifications: trainer.certifications,
         languages: trainer.languages,
-        rating: trainer.rating,
-        coursesCount: trainer.coursesCount,
-        studentsCount: trainer.studentsCount,
-        verificationDate: trainer.verificationDate,
-        accreditations: trainer.accreditations
+        verificationDate: trainer.verificationDate
+        // Excluded admin-only fields: rating, coursesCount, studentsCount, accreditations, commissionRate
       }
     });
   } catch (error) {

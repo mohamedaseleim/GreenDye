@@ -34,12 +34,10 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Edit as EditIcon,
   Delete as DeleteIcon,
   Refresh as RefreshIcon,
   Check as ApproveIcon,
   Close as RejectIcon,
-  Visibility as ViewIcon,
   BarChart as AnalyticsIcon,
   AttachMoney as PriceIcon,
   Category as CategoryIcon,
@@ -75,6 +73,7 @@ const AdminCourses = () => {
   const [openAnalyticsDialog, setOpenAnalyticsDialog] = useState(false);
   const [openTagsDialog, setOpenTagsDialog] = useState(false);
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
   
   // Selected data
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -88,6 +87,17 @@ const AdminCourses = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [newTag, setNewTag] = useState('');
+  const [createFormData, setCreateFormData] = useState({
+    title: { en: '', ar: '', fr: '' },
+    description: { en: '', ar: '', fr: '' },
+    category: '',
+    level: 'beginner',
+    price: 0,
+    currency: 'USD',
+    duration: '',
+    language: 'en',
+    thumbnail: ''
+  });
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -301,14 +311,47 @@ const AdminCourses = () => {
     setPage(0);
   };
 
+  const handleCreateCourse = async () => {
+    try {
+      await adminService.createAdminCourse(createFormData);
+      toast.success('Course created successfully');
+      setOpenCreateDialog(false);
+      setCreateFormData({
+        title: { en: '', ar: '', fr: '' },
+        description: { en: '', ar: '', fr: '' },
+        category: '',
+        level: 'beginner',
+        price: 0,
+        currency: 'USD',
+        duration: '',
+        language: 'en',
+        thumbnail: ''
+      });
+      fetchCourses();
+      fetchStatistics();
+    } catch (error) {
+      console.error('Error creating course:', error);
+      toast.error('Failed to create course');
+    }
+  };
+
 
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box sx={{ mb: 4 }}>
-        <Typography variant="h4" component="h1" gutterBottom>
-          Course Management
-        </Typography>
+        <Box display="flex" justifyContent="space-between" alignItems="center" mb={2}>
+          <Typography variant="h4" component="h1" gutterBottom>
+            Course Management
+          </Typography>
+          <Button
+            variant="contained"
+            startIcon={<AddIcon />}
+            onClick={() => setOpenCreateDialog(true)}
+          >
+            Add Course
+          </Button>
+        </Box>
         
         {/* Statistics Cards */}
         {statistics && (
@@ -840,6 +883,162 @@ const AdminCourses = () => {
         <DialogActions>
           <Button onClick={() => setOpenCategoryDialog(false)}>Cancel</Button>
           <Button onClick={handleSaveCategory} variant="contained">Save</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Create Course Dialog */}
+      <Dialog open={openCreateDialog} onClose={() => setOpenCreateDialog(false)} maxWidth="md" fullWidth>
+        <DialogTitle>Create New Course</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Grid container spacing={2}>
+              {/* Title in English */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Title (English)"
+                  value={createFormData.title.en}
+                  onChange={(e) => setCreateFormData({
+                    ...createFormData,
+                    title: { ...createFormData.title, en: e.target.value }
+                  })}
+                />
+              </Grid>
+              
+              {/* Title in Arabic */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Title (Arabic)"
+                  value={createFormData.title.ar}
+                  onChange={(e) => setCreateFormData({
+                    ...createFormData,
+                    title: { ...createFormData.title, ar: e.target.value }
+                  })}
+                />
+              </Grid>
+              
+              {/* Description in English */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="Description (English)"
+                  value={createFormData.description.en}
+                  onChange={(e) => setCreateFormData({
+                    ...createFormData,
+                    description: { ...createFormData.description, en: e.target.value }
+                  })}
+                />
+              </Grid>
+              
+              {/* Category */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Category</InputLabel>
+                  <Select
+                    value={createFormData.category}
+                    onChange={(e) => setCreateFormData({ ...createFormData, category: e.target.value })}
+                    label="Category"
+                  >
+                    {COURSE_CATEGORIES.map((cat) => (
+                      <MenuItem key={cat.value} value={cat.value}>
+                        {cat.label}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              
+              {/* Level */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Level</InputLabel>
+                  <Select
+                    value={createFormData.level}
+                    onChange={(e) => setCreateFormData({ ...createFormData, level: e.target.value })}
+                    label="Level"
+                  >
+                    <MenuItem value="beginner">Beginner</MenuItem>
+                    <MenuItem value="intermediate">Intermediate</MenuItem>
+                    <MenuItem value="advanced">Advanced</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              
+              {/* Price */}
+              <Grid item xs={12} md={8}>
+                <TextField
+                  fullWidth
+                  label="Price"
+                  type="number"
+                  value={createFormData.price}
+                  onChange={(e) => setCreateFormData({ ...createFormData, price: e.target.value })}
+                />
+              </Grid>
+              
+              {/* Currency */}
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Currency</InputLabel>
+                  <Select
+                    value={createFormData.currency}
+                    onChange={(e) => setCreateFormData({ ...createFormData, currency: e.target.value })}
+                    label="Currency"
+                  >
+                    <MenuItem value="USD">USD</MenuItem>
+                    <MenuItem value="EUR">EUR</MenuItem>
+                    <MenuItem value="EGP">EGP</MenuItem>
+                    <MenuItem value="SAR">SAR</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              
+              {/* Duration */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Duration (hours)"
+                  type="number"
+                  value={createFormData.duration}
+                  onChange={(e) => setCreateFormData({ ...createFormData, duration: e.target.value })}
+                />
+              </Grid>
+              
+              {/* Language */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Language</InputLabel>
+                  <Select
+                    value={createFormData.language}
+                    onChange={(e) => setCreateFormData({ ...createFormData, language: e.target.value })}
+                    label="Language"
+                  >
+                    <MenuItem value="en">English</MenuItem>
+                    <MenuItem value="ar">Arabic</MenuItem>
+                    <MenuItem value="fr">French</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              
+              {/* Thumbnail URL */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Thumbnail URL"
+                  value={createFormData.thumbnail}
+                  onChange={(e) => setCreateFormData({ ...createFormData, thumbnail: e.target.value })}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenCreateDialog(false)}>Cancel</Button>
+          <Button onClick={handleCreateCourse} variant="contained" color="primary">
+            Create Course
+          </Button>
         </DialogActions>
       </Dialog>
     </Container>

@@ -50,5 +50,6 @@ const AuditTrailSchema = new mongoose.Schema({
 AuditTrailSchema.index({ user: 1, timestamp: -1 });
 AuditTrailSchema.index({ resourceType: 1, resourceId: 1 });
 AuditTrailSchema.index({ action: 1, timestamp: -1 });
+AuditTrailSchema.index({ resourceType: 1, resourceId: 1, timestamp: -1 });
 
 module.exports = mongoose.model('AuditTrail', AuditTrailSchema);

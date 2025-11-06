@@ -230,7 +230,10 @@ const AdminCertificates = () => {
   const handleOpenCreateDialog = () => {
     setOpenCreateDialog(true);
     // Fetch data asynchronously after opening dialog
-    Promise.all([fetchUsers(), fetchCourses()]);
+    Promise.all([fetchUsers(), fetchCourses()]).catch(error => {
+      console.error('Error loading dialog data:', error);
+      // Errors are already handled in fetchUsers and fetchCourses with toast messages
+    });
   };
 
   const handleCloseCreateDialog = () => {
@@ -258,6 +261,15 @@ const AdminCertificates = () => {
     return course.title?.en || course.title?.default || course.title || 'Untitled Course';
   };
 
+  const validateScore = (scoreString) => {
+    if (!scoreString) return null; // No score provided is valid
+    const scoreValue = parseFloat(scoreString);
+    if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100) {
+      return 'Score must be a valid number between 0 and 100';
+    }
+    return null; // Valid score
+  };
+
   const handleCreateCertificate = async () => {
     try {
       // Validation
@@ -267,12 +279,10 @@ const AdminCertificates = () => {
       }
 
       // Validate score if provided
-      if (formData.score) {
-        const scoreValue = parseFloat(formData.score);
-        if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100) {
-          toast.error('Score must be a valid number between 0 and 100');
-          return;
-        }
+      const scoreError = validateScore(formData.score);
+      if (scoreError) {
+        toast.error(scoreError);
+        return;
       }
 
       // Prepare data

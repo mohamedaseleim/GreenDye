@@ -355,7 +355,7 @@ const VerifyTrainer = () => {
                       {trainer.accreditations.map((accred, index) => (
                         <ListItem key={index} sx={{ py: 1 }}>
                           <ListItemText
-                            primary={accred.organization || accred.name}
+                            primary={accred.organization}
                             secondary={
                               <>
                                 {accred.accreditationNumber && `Number: ${accred.accreditationNumber}`}

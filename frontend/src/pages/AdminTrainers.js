@@ -64,6 +64,9 @@ const AdminTrainers = () => {
   const [filterApplication, setFilterApplication] = useState('');
   const [currentTab, setCurrentTab] = useState(0);
   
+  // Constants
+  const MAX_EXPERIENCE_YEARS = 50;
+  
   // Dialogs
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [openMetricsDialog, setOpenMetricsDialog] = useState(false);
@@ -314,7 +317,7 @@ const AdminTrainers = () => {
       
       if (createFormData.experience) {
         const exp = parseFloat(createFormData.experience);
-        if (!isNaN(exp) && exp >= 0 && exp <= 50) {
+        if (!isNaN(exp) && exp >= 0 && exp <= MAX_EXPERIENCE_YEARS) {
           requestData.experience = exp;
         }
       }
@@ -1101,7 +1104,8 @@ const AdminTrainers = () => {
                   label="Years of Experience (Optional)"
                   value={createFormData.experience}
                   onChange={(e) => setCreateFormData({ ...createFormData, experience: e.target.value })}
-                  inputProps={{ min: 0, max: 50, step: 1 }}
+                  inputProps={{ min: 0, max: MAX_EXPERIENCE_YEARS, step: 1 }}
+                  helperText={`Maximum ${MAX_EXPERIENCE_YEARS} years`}
                 />
               </Grid>
 

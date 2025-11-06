@@ -227,9 +227,10 @@ const AdminCertificates = () => {
     }
   };
 
-  const handleOpenCreateDialog = async () => {
+  const handleOpenCreateDialog = () => {
     setOpenCreateDialog(true);
-    await Promise.all([fetchUsers(), fetchCourses()]);
+    // Fetch data asynchronously after opening dialog
+    Promise.all([fetchUsers(), fetchCourses()]);
   };
 
   const handleCloseCreateDialog = () => {
@@ -253,12 +254,25 @@ const AdminCertificates = () => {
     }));
   };
 
+  const getCourseDisplayTitle = (course) => {
+    return course.title?.en || course.title?.default || course.title || 'Untitled Course';
+  };
+
   const handleCreateCertificate = async () => {
     try {
       // Validation
       if (!formData.userId || !formData.courseId) {
         toast.error('Please select both user and course');
         return;
+      }
+
+      // Validate score if provided
+      if (formData.score) {
+        const scoreValue = parseFloat(formData.score);
+        if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100) {
+          toast.error('Score must be a valid number between 0 and 100');
+          return;
+        }
       }
 
       // Prepare data
@@ -518,7 +532,7 @@ const AdminCertificates = () => {
                     <MenuItem value="">Select Course</MenuItem>
                     {courses.map((course) => (
                       <MenuItem key={course._id} value={course._id}>
-                        {course.title?.en || course.title?.default || course.title || 'Untitled Course'}
+                        {getCourseDisplayTitle(course)}
                       </MenuItem>
                     ))}
                   </Select>

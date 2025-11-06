@@ -10,8 +10,13 @@ const AnnouncementBanner = ({ userRole = 'all' }) => {
   useEffect(() => {
     fetchActiveAnnouncements();
     // Load closed announcements from localStorage
-    const closed = JSON.parse(localStorage.getItem('closedAnnouncements') || '[]');
-    setClosedAnnouncements(closed);
+    try {
+      const closed = JSON.parse(localStorage.getItem('closedAnnouncements') || '[]');
+      setClosedAnnouncements(closed);
+    } catch (error) {
+      console.error('Error loading closed announcements from localStorage:', error);
+      setClosedAnnouncements([]);
+    }
   }, []);
 
   const fetchActiveAnnouncements = async () => {
@@ -29,12 +34,9 @@ const AnnouncementBanner = ({ userRole = 'all' }) => {
     localStorage.setItem('closedAnnouncements', JSON.stringify(newClosed));
   };
 
-  const getAnnouncementText = (announcement) => {
-    return announcement.title?.en || announcement.title?.ar || announcement.title?.fr || '';
-  };
-
-  const getAnnouncementContent = (announcement) => {
-    return announcement.content?.en || announcement.content?.ar || announcement.content?.fr || '';
+  const getLocalizedText = (textObject) => {
+    if (!textObject) return '';
+    return textObject.en || textObject.ar || textObject.fr || '';
   };
 
   const getSeverity = (type) => {
@@ -86,10 +88,10 @@ const AnnouncementBanner = ({ userRole = 'all' }) => {
               )
             }
           >
-            <strong>{getAnnouncementText(announcement)}</strong>
+            <strong>{getLocalizedText(announcement.title)}</strong>
             {announcement.content && (
               <Box sx={{ mt: 0.5 }}>
-                {getAnnouncementContent(announcement)}
+                {getLocalizedText(announcement.content)}
               </Box>
             )}
           </Alert>

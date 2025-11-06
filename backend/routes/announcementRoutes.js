@@ -1,6 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const Announcement = require('../models/Announcement');
+const logger = require('../utils/logger');
 
 // Priority order mapping for sorting
 const priorityOrder = {
@@ -39,9 +40,10 @@ router.get('/active', async (req, res) => {
       data: announcements
     });
   } catch (error) {
+    logger.error('Error fetching active announcements:', error);
     res.status(500).json({
       success: false,
-      message: 'Error fetching announcements'
+      message: 'Unable to fetch announcements at this time'
     });
   }
 });

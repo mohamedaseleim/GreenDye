@@ -211,7 +211,14 @@ exports.createCertificate = async (req, res, next) => {
     }
 
     if (duration !== undefined && duration !== null && duration !== '') {
-      certificateData.metadata.duration = parseFloat(duration);
+      const parsedDuration = parseFloat(duration);
+      if (isNaN(parsedDuration) || parsedDuration < 0) {
+        return res.status(400).json({
+          success: false,
+          message: 'Duration must be a valid positive number'
+        });
+      }
+      certificateData.metadata.duration = parsedDuration;
     } else if (course?.duration) {
       certificateData.metadata.duration = course.duration;
     }

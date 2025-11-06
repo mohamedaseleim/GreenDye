@@ -280,6 +280,15 @@ const AdminCertificates = () => {
     return null; // Valid score
   };
 
+  const validateDuration = (durationString) => {
+    if (!durationString || !durationString.trim()) return null; // No duration provided is valid
+    const durationValue = parseFloat(durationString);
+    if (isNaN(durationValue) || durationValue < 0) {
+      return 'Duration must be a valid positive number';
+    }
+    return null; // Valid duration
+  };
+
   const handleCreateCertificate = async () => {
     try {
       // Validation - no longer require userId and courseId
@@ -298,6 +307,13 @@ const AdminCertificates = () => {
       const scoreError = validateScore(formData.score);
       if (scoreError) {
         toast.error(scoreError);
+        return;
+      }
+
+      // Validate duration if provided
+      const durationError = validateDuration(formData.duration);
+      if (durationError) {
+        toast.error(durationError);
         return;
       }
 

@@ -1,6 +1,6 @@
 const Certificate = require('../models/Certificate');
 const Trainer = require('../models/Trainer');
-const { DEFAULT_CERTIFICATE_ISSUER } = require('../utils/constants');
+const { DEFAULT_CERTIFICATE_ISSUER, DEFAULT_COURSE_TITLE } = require('../utils/constants');
 
 // Helper to read Map<string,string> courseName or populated course title
 function resolveCourseTitle(cert) {
@@ -12,7 +12,7 @@ function resolveCourseTitle(cert) {
     // plain object fallback
     return cert.courseName.default || cert.courseName.en || cert.courseName.title || Object.values(cert.courseName)[0];
   }
-  return cert.course?.title || 'Course';
+  return cert.course?.title || DEFAULT_COURSE_TITLE;
 }
 
 // @desc    Verify certificate (token-aware, revocation/expiry-aware)
@@ -64,7 +64,7 @@ exports.verifyCertificate = async (req, res, next) => {
 
     // Add course title (with fallback chain)
     const courseTitle = certificate.courseTitle || resolveCourseTitle(certificate);
-    if (courseTitle && courseTitle !== 'Course') basePayload.courseTitle = courseTitle;
+    if (courseTitle && courseTitle !== DEFAULT_COURSE_TITLE) basePayload.courseTitle = courseTitle;
 
     // Add certificate level
     if (certificate.certificateLevel) basePayload.certificateLevel = certificate.certificateLevel;

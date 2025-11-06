@@ -212,7 +212,7 @@ const VerifyCertificate = () => {
                 )}
 
                 {/* Score */}
-                {certificate.score !== undefined && certificate.score !== null && (
+                {certificate.score != null && (
                   <Grid item xs={12} sm={6}>
                     <Typography variant="subtitle2" color="text.secondary">
                       Score

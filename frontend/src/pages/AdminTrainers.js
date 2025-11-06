@@ -274,7 +274,7 @@ const AdminTrainers = () => {
       const requestData = {
         userId: createFormData.userId,
         fullName: createFormData.fullName,
-        commissionRate: createFormData.commissionRate !== '' && createFormData.commissionRate != null 
+        commissionRate: createFormData.commissionRate !== '' && createFormData.commissionRate !== null 
           ? parseFloat(createFormData.commissionRate) 
           : 20
       };
@@ -283,7 +283,7 @@ const AdminTrainers = () => {
       if (createFormData.bio) {
         requestData.bio = { en: createFormData.bio };
       }
-      if (createFormData.expertise && typeof createFormData.expertise === 'string') {
+      if (createFormData.expertise) {
         requestData.expertise = createFormData.expertise.split(',').map(e => e.trim()).filter(e => e);
       }
 

@@ -2,15 +2,14 @@ const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/auth');
 const {
-  getCourses,
   getCourse,
-  createCourse,
   updateCourse,
   deleteCourse
 } = require('../controllers/courseController');
 const {
   getAdminCourses,
   getPendingCourses,
+  createAdminCourse,
   setCoursePricing,
   getCourseAnalytics,
   getCourseCategories,
@@ -49,7 +48,7 @@ router.put('/bulk-update', bulkUpdateCourses);
 // Admin course management routes
 router.route('/')
   .get(getAdminCourses)
-  .post(createCourse);
+  .post(createAdminCourse);
 
 // Course-specific routes
 router.route('/:id')

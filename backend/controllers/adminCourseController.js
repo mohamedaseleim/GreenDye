@@ -95,6 +95,45 @@ exports.getPendingCourses = async (req, res, next) => {
   }
 };
 
+// @desc    Create course (admin-specific)
+// @route   POST /api/admin/courses
+// @access  Private/Admin
+exports.createAdminCourse = async (req, res, next) => {
+  try {
+    // Sanitize input to prevent NoSQL injection
+    const sanitizedData = mongoSanitize(req.body);
+    
+    // Allow admin to set instructor or leave empty
+    // Set default approvalStatus to 'approved' for admin-created courses
+    // Set isPublished based on admin's choice
+    const courseData = {
+      ...sanitizedData,
+      approvalStatus: sanitizedData.approvalStatus || 'approved',
+      isPublished: sanitizedData.isPublished !== undefined ? sanitizedData.isPublished : true
+    };
+
+    // If no instructor is provided, set to admin's ID
+    if (!courseData.instructor) {
+      courseData.instructor = req.user.id;
+    }
+    
+    const course = await Course.create(courseData);
+    
+    // Populate instructor data for response
+    await course.populate('instructor', 'name email avatar');
+
+    logger.info(`Admin ${req.user.id} created course ${course._id}`);
+
+    res.status(201).json({
+      success: true,
+      data: course
+    });
+  } catch (error) {
+    logger.error('Error creating admin course:', error);
+    next(error);
+  }
+};
+
 // @desc    Set course pricing and discounts
 // @route   PUT /api/admin/courses/:id/pricing
 // @access  Private/Admin

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
+const { DEFAULT_CERTIFICATE_ISSUER } = require('../utils/constants');
 
 const CertificateSchema = new mongoose.Schema({
   certificateId: {
@@ -9,29 +10,37 @@ const CertificateSchema = new mongoose.Schema({
     default: () => `CERT-${uuidv4().split('-')[0].toUpperCase()}`
   },
 
-  // Holder & course linkage
+  // Holder & course linkage (now optional)
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true,
+    required: false,
     index: true
   },
   course: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Course',
-    required: true,
+    required: false,
     index: true
   },
 
   // Display fields
+  traineeName: {
+    type: String,
+    required: false
+  },
   userName: {
     type: String,
-    required: true
+    required: false
+  },
+  courseTitle: {
+    type: String,
+    required: false
   },
   courseName: {
     type: Map,
     of: String,
-    required: true
+    required: false
   },
 
   // Dates
@@ -49,15 +58,20 @@ const CertificateSchema = new mongoose.Schema({
   },
 
   // Result
+  certificateLevel: {
+    type: String,
+    required: false
+  },
   grade: {
     type: String,
     enum: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'Pass', 'Distinction'],
-    default: 'Pass'
+    required: false
   },
   score: {
     type: Number,
     min: 0,
-    max: 100
+    max: 100,
+    required: false
   },
 
   // Verification artifacts
@@ -97,8 +111,14 @@ const CertificateSchema = new mongoose.Schema({
   // Extras
   metadata: {
     duration: Number, // hours
-    instructor: String,
-    language: String
+    instructor: String, // tutorName
+    language: String,
+    scheme: String,
+    heldOn: Date,
+    issuedBy: {
+      type: String,
+      default: DEFAULT_CERTIFICATE_ISSUER
+    }
   },
 
   createdAt: {

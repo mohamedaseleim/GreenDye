@@ -164,34 +164,64 @@ const VerifyCertificate = () => {
                 </Grid>
 
                 {/* Trainee Name */}
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Trainee Name
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {certificate.traineeName || 'N/A'}
-                  </Typography>
-                </Grid>
+                {certificate.traineeName && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Trainee Name
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {certificate.traineeName}
+                    </Typography>
+                  </Grid>
+                )}
 
                 {/* Course Title */}
-                <Grid item xs={12}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Course Title
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {getCourseTitle(certificate.courseTitle)}
-                  </Typography>
-                </Grid>
+                {certificate.courseTitle && (
+                  <Grid item xs={12}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Course Title
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {getCourseTitle(certificate.courseTitle)}
+                    </Typography>
+                  </Grid>
+                )}
 
                 {/* Certificate Level */}
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Certificate Level
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {certificate.certificateLevel || 'N/A'}
-                  </Typography>
-                </Grid>
+                {certificate.certificateLevel && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Certificate Level
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {certificate.certificateLevel}
+                    </Typography>
+                  </Grid>
+                )}
+
+                {/* Grade */}
+                {certificate.grade && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Grade
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {certificate.grade}
+                    </Typography>
+                  </Grid>
+                )}
+
+                {/* Score */}
+                {certificate.score != null && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Score
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {certificate.score}%
+                    </Typography>
+                  </Grid>
+                )}
 
                 {/* Status */}
                 <Grid item xs={12} sm={6}>
@@ -203,45 +233,77 @@ const VerifyCertificate = () => {
                   </Typography>
                 </Grid>
 
-                {/* Duration */}
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Duration
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {certificate.duration ? `${certificate.duration} hours` : 'N/A'}
-                  </Typography>
-                </Grid>
-
                 {/* Tutor Name */}
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Tutor Name
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {certificate.tutorName || 'N/A'}
-                  </Typography>
-                </Grid>
+                {certificate.tutorName && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Tutor Name
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {certificate.tutorName}
+                    </Typography>
+                  </Grid>
+                )}
+
+                {/* Scheme */}
+                {certificate.scheme && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Scheme
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {certificate.scheme}
+                    </Typography>
+                  </Grid>
+                )}
+
+                {/* Held On */}
+                {certificate.heldOn && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Held On
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {formatDate(certificate.heldOn)}
+                    </Typography>
+                  </Grid>
+                )}
+
+                {/* Duration */}
+                {certificate.duration && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Duration
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {certificate.duration} hours
+                    </Typography>
+                  </Grid>
+                )}
 
                 {/* Issued By */}
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Issued by
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {certificate.issuedBy || 'N/A'}
-                  </Typography>
-                </Grid>
+                {certificate.issuedBy && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Issued by
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {certificate.issuedBy}
+                    </Typography>
+                  </Grid>
+                )}
 
                 {/* Verification Date */}
-                <Grid item xs={12} sm={6}>
-                  <Typography variant="subtitle2" color="text.secondary">
-                    Verification Date
-                  </Typography>
-                  <Typography variant="body1" fontWeight="medium">
-                    {formatDate(certificate.verificationDate)}
-                  </Typography>
-                </Grid>
+                {certificate.verificationDate && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Verification Date
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {formatDate(certificate.verificationDate)}
+                    </Typography>
+                  </Grid>
+                )}
 
                 {/* Issue Date */}
                 {certificate.issueDate && (
@@ -267,14 +329,14 @@ const VerifyCertificate = () => {
                   </Grid>
                 )}
 
-                {/* Score */}
-                {certificate.score !== undefined && (
+                {/* Expiry Date */}
+                {certificate.expiryDate && (
                   <Grid item xs={12} sm={6}>
                     <Typography variant="subtitle2" color="text.secondary">
-                      Score
+                      Expiry Date
                     </Typography>
                     <Typography variant="body1" fontWeight="medium">
-                      {certificate.score}%
+                      {formatDate(certificate.expiryDate)}
                     </Typography>
                   </Grid>
                 )}
@@ -286,6 +348,7 @@ const VerifyCertificate = () => {
                       <Alert severity="error">
                         This certificate has been revoked
                         {certificate.revokedDate && ` on ${formatDate(certificate.revokedDate)}`}
+                        {certificate.revokedReason && `. Reason: ${certificate.revokedReason}`}
                       </Alert>
                     </Grid>
                   </>

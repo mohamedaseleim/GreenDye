@@ -87,7 +87,8 @@ const AdminCourses = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [newTag, setNewTag] = useState('');
-  const [createFormData, setCreateFormData] = useState({
+  
+  const initialCreateFormData = {
     title: { en: '', ar: '', fr: '' },
     description: { en: '', ar: '', fr: '' },
     category: '',
@@ -97,7 +98,9 @@ const AdminCourses = () => {
     duration: 0,
     language: 'en',
     thumbnail: ''
-  });
+  };
+  
+  const [createFormData, setCreateFormData] = useState(initialCreateFormData);
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -316,17 +319,7 @@ const AdminCourses = () => {
       await adminService.createAdminCourse(createFormData);
       toast.success('Course created successfully');
       setOpenCreateDialog(false);
-      setCreateFormData({
-        title: { en: '', ar: '', fr: '' },
-        description: { en: '', ar: '', fr: '' },
-        category: '',
-        level: 'beginner',
-        price: 0,
-        currency: 'USD',
-        duration: 0,
-        language: 'en',
-        thumbnail: ''
-      });
+      setCreateFormData(initialCreateFormData);
       fetchCourses();
       fetchStatistics();
     } catch (error) {
@@ -1017,7 +1010,7 @@ const AdminCourses = () => {
                   label="Price"
                   type="number"
                   value={createFormData.price}
-                  onChange={(e) => setCreateFormData({ ...createFormData, price: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setCreateFormData({ ...createFormData, price: Number(e.target.value) || 0 })}
                 />
               </Grid>
               
@@ -1045,7 +1038,7 @@ const AdminCourses = () => {
                   label="Duration (hours)"
                   type="number"
                   value={createFormData.duration}
-                  onChange={(e) => setCreateFormData({ ...createFormData, duration: parseFloat(e.target.value) || 0 })}
+                  onChange={(e) => setCreateFormData({ ...createFormData, duration: Number(e.target.value) || 0 })}
                 />
               </Grid>
               

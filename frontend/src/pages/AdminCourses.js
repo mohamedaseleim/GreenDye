@@ -94,7 +94,7 @@ const AdminCourses = () => {
     level: 'beginner',
     price: 0,
     currency: 'USD',
-    duration: '',
+    duration: 0,
     language: 'en',
     thumbnail: ''
   });
@@ -323,7 +323,7 @@ const AdminCourses = () => {
         level: 'beginner',
         price: 0,
         currency: 'USD',
-        duration: '',
+        duration: 0,
         language: 'en',
         thumbnail: ''
       });
@@ -918,6 +918,19 @@ const AdminCourses = () => {
                 />
               </Grid>
               
+              {/* Title in French */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Title (French)"
+                  value={createFormData.title.fr}
+                  onChange={(e) => setCreateFormData({
+                    ...createFormData,
+                    title: { ...createFormData.title, fr: e.target.value }
+                  })}
+                />
+              </Grid>
+              
               {/* Description in English */}
               <Grid item xs={12}>
                 <TextField
@@ -929,6 +942,36 @@ const AdminCourses = () => {
                   onChange={(e) => setCreateFormData({
                     ...createFormData,
                     description: { ...createFormData.description, en: e.target.value }
+                  })}
+                />
+              </Grid>
+              
+              {/* Description in Arabic */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="Description (Arabic)"
+                  value={createFormData.description.ar}
+                  onChange={(e) => setCreateFormData({
+                    ...createFormData,
+                    description: { ...createFormData.description, ar: e.target.value }
+                  })}
+                />
+              </Grid>
+              
+              {/* Description in French */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  multiline
+                  rows={3}
+                  label="Description (French)"
+                  value={createFormData.description.fr}
+                  onChange={(e) => setCreateFormData({
+                    ...createFormData,
+                    description: { ...createFormData.description, fr: e.target.value }
                   })}
                 />
               </Grid>
@@ -974,7 +1017,7 @@ const AdminCourses = () => {
                   label="Price"
                   type="number"
                   value={createFormData.price}
-                  onChange={(e) => setCreateFormData({ ...createFormData, price: e.target.value })}
+                  onChange={(e) => setCreateFormData({ ...createFormData, price: parseFloat(e.target.value) || 0 })}
                 />
               </Grid>
               
@@ -1002,7 +1045,7 @@ const AdminCourses = () => {
                   label="Duration (hours)"
                   type="number"
                   value={createFormData.duration}
-                  onChange={(e) => setCreateFormData({ ...createFormData, duration: e.target.value })}
+                  onChange={(e) => setCreateFormData({ ...createFormData, duration: parseFloat(e.target.value) || 0 })}
                 />
               </Grid>
               

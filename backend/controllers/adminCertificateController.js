@@ -105,6 +105,7 @@ exports.createCertificate = async (req, res, next) => {
       tutorName,
       scheme,
       heldOn,
+      heldIn,
       duration,
       issuedBy,
       issueDate,
@@ -210,6 +211,10 @@ exports.createCertificate = async (req, res, next) => {
       certificateData.metadata.heldOn = heldOn;
     }
 
+    if (heldIn) {
+      certificateData.metadata.heldIn = heldIn;
+    }
+
     if (duration !== undefined && duration !== null && duration !== '') {
       const parsedDuration = parseFloat(duration);
       if (isNaN(parsedDuration) || parsedDuration < 0) {
@@ -288,6 +293,7 @@ exports.updateCertificate = async (req, res, next) => {
       tutorName,
       scheme,
       heldOn,
+      heldIn,
       duration,
       issuedBy,
       issueDate,
@@ -311,6 +317,7 @@ exports.updateCertificate = async (req, res, next) => {
     if (tutorName) certificate.metadata.instructor = tutorName;
     if (scheme) certificate.metadata.scheme = scheme;
     if (heldOn) certificate.metadata.heldOn = heldOn;
+    if (heldIn) certificate.metadata.heldIn = heldIn;
     if (duration !== undefined) certificate.metadata.duration = duration;
     if (issuedBy) certificate.metadata.issuedBy = issuedBy;
 

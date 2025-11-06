@@ -170,14 +170,24 @@ const Header = () => {
                       {t('analytics')}
                     </MenuItem>
                     {user?.role === 'admin' && (
-                      <MenuItem
-                        onClick={() => {
-                          navigate('/admin/analytics');
-                          handleClose();
-                        }}
-                      >
-                        {t('adminAnalytics')}
-                      </MenuItem>
+                      <>
+                        <MenuItem
+                          onClick={() => {
+                            navigate('/admin/analytics');
+                            handleClose();
+                          }}
+                        >
+                          {t('adminAnalytics')}
+                        </MenuItem>
+                        <MenuItem
+                          onClick={() => {
+                            navigate('/admin/dashboard');
+                            handleClose();
+                          }}
+                        >
+                          {t('adminDashboard')}
+                        </MenuItem>
+                      </>
                     )}
                   <MenuItem onClick={handleLogout}>{t('logout')}</MenuItem>
                 </Menu>
@@ -244,14 +254,24 @@ const Header = () => {
                     {t('analytics')}
                   </MenuItem>
                   {user?.role === 'admin' && (
-                    <MenuItem
-                      onClick={() => {
-                        navigate('/admin/analytics');
-                        handleMobileMenuClose();
-                      }}
-                    >
-                      {t('adminAnalytics')}
-                    </MenuItem>
+                    <>
+                      <MenuItem
+                        onClick={() => {
+                          navigate('/admin/analytics');
+                          handleMobileMenuClose();
+                        }}
+                      >
+                        {t('adminAnalytics')}
+                      </MenuItem>
+                      <MenuItem
+                        onClick={() => {
+                          navigate('/admin/dashboard');
+                          handleMobileMenuClose();
+                        }}
+                      >
+                        {t('adminDashboard')}
+                      </MenuItem>
+                    </>
                   )}
                   <MenuItem
                     onClick={() => {

@@ -1159,7 +1159,7 @@ const AdminTrainers = () => {
                           onChange={(e) => updateQualification(index, 'institution', e.target.value)}
                         />
                       </Grid>
-                      <Grid item xs={10} md={1}>
+                      <Grid item xs={8} md={2}>
                         <TextField
                           fullWidth
                           size="small"
@@ -1169,7 +1169,7 @@ const AdminTrainers = () => {
                           onChange={(e) => updateQualification(index, 'year', e.target.value)}
                         />
                       </Grid>
-                      <Grid item xs={2} md={1}>
+                      <Grid item xs={4} md={1}>
                         <IconButton
                           size="small"
                           color="error"
@@ -1220,7 +1220,7 @@ const AdminTrainers = () => {
                           onChange={(e) => updateCertification(index, 'organization', e.target.value)}
                         />
                       </Grid>
-                      <Grid item xs={10} md={1}>
+                      <Grid item xs={8} md={2}>
                         <TextField
                           fullWidth
                           size="small"
@@ -1230,7 +1230,7 @@ const AdminTrainers = () => {
                           onChange={(e) => updateCertification(index, 'year', e.target.value)}
                         />
                       </Grid>
-                      <Grid item xs={2} md={1}>
+                      <Grid item xs={4} md={1}>
                         <IconButton
                           size="small"
                           color="error"
@@ -1273,7 +1273,7 @@ const AdminTrainers = () => {
                           placeholder="e.g., English, Arabic, French"
                         />
                       </Grid>
-                      <Grid item xs={10} md={6}>
+                      <Grid item xs={8} md={6}>
                         <FormControl fullWidth size="small">
                           <InputLabel>Proficiency</InputLabel>
                           <Select
@@ -1288,7 +1288,7 @@ const AdminTrainers = () => {
                           </Select>
                         </FormControl>
                       </Grid>
-                      <Grid item xs={2} md={1}>
+                      <Grid item xs={4} md={1}>
                         <IconButton
                           size="small"
                           color="error"

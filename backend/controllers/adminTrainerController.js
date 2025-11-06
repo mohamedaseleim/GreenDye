@@ -154,9 +154,7 @@ exports.createTrainer = async (req, res, next) => {
       await trainer.save();
     } catch (qrError) {
       // Log warning but continue - QR code is not critical for trainer creation
-      console.warn('QR code generation failed for trainer:', trainer.trainerId, 
-        'Error:', qrError.message, 
-        'Note: Trainer profile created successfully but QR code can be regenerated later if needed');
+      console.warn(`QR code generation failed for trainer: ${trainer.trainerId}. Error: ${qrError.message}. Note: Trainer profile created successfully but QR code can be regenerated later if needed`);
       // Trainer was created successfully, just without QR code
     }
 

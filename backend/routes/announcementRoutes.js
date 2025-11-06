@@ -2,6 +2,14 @@ const express = require('express');
 const router = express.Router();
 const Announcement = require('../models/Announcement');
 
+// Priority order mapping for sorting
+const priorityOrder = {
+  urgent: 4,
+  high: 3,
+  medium: 2,
+  low: 1
+};
+
 // @desc    Get active announcements (public)
 // @route   GET /api/announcements/active
 // @access  Public
@@ -16,7 +24,14 @@ router.get('/active', async (req, res) => {
         { endDate: null },
         { endDate: { $gte: now } }
       ]
-    }).sort({ priority: -1, startDate: -1 });
+    }).sort({ startDate: -1 });
+
+    // Sort by priority (urgent > high > medium > low) then by startDate
+    announcements.sort((a, b) => {
+      const priorityDiff = (priorityOrder[b.priority] || 0) - (priorityOrder[a.priority] || 0);
+      if (priorityDiff !== 0) return priorityDiff;
+      return new Date(b.startDate) - new Date(a.startDate);
+    });
 
     res.status(200).json({
       success: true,

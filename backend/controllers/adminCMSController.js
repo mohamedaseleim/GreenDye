@@ -657,3 +657,92 @@ exports.getDashboardStats = async (req, res, next) => {
     next(error);
   }
 };
+
+// ========== AUDIT TRAIL ==========
+
+// @desc    Get audit trail logs
+// @route   GET /api/admin/cms/audit-trail
+// @access  Private/Admin
+exports.getAuditTrail = async (req, res, next) => {
+  try {
+    const { 
+      action, 
+      resourceType, 
+      userId, 
+      page = 1, 
+      limit = 50,
+      startDate,
+      endDate 
+    } = mongoSanitize(req.query);
+
+    const query = {};
+    if (action) query.action = action;
+    if (resourceType) query.resourceType = resourceType;
+    if (userId) query.user = userId;
+    
+    // Date filtering
+    if (startDate || endDate) {
+      query.timestamp = {};
+      if (startDate) query.timestamp.$gte = new Date(startDate);
+      if (endDate) query.timestamp.$lte = new Date(endDate);
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const auditLogs = await AuditTrail.find(query)
+      .populate('user', 'name email role')
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await AuditTrail.countDocuments(query);
+
+    res.status(200).json({
+      success: true,
+      count: auditLogs.length,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+      data: auditLogs
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// @desc    Get audit trail for specific resource
+// @route   GET /api/admin/cms/audit-trail/resource/:resourceType/:resourceId
+// @access  Private/Admin
+exports.getResourceAuditTrail = async (req, res, next) => {
+  try {
+    const { resourceType, resourceId } = req.params;
+    const { page = 1, limit = 20 } = mongoSanitize(req.query);
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const auditLogs = await AuditTrail.find({
+      resourceType,
+      resourceId
+    })
+      .populate('user', 'name email role')
+      .sort({ timestamp: -1 })
+      .skip(skip)
+      .limit(parseInt(limit));
+
+    const total = await AuditTrail.countDocuments({
+      resourceType,
+      resourceId
+    });
+
+    res.status(200).json({
+      success: true,
+      count: auditLogs.length,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+      data: auditLogs
+    });
+  } catch (error) {
+    next(error);
+  }
+};

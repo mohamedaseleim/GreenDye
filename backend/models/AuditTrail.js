@@ -4,17 +4,21 @@ const AuditTrailSchema = new mongoose.Schema({
   user: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
-    required: true
+    required: true,
+    index: true
   },
   action: {
     type: String,
-    required: true
+    required: true,
+    index: true
   },
   resourceType: {
-    type: String
+    type: String,
+    index: true
   },
   resourceId: {
-    type: mongoose.Schema.Types.ObjectId
+    type: mongoose.Schema.Types.ObjectId,
+    index: true
   },
   targetType: {
     type: String
@@ -33,12 +37,18 @@ const AuditTrailSchema = new mongoose.Schema({
   },
   timestamp: {
     type: Date,
-    default: Date.now
+    default: Date.now,
+    index: true
   },
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+// Compound indexes for efficient querying
+AuditTrailSchema.index({ user: 1, timestamp: -1 });
+AuditTrailSchema.index({ resourceType: 1, resourceId: 1 });
+AuditTrailSchema.index({ action: 1, timestamp: -1 });
 
 module.exports = mongoose.model('AuditTrail', AuditTrailSchema);

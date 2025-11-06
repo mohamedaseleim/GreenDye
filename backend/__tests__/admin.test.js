@@ -2,13 +2,8 @@ const request = require('supertest');
 const mongoose = require('mongoose');
 const app = require('../server');
 const User = require('../models/User');
-const Certificate = require('../models/Certificate');
-const Page = require('../models/Page');
 
 describe('Admin Dashboard API Tests', () => {
-  let adminToken;
-  let adminUser;
-  
   beforeAll(async () => {
     // Connect to test database
     if (mongoose.connection.readyState === 0) {

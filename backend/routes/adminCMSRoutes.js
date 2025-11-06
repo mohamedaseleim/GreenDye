@@ -18,7 +18,9 @@ const {
   deleteAnnouncement,
   getPendingForumPosts,
   moderateForumPost,
-  getDashboardStats
+  getDashboardStats,
+  getAuditTrail,
+  getResourceAuditTrail
 } = require('../controllers/adminCMSController');
 const { uploadMedia, upload } = require('../controllers/adminMediaController');
 
@@ -64,5 +66,9 @@ router.route('/announcements/:id')
 // Content moderation
 router.get('/moderation/forums', getPendingForumPosts);
 router.put('/moderation/forums/:id', moderateForumPost);
+
+// Audit trail
+router.get('/audit-trail', getAuditTrail);
+router.get('/audit-trail/resource/:resourceType/:resourceId', getResourceAuditTrail);
 
 module.exports = router;

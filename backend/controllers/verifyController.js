@@ -49,26 +49,62 @@ exports.verifyCertificate = async (req, res, next) => {
     else if (isExpired) status = 'Expired';
     else status = 'Valid';
 
+    // Build payload with only non-null/non-undefined fields
     const basePayload = {
       certificateId: certificate.certificateId,
-      traineeName: certificate.userName || certificate.user?.name,
-      courseTitle: resolveCourseTitle(certificate),
-      certificateLevel: certificate.grade,
-      duration: certificate.metadata?.duration,
-      tutorName: certificate.metadata?.instructor,
-      issuedBy: 'GreenDye Academy',
-      verificationDate: new Date(),
       status,
       isRevoked: !!certificate.isRevoked,
-      revokedDate: certificate.revokedDate || null,
-      revokedReason: certificate.revokedReason || null,
-      completionDate: certificate.completionDate || null,
-      issueDate: certificate.issueDate || null,
-      expiryDate: certificate.expiryDate || null,
-      score: typeof certificate.score === 'number' ? certificate.score : null,
-      verificationUrl: certificate.verificationUrl || null,
-      qrCode: certificate.qrCode || null
+      verificationDate: new Date()
     };
+
+    // Add trainee name (with fallback chain)
+    const traineeName = certificate.traineeName || certificate.userName || certificate.user?.name;
+    if (traineeName) basePayload.traineeName = traineeName;
+
+    // Add course title (with fallback chain)
+    const courseTitle = certificate.courseTitle || resolveCourseTitle(certificate);
+    if (courseTitle && courseTitle !== 'Course') basePayload.courseTitle = courseTitle;
+
+    // Add certificate level
+    if (certificate.certificateLevel) basePayload.certificateLevel = certificate.certificateLevel;
+
+    // Add grade (separate field)
+    if (certificate.grade) basePayload.grade = certificate.grade;
+
+    // Add score
+    if (typeof certificate.score === 'number') basePayload.score = certificate.score;
+
+    // Add tutor name
+    if (certificate.metadata?.instructor) basePayload.tutorName = certificate.metadata.instructor;
+
+    // Add scheme
+    if (certificate.metadata?.scheme) basePayload.scheme = certificate.metadata.scheme;
+
+    // Add held on date
+    if (certificate.metadata?.heldOn) basePayload.heldOn = certificate.metadata.heldOn;
+
+    // Add duration
+    if (certificate.metadata?.duration) basePayload.duration = certificate.metadata.duration;
+
+    // Add issued by
+    if (certificate.metadata?.issuedBy) {
+      basePayload.issuedBy = certificate.metadata.issuedBy;
+    } else {
+      basePayload.issuedBy = 'GreenDye Academy';
+    }
+
+    // Add dates
+    if (certificate.completionDate) basePayload.completionDate = certificate.completionDate;
+    if (certificate.issueDate) basePayload.issueDate = certificate.issueDate;
+    if (certificate.expiryDate) basePayload.expiryDate = certificate.expiryDate;
+
+    // Add revocation info if applicable
+    if (certificate.revokedDate) basePayload.revokedDate = certificate.revokedDate;
+    if (certificate.revokedReason) basePayload.revokedReason = certificate.revokedReason;
+
+    // Add verification URL and QR code
+    if (certificate.verificationUrl) basePayload.verificationUrl = certificate.verificationUrl;
+    if (certificate.qrCode) basePayload.qrCode = certificate.qrCode;
 
     // If not valid (revoked/invalid/expired) return verified:false but success:true
     if (certificate.isRevoked || !certificate.isValid || isExpired) {

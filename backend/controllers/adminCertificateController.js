@@ -33,6 +33,7 @@ exports.getAllCertificates = async (req, res, next) => {
       const escapedSearch = sanitizedSearch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       query.$or = [
         { userName: { $regex: escapedSearch, $options: 'i' } },
+        { traineeName: { $regex: escapedSearch, $options: 'i' } },
         { certificateId: { $regex: escapedSearch, $options: 'i' } }
       ];
     }
@@ -95,61 +96,132 @@ exports.createCertificate = async (req, res, next) => {
     const {
       userId,
       courseId,
-      userName,
+      traineeName,
+      courseTitle,
+      certificateLevel,
       grade,
       score,
+      tutorName,
+      scheme,
+      heldOn,
+      duration,
+      issuedBy,
       issueDate,
       expiryDate,
-      instructorName,
       certificateId
     } = sanitizedInput;
 
-    // Validate user and course exist
-    const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({
-        success: false,
-        message: 'User not found'
-      });
-    }
-
-    const course = await Course.findById(courseId);
-    if (!course) {
-      return res.status(404).json({
-        success: false,
-        message: 'Course not found'
-      });
-    }
-
-    // Check for duplicate
-    const existing = await Certificate.findOne({
-      user: userId,
-      course: courseId
-    });
-
-    if (existing) {
-      return res.status(400).json({
-        success: false,
-        message: 'Certificate already exists for this user and course'
-      });
-    }
-
-    // Create certificate data
+    // Initialize certificate data
     const certificateData = {
-      user: userId,
-      course: courseId,
-      userName: userName || user.name,
-      courseName: course.title,
-      grade: grade || 'Pass',
-      score,
       issueDate: issueDate || Date.now(),
-      expiryDate,
-      metadata: {
-        duration: course.duration,
-        instructor: instructorName || course.instructor?.name,
-        language: user.language || 'en'
-      }
+      metadata: {}
     };
+
+    // User and Course are now optional
+    let user = null;
+    let course = null;
+
+    if (userId) {
+      user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: 'User not found'
+        });
+      }
+      certificateData.user = userId;
+    }
+
+    if (courseId) {
+      course = await Course.findById(courseId);
+      if (!course) {
+        return res.status(404).json({
+          success: false,
+          message: 'Course not found'
+        });
+      }
+      certificateData.course = courseId;
+    }
+
+    // Check for duplicate only if both user and course are provided
+    if (userId && courseId) {
+      const existing = await Certificate.findOne({
+        user: userId,
+        course: courseId
+      });
+
+      if (existing) {
+        return res.status(400).json({
+          success: false,
+          message: 'Certificate already exists for this user and course'
+        });
+      }
+    }
+
+    // Set trainee name (with priority: traineeName > userName from user object)
+    if (traineeName) {
+      certificateData.traineeName = traineeName;
+      certificateData.userName = traineeName; // Keep backward compatibility
+    } else if (user) {
+      certificateData.traineeName = user.name;
+      certificateData.userName = user.name;
+    }
+
+    // Set course title (with priority: courseTitle > courseName from course object)
+    if (courseTitle) {
+      certificateData.courseTitle = courseTitle;
+    } else if (course) {
+      certificateData.courseName = course.title;
+    }
+
+    // Set certificate level and grade
+    if (certificateLevel) {
+      certificateData.certificateLevel = certificateLevel;
+    }
+    if (grade) {
+      certificateData.grade = grade;
+    }
+
+    // Set score
+    if (score !== undefined && score !== null && score !== '') {
+      certificateData.score = parseFloat(score);
+    }
+
+    // Set expiry date
+    if (expiryDate) {
+      certificateData.expiryDate = expiryDate;
+    }
+
+    // Set metadata fields
+    if (tutorName) {
+      certificateData.metadata.instructor = tutorName;
+    } else if (course?.instructor?.name) {
+      certificateData.metadata.instructor = course.instructor.name;
+    }
+
+    if (scheme) {
+      certificateData.metadata.scheme = scheme;
+    }
+
+    if (heldOn) {
+      certificateData.metadata.heldOn = heldOn;
+    }
+
+    if (duration !== undefined && duration !== null && duration !== '') {
+      certificateData.metadata.duration = parseFloat(duration);
+    } else if (course?.duration) {
+      certificateData.metadata.duration = course.duration;
+    }
+
+    if (issuedBy) {
+      certificateData.metadata.issuedBy = issuedBy;
+    } else {
+      certificateData.metadata.issuedBy = 'GreenDye Academy';
+    }
+
+    if (user?.language) {
+      certificateData.metadata.language = user.language;
+    }
 
     // Override certificateId if provided
     if (certificateId) {
@@ -169,7 +241,7 @@ exports.createCertificate = async (req, res, next) => {
       action: 'create',
       resourceType: 'Certificate',
       resourceId: certificate._id,
-      details: `Created certificate ${certificate.certificateId} for user ${user.name}`,
+      details: `Created certificate ${certificate.certificateId}${user ? ` for user ${user.name}` : ''}`,
       ipAddress: req.ip
     });
 
@@ -198,24 +270,39 @@ exports.updateCertificate = async (req, res, next) => {
     }
 
     const {
-      userName,
+      traineeName,
+      courseTitle,
+      certificateLevel,
       grade,
       score,
+      tutorName,
+      scheme,
+      heldOn,
+      duration,
+      issuedBy,
       issueDate,
-      expiryDate,
-      instructorName
+      expiryDate
     } = req.body;
 
     // Update allowed fields
-    if (userName) certificate.userName = userName;
+    if (traineeName) {
+      certificate.traineeName = traineeName;
+      certificate.userName = traineeName; // Keep backward compatibility
+    }
+    if (courseTitle) certificate.courseTitle = courseTitle;
+    if (certificateLevel) certificate.certificateLevel = certificateLevel;
     if (grade) certificate.grade = grade;
     if (score !== undefined) certificate.score = score;
     if (issueDate) certificate.issueDate = issueDate;
     if (expiryDate !== undefined) certificate.expiryDate = expiryDate;
-    if (instructorName) {
-      certificate.metadata = certificate.metadata || {};
-      certificate.metadata.instructor = instructorName;
-    }
+    
+    // Update metadata fields
+    if (!certificate.metadata) certificate.metadata = {};
+    if (tutorName) certificate.metadata.instructor = tutorName;
+    if (scheme) certificate.metadata.scheme = scheme;
+    if (heldOn) certificate.metadata.heldOn = heldOn;
+    if (duration !== undefined) certificate.metadata.duration = duration;
+    if (issuedBy) certificate.metadata.issuedBy = issuedBy;
 
     await certificate.save();
 

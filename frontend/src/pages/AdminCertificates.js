@@ -60,12 +60,18 @@ const AdminCertificates = () => {
   const [formData, setFormData] = useState({
     userId: '',
     courseId: '',
-    userName: '',
-    grade: 'Pass',
+    traineeName: '',
+    courseTitle: '',
+    certificateLevel: '',
+    grade: '',
     score: '',
+    tutorName: '',
+    scheme: '',
+    heldOn: '',
+    duration: '',
+    issuedBy: 'GreenDye Academy',
     issueDate: '',
-    expiryDate: '',
-    instructorName: ''
+    expiryDate: ''
   });
 
   useEffect(() => {
@@ -239,12 +245,18 @@ const AdminCertificates = () => {
     setFormData({
       userId: '',
       courseId: '',
-      userName: '',
-      grade: 'Pass',
+      traineeName: '',
+      courseTitle: '',
+      certificateLevel: '',
+      grade: '',
       score: '',
+      tutorName: '',
+      scheme: '',
+      heldOn: '',
+      duration: '',
+      issuedBy: 'GreenDye Academy',
       issueDate: '',
-      expiryDate: '',
-      instructorName: ''
+      expiryDate: ''
     });
   };
 
@@ -270,9 +282,15 @@ const AdminCertificates = () => {
 
   const handleCreateCertificate = async () => {
     try {
-      // Validation
-      if (!formData.userId || !formData.courseId) {
-        toast.error('Please select both user and course');
+      // Validation - no longer require userId and courseId
+      // But at least one identifier should be provided
+      if (!formData.userId && !formData.traineeName) {
+        toast.error('Please select a user or enter a trainee name');
+        return;
+      }
+
+      if (!formData.courseId && !formData.courseTitle) {
+        toast.error('Please select a course or enter a course title');
         return;
       }
 
@@ -283,19 +301,26 @@ const AdminCertificates = () => {
         return;
       }
 
-      // Prepare data
-      const data = {
-        userId: formData.userId,
-        courseId: formData.courseId,
-        grade: formData.grade || 'Pass',
-      };
+      // Prepare data - only include fields that have values
+      const data = {};
 
-      // Add optional fields if provided
-      if (formData.userName) data.userName = formData.userName;
+      // Add user and course if selected
+      if (formData.userId) data.userId = formData.userId;
+      if (formData.courseId) data.courseId = formData.courseId;
+
+      // Add all optional fields if provided
+      if (formData.traineeName) data.traineeName = formData.traineeName;
+      if (formData.courseTitle) data.courseTitle = formData.courseTitle;
+      if (formData.certificateLevel) data.certificateLevel = formData.certificateLevel;
+      if (formData.grade) data.grade = formData.grade;
       if (formData.score) data.score = parseFloat(formData.score);
+      if (formData.tutorName) data.tutorName = formData.tutorName;
+      if (formData.scheme) data.scheme = formData.scheme;
+      if (formData.heldOn) data.heldOn = formData.heldOn;
+      if (formData.duration) data.duration = parseFloat(formData.duration);
+      if (formData.issuedBy) data.issuedBy = formData.issuedBy;
       if (formData.issueDate) data.issueDate = formData.issueDate;
       if (formData.expiryDate) data.expiryDate = formData.expiryDate;
-      if (formData.instructorName) data.instructorName = formData.instructorName;
 
       await adminService.createCertificate(data);
       toast.success('Certificate created successfully');
@@ -512,13 +537,14 @@ const AdminCertificates = () => {
         <DialogContent>
           <Box sx={{ pt: 2 }}>
             <Grid container spacing={2}>
+              {/* User (Optional) */}
               <Grid item xs={12}>
-                <FormControl fullWidth required>
-                  <InputLabel>User</InputLabel>
+                <FormControl fullWidth>
+                  <InputLabel>User (Optional)</InputLabel>
                   <Select
                     value={formData.userId}
                     onChange={(e) => handleFormChange('userId', e.target.value)}
-                    label="User"
+                    label="User (Optional)"
                   >
                     <MenuItem value="">Select User</MenuItem>
                     {users.map((user) => (
@@ -529,13 +555,15 @@ const AdminCertificates = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* Course (Optional) */}
               <Grid item xs={12}>
-                <FormControl fullWidth required>
-                  <InputLabel>Course</InputLabel>
+                <FormControl fullWidth>
+                  <InputLabel>Course (Optional)</InputLabel>
                   <Select
                     value={formData.courseId}
                     onChange={(e) => handleFormChange('courseId', e.target.value)}
-                    label="Course"
+                    label="Course (Optional)"
                   >
                     <MenuItem value="">Select Course</MenuItem>
                     {courses.map((course) => (
@@ -546,34 +574,63 @@ const AdminCertificates = () => {
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* Trainee Name (Optional) */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="User Name (Optional)"
-                  value={formData.userName}
-                  onChange={(e) => handleFormChange('userName', e.target.value)}
-                  placeholder="Override display name"
+                  label="Trainee Name (Optional)"
+                  value={formData.traineeName}
+                  onChange={(e) => handleFormChange('traineeName', e.target.value)}
+                  placeholder="Enter trainee name"
                 />
               </Grid>
+
+              {/* Course Title (Optional) */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Course Title (Optional)"
+                  value={formData.courseTitle}
+                  onChange={(e) => handleFormChange('courseTitle', e.target.value)}
+                  placeholder="Enter course title"
+                />
+              </Grid>
+
+              {/* Certificate Level (Optional) */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Certificate Level (Optional)"
+                  value={formData.certificateLevel}
+                  onChange={(e) => handleFormChange('certificateLevel', e.target.value)}
+                  placeholder="e.g., Foundation, Advanced, Professional"
+                />
+              </Grid>
+
+              {/* Grade (Optional) */}
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
-                  <InputLabel>Grade</InputLabel>
+                  <InputLabel>Grade (Optional)</InputLabel>
                   <Select
                     value={formData.grade}
                     onChange={(e) => handleFormChange('grade', e.target.value)}
-                    label="Grade"
+                    label="Grade (Optional)"
                   >
-                    <MenuItem value="Pass">Pass</MenuItem>
-                    <MenuItem value="Distinction">Distinction</MenuItem>
+                    <MenuItem value="">None</MenuItem>
                     <MenuItem value="A+">A+</MenuItem>
                     <MenuItem value="A">A</MenuItem>
                     <MenuItem value="B+">B+</MenuItem>
                     <MenuItem value="B">B</MenuItem>
                     <MenuItem value="C+">C+</MenuItem>
                     <MenuItem value="C">C</MenuItem>
+                    <MenuItem value="Pass">Pass</MenuItem>
+                    <MenuItem value="Distinction">Distinction</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
+
+              {/* Score (Optional) */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -585,15 +642,66 @@ const AdminCertificates = () => {
                   placeholder="0-100"
                 />
               </Grid>
+
+              {/* Tutor Name (Optional) */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Instructor Name (Optional)"
-                  value={formData.instructorName}
-                  onChange={(e) => handleFormChange('instructorName', e.target.value)}
-                  placeholder="Override instructor name"
+                  label="Tutor Name (Optional)"
+                  value={formData.tutorName}
+                  onChange={(e) => handleFormChange('tutorName', e.target.value)}
+                  placeholder="Enter tutor name"
                 />
               </Grid>
+
+              {/* Scheme (Optional) */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Scheme (Optional)"
+                  value={formData.scheme}
+                  onChange={(e) => handleFormChange('scheme', e.target.value)}
+                  placeholder="Enter scheme"
+                />
+              </Grid>
+
+              {/* Held On (Optional) */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Held On (Optional)"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.heldOn}
+                  onChange={(e) => handleFormChange('heldOn', e.target.value)}
+                />
+              </Grid>
+
+              {/* Duration (Optional) */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Duration in Hours (Optional)"
+                  type="number"
+                  inputProps={{ min: 0, step: 0.5 }}
+                  value={formData.duration}
+                  onChange={(e) => handleFormChange('duration', e.target.value)}
+                  placeholder="Enter duration in hours"
+                />
+              </Grid>
+
+              {/* Issued by (Optional) */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Issued by (Optional)"
+                  value={formData.issuedBy}
+                  onChange={(e) => handleFormChange('issuedBy', e.target.value)}
+                  placeholder="GreenDye Academy"
+                />
+              </Grid>
+
+              {/* Issue Date (Optional) */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
@@ -604,6 +712,8 @@ const AdminCertificates = () => {
                   onChange={(e) => handleFormChange('issueDate', e.target.value)}
                 />
               </Grid>
+
+              {/* Expiry Date (Optional) */}
               <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth

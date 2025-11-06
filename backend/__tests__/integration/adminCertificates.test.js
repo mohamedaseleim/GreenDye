@@ -70,17 +70,71 @@ describe('Admin Certificate API Endpoints', () => {
   });
 
   describe('POST /api/admin/certificates', () => {
-    it('should create a certificate manually (admin)', async () => {
+    it('should create a certificate manually with all new fields (admin)', async () => {
       const response = await request(app)
         .post('/api/admin/certificates')
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
           userId: studentId,
           courseId: courseId,
-          userName: 'Student User',
+          traineeName: 'Test Trainee',
+          courseTitle: 'Advanced Testing Course',
+          certificateLevel: 'Professional',
           grade: 'A+',
           score: 98,
-          instructorName: 'Test Instructor'
+          tutorName: 'Dr. Test Tutor',
+          scheme: 'Test Scheme',
+          heldOn: '2024-01-15',
+          duration: 40,
+          issuedBy: 'GreenDye Academy',
+          issueDate: '2024-01-20',
+          expiryDate: '2025-01-20'
+        })
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('certificateId');
+      expect(response.body.data).toHaveProperty('traineeName', 'Test Trainee');
+      expect(response.body.data).toHaveProperty('courseTitle', 'Advanced Testing Course');
+      expect(response.body.data).toHaveProperty('certificateLevel', 'Professional');
+      expect(response.body.data).toHaveProperty('grade', 'A+');
+      expect(response.body.data).toHaveProperty('score', 98);
+      expect(response.body.data).toHaveProperty('verificationUrl');
+      expect(response.body.data).toHaveProperty('qrCode');
+
+      // Verify metadata fields
+      const certificate = await Certificate.findById(response.body.data._id);
+      expect(certificate.metadata.instructor).toBe('Dr. Test Tutor');
+      expect(certificate.metadata.scheme).toBe('Test Scheme');
+      expect(certificate.metadata.duration).toBe(40);
+      expect(certificate.metadata.issuedBy).toBe('GreenDye Academy');
+    });
+
+    it('should create a certificate with minimal fields (userId and courseId optional)', async () => {
+      const response = await request(app)
+        .post('/api/admin/certificates')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          traineeName: 'Manual Trainee',
+          courseTitle: 'Manual Course'
+        })
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveProperty('certificateId');
+      expect(response.body.data).toHaveProperty('traineeName', 'Manual Trainee');
+      expect(response.body.data).toHaveProperty('courseTitle', 'Manual Course');
+    });
+
+    it('should create a certificate with backward compatibility fields', async () => {
+      const response = await request(app)
+        .post('/api/admin/certificates')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          userId: studentId,
+          courseId: courseId,
+          grade: 'A+',
+          score: 98
         })
         .expect(201);
 
@@ -98,8 +152,8 @@ describe('Admin Certificate API Endpoints', () => {
       expect(certificate.courseName.get('en')).toBe('Test Course');
     });
 
-    it('should fail to create duplicate certificate', async () => {
-      // First creation
+    it('should fail to create duplicate certificate only when both userId and courseId are provided', async () => {
+      // First creation with userId and courseId
       await request(app)
         .post('/api/admin/certificates')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -111,7 +165,7 @@ describe('Admin Certificate API Endpoints', () => {
         })
         .expect(201);
 
-      // Second creation should fail
+      // Second creation with same userId and courseId should fail
       const response = await request(app)
         .post('/api/admin/certificates')
         .set('Authorization', `Bearer ${adminToken}`)
@@ -125,6 +179,18 @@ describe('Admin Certificate API Endpoints', () => {
 
       expect(response.body.success).toBe(false);
       expect(response.body.message).toContain('already exists');
+
+      // But creating with only manual fields should succeed
+      const manualResponse = await request(app)
+        .post('/api/admin/certificates')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          traineeName: 'Another Trainee',
+          courseTitle: 'Another Course'
+        })
+        .expect(201);
+
+      expect(manualResponse.body.success).toBe(true);
     });
   });
 
@@ -182,7 +248,7 @@ describe('Admin Certificate API Endpoints', () => {
   });
 
   describe('PUT /api/admin/certificates/:id', () => {
-    it('should update certificate details', async () => {
+    it('should update certificate details with new fields', async () => {
       // Create a certificate
       const createResponse = await request(app)
         .post('/api/admin/certificates')
@@ -196,21 +262,36 @@ describe('Admin Certificate API Endpoints', () => {
 
       const certificateId = createResponse.body.data._id;
 
-      // Update it
+      // Update it with new fields
       const response = await request(app)
         .put(`/api/admin/certificates/${certificateId}`)
         .set('Authorization', `Bearer ${adminToken}`)
         .send({
+          traineeName: 'Updated Trainee Name',
+          courseTitle: 'Updated Course Title',
+          certificateLevel: 'Advanced',
           grade: 'A+',
           score: 98,
-          userName: 'Updated Name'
+          tutorName: 'Updated Tutor',
+          scheme: 'Updated Scheme',
+          duration: 50,
+          issuedBy: 'Updated Academy'
         })
         .expect(200);
 
       expect(response.body.success).toBe(true);
+      expect(response.body.data.traineeName).toBe('Updated Trainee Name');
+      expect(response.body.data.courseTitle).toBe('Updated Course Title');
+      expect(response.body.data.certificateLevel).toBe('Advanced');
       expect(response.body.data.grade).toBe('A+');
       expect(response.body.data.score).toBe(98);
-      expect(response.body.data.userName).toBe('Updated Name');
+      
+      // Verify metadata fields
+      const certificate = await Certificate.findById(certificateId);
+      expect(certificate.metadata.instructor).toBe('Updated Tutor');
+      expect(certificate.metadata.scheme).toBe('Updated Scheme');
+      expect(certificate.metadata.duration).toBe(50);
+      expect(certificate.metadata.issuedBy).toBe('Updated Academy');
     });
   });
 

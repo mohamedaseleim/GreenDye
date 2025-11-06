@@ -284,7 +284,10 @@ const AdminTrainers = () => {
         requestData.bio = { en: createFormData.bio };
       }
       if (createFormData.expertise) {
-        requestData.expertise = createFormData.expertise.split(',').map(e => e.trim()).filter(e => e);
+        const expertiseArray = createFormData.expertise.split(',').map(e => e.trim()).filter(e => e);
+        if (expertiseArray.length > 0) {
+          requestData.expertise = expertiseArray;
+        }
       }
 
       await adminService.createTrainer(requestData);

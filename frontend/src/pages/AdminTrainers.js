@@ -274,14 +274,16 @@ const AdminTrainers = () => {
       const requestData = {
         userId: createFormData.userId,
         fullName: createFormData.fullName,
-        commissionRate: parseFloat(createFormData.commissionRate) || 20
+        commissionRate: createFormData.commissionRate !== '' && createFormData.commissionRate != null 
+          ? parseFloat(createFormData.commissionRate) 
+          : 20
       };
 
       // Add optional fields if provided
       if (createFormData.bio) {
         requestData.bio = { en: createFormData.bio };
       }
-      if (createFormData.expertise) {
+      if (createFormData.expertise && typeof createFormData.expertise === 'string') {
         requestData.expertise = createFormData.expertise.split(',').map(e => e.trim()).filter(e => e);
       }
 

@@ -1104,8 +1104,8 @@ const AdminTrainers = () => {
                   label="Years of Experience (Optional)"
                   value={createFormData.experience}
                   onChange={(e) => setCreateFormData({ ...createFormData, experience: e.target.value })}
-                  inputProps={{ min: 0, max: MAX_EXPERIENCE_YEARS, step: 1 }}
-                  helperText={`Maximum ${MAX_EXPERIENCE_YEARS} years`}
+                  inputProps={{ min: 0, max: MAX_EXPERIENCE_YEARS, step: 0.5 }}
+                  helperText={`Maximum ${MAX_EXPERIENCE_YEARS} years (can include decimals like 2.5)`}
                 />
               </Grid>
 

@@ -115,6 +115,7 @@ const CertificateSchema = new mongoose.Schema({
     language: String,
     scheme: String,
     heldOn: Date,
+    heldIn: String, // location
     issuedBy: {
       type: String,
       default: DEFAULT_CERTIFICATE_ISSUER

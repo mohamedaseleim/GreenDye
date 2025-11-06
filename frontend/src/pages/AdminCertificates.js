@@ -69,6 +69,7 @@ const AdminCertificates = () => {
     scheme: '',
     heldOn: '',
     duration: '',
+    heldIn: '',
     issuedBy: 'GreenDye Academy',
     issueDate: '',
     expiryDate: ''
@@ -254,6 +255,7 @@ const AdminCertificates = () => {
       scheme: '',
       heldOn: '',
       duration: '',
+      heldIn: '',
       issuedBy: 'GreenDye Academy',
       issueDate: '',
       expiryDate: ''
@@ -334,6 +336,7 @@ const AdminCertificates = () => {
       if (formData.scheme) data.scheme = formData.scheme;
       if (formData.heldOn) data.heldOn = formData.heldOn;
       if (formData.duration) data.duration = parseFloat(formData.duration);
+      if (formData.heldIn) data.heldIn = formData.heldIn;
       if (formData.issuedBy) data.issuedBy = formData.issuedBy;
       if (formData.issueDate) data.issueDate = formData.issueDate;
       if (formData.expiryDate) data.expiryDate = formData.expiryDate;
@@ -703,6 +706,17 @@ const AdminCertificates = () => {
                   value={formData.duration}
                   onChange={(e) => handleFormChange('duration', e.target.value)}
                   placeholder="Enter duration in hours"
+                />
+              </Grid>
+
+              {/* Held in (Optional) */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Held in (Optional)"
+                  value={formData.heldIn}
+                  onChange={(e) => handleFormChange('heldIn', e.target.value)}
+                  placeholder="Enter location"
                 />
               </Grid>
 

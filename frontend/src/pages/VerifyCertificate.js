@@ -281,6 +281,18 @@ const VerifyCertificate = () => {
                   </Grid>
                 )}
 
+                {/* Held in */}
+                {certificate.heldIn && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Held in
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {certificate.heldIn}
+                    </Typography>
+                  </Grid>
+                )}
+
                 {/* Issued By */}
                 {certificate.issuedBy && (
                   <Grid item xs={12} sm={6}>

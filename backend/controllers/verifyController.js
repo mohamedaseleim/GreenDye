@@ -84,6 +84,9 @@ exports.verifyCertificate = async (req, res, next) => {
     // Add held on date
     if (certificate.metadata?.heldOn) basePayload.heldOn = certificate.metadata.heldOn;
 
+    // Add held in location
+    if (certificate.metadata?.heldIn) basePayload.heldIn = certificate.metadata.heldIn;
+
     // Add duration
     if (certificate.metadata?.duration) basePayload.duration = certificate.metadata.duration;
 

@@ -86,6 +86,7 @@ describe('Admin Certificate API Endpoints', () => {
           scheme: 'Test Scheme',
           heldOn: '2024-01-15',
           duration: 40,
+          heldIn: 'New York, USA',
           issuedBy: 'GreenDye Academy',
           issueDate: '2024-01-20',
           expiryDate: '2025-01-20'
@@ -107,6 +108,7 @@ describe('Admin Certificate API Endpoints', () => {
       expect(certificate.metadata.instructor).toBe('Dr. Test Tutor');
       expect(certificate.metadata.scheme).toBe('Test Scheme');
       expect(certificate.metadata.duration).toBe(40);
+      expect(certificate.metadata.heldIn).toBe('New York, USA');
       expect(certificate.metadata.issuedBy).toBe('GreenDye Academy');
     });
 

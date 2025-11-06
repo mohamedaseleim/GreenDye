@@ -174,6 +174,13 @@ const TrainerSchema = new mongoose.Schema({
   payoutDetails: {
     type: mongoose.Schema.Types.Mixed // Can store bank account, PayPal email, etc.
   },
+  // QR code and verification
+  qrCode: {
+    type: String // Data URL of QR code image
+  },
+  verificationUrl: {
+    type: String // Public verification URL
+  },
   createdAt: {
     type: Date,
     default: Date.now

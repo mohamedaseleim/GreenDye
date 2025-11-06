@@ -64,6 +64,9 @@ const AdminTrainers = () => {
   const [filterApplication, setFilterApplication] = useState('');
   const [currentTab, setCurrentTab] = useState(0);
   
+  // Constants
+  const MAX_EXPERIENCE_YEARS = 50;
+  
   // Dialogs
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
   const [openMetricsDialog, setOpenMetricsDialog] = useState(false);
@@ -84,11 +87,22 @@ const AdminTrainers = () => {
   // Create trainer form data
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(false);
+  const [currentBioLang, setCurrentBioLang] = useState('en');
+  const [createdTrainer, setCreatedTrainer] = useState(null);
   const [createFormData, setCreateFormData] = useState({
+    verificationStatus: 'Pending',
     userId: '',
     fullName: '',
-    bio: '',
+    title: '',
+    bioEn: '',
+    bioAr: '',
+    bioFr: '',
     expertise: '',
+    experience: '',
+    verificationDate: '',
+    qualifications: [],
+    certifications: [],
+    languages: [],
     commissionRate: 20
   });
 
@@ -265,13 +279,14 @@ const AdminTrainers = () => {
       return;
     }
     
-    if (!createFormData.fullName) {
-      toast.error('Please enter full name');
+    if (!createFormData.fullName || createFormData.fullName.length < 3) {
+      toast.error('Please enter a full name (minimum 3 characters)');
       return;
     }
 
     try {
       const requestData = {
+        verificationStatus: createFormData.verificationStatus,
         userId: createFormData.userId,
         fullName: createFormData.fullName,
         commissionRate: createFormData.commissionRate !== '' && createFormData.commissionRate !== null 
@@ -280,25 +295,70 @@ const AdminTrainers = () => {
       };
 
       // Add optional fields if provided
-      if (createFormData.bio) {
-        requestData.bio = { en: createFormData.bio };
+      if (createFormData.title) {
+        requestData.title = { en: createFormData.title };
       }
+      
+      // Add bio with multi-language support
+      const bio = {};
+      if (createFormData.bioEn) bio.en = createFormData.bioEn;
+      if (createFormData.bioAr) bio.ar = createFormData.bioAr;
+      if (createFormData.bioFr) bio.fr = createFormData.bioFr;
+      if (Object.keys(bio).length > 0) {
+        requestData.bio = bio;
+      }
+      
       if (createFormData.expertise) {
         const expertiseArray = createFormData.expertise.split(',').map(e => e.trim()).filter(e => e);
         if (expertiseArray.length > 0) {
           requestData.expertise = expertiseArray;
         }
       }
+      
+      if (createFormData.experience) {
+        const exp = parseFloat(createFormData.experience);
+        if (!isNaN(exp) && exp >= 0 && exp <= MAX_EXPERIENCE_YEARS) {
+          requestData.experience = exp;
+        }
+      }
+      
+      if (createFormData.verificationDate) {
+        requestData.verificationDate = createFormData.verificationDate;
+      }
+      
+      if (createFormData.qualifications && createFormData.qualifications.length > 0) {
+        requestData.qualifications = createFormData.qualifications;
+      }
+      
+      if (createFormData.certifications && createFormData.certifications.length > 0) {
+        requestData.certifications = createFormData.certifications;
+      }
+      
+      if (createFormData.languages && createFormData.languages.length > 0) {
+        requestData.languages = createFormData.languages;
+      }
 
-      await adminService.createTrainer(requestData);
+      const response = await adminService.createTrainer(requestData);
       toast.success('Trainer profile created successfully');
+      
+      // Store created trainer to show QR code
+      setCreatedTrainer(response.data);
       
       // Reset form
       setCreateFormData({
+        verificationStatus: 'Pending',
         userId: '',
         fullName: '',
-        bio: '',
+        title: '',
+        bioEn: '',
+        bioAr: '',
+        bioFr: '',
         expertise: '',
+        experience: '',
+        verificationDate: '',
+        qualifications: [],
+        certifications: [],
+        languages: [],
         commissionRate: 20
       });
       setOpenCreateDialog(false);
@@ -311,11 +371,21 @@ const AdminTrainers = () => {
 
   const handleCloseCreateDialog = () => {
     setOpenCreateDialog(false);
+    setCreatedTrainer(null);
     setCreateFormData({
+      verificationStatus: 'Pending',
       userId: '',
       fullName: '',
-      bio: '',
+      title: '',
+      bioEn: '',
+      bioAr: '',
+      bioFr: '',
       expertise: '',
+      experience: '',
+      verificationDate: '',
+      qualifications: [],
+      certifications: [],
+      languages: [],
       commissionRate: 20
     });
   };
@@ -332,6 +402,67 @@ const AdminTrainers = () => {
   const handleTabChange = (event, newValue) => {
     setCurrentTab(newValue);
     setPage(0);
+  };
+  
+  // Helper functions for managing dynamic arrays
+  const addQualification = () => {
+    setCreateFormData({
+      ...createFormData,
+      qualifications: [...createFormData.qualifications, { degree: '', institution: '', year: '' }]
+    });
+  };
+  
+  const removeQualification = (index) => {
+    setCreateFormData({
+      ...createFormData,
+      qualifications: createFormData.qualifications.filter((_, i) => i !== index)
+    });
+  };
+  
+  const updateQualification = (index, field, value) => {
+    const updated = [...createFormData.qualifications];
+    updated[index] = { ...updated[index], [field]: value };
+    setCreateFormData({ ...createFormData, qualifications: updated });
+  };
+  
+  const addCertification = () => {
+    setCreateFormData({
+      ...createFormData,
+      certifications: [...createFormData.certifications, { name: '', organization: '', year: '' }]
+    });
+  };
+  
+  const removeCertification = (index) => {
+    setCreateFormData({
+      ...createFormData,
+      certifications: createFormData.certifications.filter((_, i) => i !== index)
+    });
+  };
+  
+  const updateCertification = (index, field, value) => {
+    const updated = [...createFormData.certifications];
+    updated[index] = { ...updated[index], [field]: value };
+    setCreateFormData({ ...createFormData, certifications: updated });
+  };
+  
+  const addLanguage = () => {
+    setCreateFormData({
+      ...createFormData,
+      languages: [...createFormData.languages, { language: '', proficiency: 'intermediate' }]
+    });
+  };
+  
+  const removeLanguage = (index) => {
+    setCreateFormData({
+      ...createFormData,
+      languages: createFormData.languages.filter((_, i) => i !== index)
+    });
+  };
+  
+  const updateLanguage = (index, field, value) => {
+    const updated = [...createFormData.languages];
+    updated[index] = { ...updated[index], [field]: value };
+    setCreateFormData({ ...createFormData, languages: updated });
   };
 
   const getStatusChip = (trainer) => {
@@ -829,19 +960,37 @@ const AdminTrainers = () => {
       <Dialog 
         open={openCreateDialog} 
         onClose={handleCloseCreateDialog}
-        maxWidth="md"
+        maxWidth="lg"
         fullWidth
+        scroll="paper"
       >
         <DialogTitle>Create Trainer Profile</DialogTitle>
-        <DialogContent>
-          <Box sx={{ mt: 2 }}>
-            <Grid container spacing={2}>
-              <Grid item xs={12}>
-                <FormControl fullWidth>
-                  <InputLabel>Select User</InputLabel>
+        <DialogContent dividers>
+          <Box sx={{ mt: 1 }}>
+            <Grid container spacing={3}>
+              {/* Verification Status */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>Verification Status (Required)</InputLabel>
+                  <Select
+                    value={createFormData.verificationStatus}
+                    label="Verification Status (Required)"
+                    onChange={(e) => setCreateFormData({ ...createFormData, verificationStatus: e.target.value })}
+                  >
+                    <MenuItem value="Approved">Approved</MenuItem>
+                    <MenuItem value="Pending">Pending</MenuItem>
+                    <MenuItem value="Rejected">Rejected</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* User Selection */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth required>
+                  <InputLabel>Select User (Required)</InputLabel>
                   <Select
                     value={createFormData.userId}
-                    label="Select User"
+                    label="Select User (Required)"
                     onChange={(e) => {
                       const selectedUser = users.find(u => u._id === e.target.value);
                       setCreateFormData({
@@ -869,57 +1018,341 @@ const AdminTrainers = () => {
                   </Select>
                 </FormControl>
               </Grid>
-              <Grid item xs={12}>
+
+              {/* Full Name */}
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
-                  label="Full Name"
+                  required
+                  label="Full Name (Required)"
                   value={createFormData.fullName}
                   onChange={(e) => setCreateFormData({ ...createFormData, fullName: e.target.value })}
-                  required
-                  helperText="Trainer's full name for profile"
+                  helperText="Minimum 3 characters"
                 />
               </Grid>
+
+              {/* Professional Title */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Professional Title (Optional)"
+                  value={createFormData.title}
+                  onChange={(e) => setCreateFormData({ ...createFormData, title: e.target.value })}
+                  placeholder="e.g., Senior Web Development Instructor"
+                />
+              </Grid>
+
+              {/* Biography - Multi-language */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Biography (Optional - Multi-language)
+                </Typography>
+                <Tabs value={currentBioLang} onChange={(e, val) => setCurrentBioLang(val)} sx={{ mb: 1 }}>
+                  <Tab label="English" value="en" />
+                  <Tab label="Arabic" value="ar" />
+                  <Tab label="French" value="fr" />
+                </Tabs>
+                {currentBioLang === 'en' && (
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Biography (English)"
+                    value={createFormData.bioEn}
+                    onChange={(e) => setCreateFormData({ ...createFormData, bioEn: e.target.value })}
+                  />
+                )}
+                {currentBioLang === 'ar' && (
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Biography (Arabic)"
+                    value={createFormData.bioAr}
+                    onChange={(e) => setCreateFormData({ ...createFormData, bioAr: e.target.value })}
+                  />
+                )}
+                {currentBioLang === 'fr' && (
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Biography (French)"
+                    value={createFormData.bioFr}
+                    onChange={(e) => setCreateFormData({ ...createFormData, bioFr: e.target.value })}
+                  />
+                )}
+              </Grid>
+
+              {/* Areas of Expertise */}
               <Grid item xs={12}>
                 <TextField
                   fullWidth
-                  multiline
-                  rows={3}
-                  label="Bio (Optional)"
-                  value={createFormData.bio}
-                  onChange={(e) => setCreateFormData({ ...createFormData, bio: e.target.value })}
-                  helperText="Brief description about the trainer"
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <TextField
-                  fullWidth
-                  label="Expertise (Optional)"
+                  label="Areas of Expertise (Optional)"
                   value={createFormData.expertise}
                   onChange={(e) => setCreateFormData({ ...createFormData, expertise: e.target.value })}
-                  placeholder="e.g., Web Development, Machine Learning, Data Science"
+                  placeholder="Web Development, React, Node.js"
                   helperText="Comma-separated list of expertise areas"
                 />
               </Grid>
-              <Grid item xs={12}>
+
+              {/* Years of Experience */}
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   type="number"
-                  label="Commission Rate (%)"
+                  label="Years of Experience (Optional)"
+                  value={createFormData.experience}
+                  onChange={(e) => setCreateFormData({ ...createFormData, experience: e.target.value })}
+                  inputProps={{ min: 0, max: MAX_EXPERIENCE_YEARS, step: 0.5 }}
+                  helperText={`Maximum ${MAX_EXPERIENCE_YEARS} years (can include decimals like 2.5)`}
+                />
+              </Grid>
+
+              {/* Verified On Date */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  type="date"
+                  label="Verified On (Optional)"
+                  value={createFormData.verificationDate}
+                  onChange={(e) => setCreateFormData({ ...createFormData, verificationDate: e.target.value })}
+                  InputLabelProps={{ shrink: true }}
+                  helperText="Automatically set to current date for Approved status"
+                />
+              </Grid>
+
+              {/* Qualifications Section */}
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="medium">
+                    Qualifications (Optional)
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={addQualification}
+                  >
+                    Add Qualification
+                  </Button>
+                </Box>
+                {createFormData.qualifications.map((qual, index) => (
+                  <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={5}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Degree/Name"
+                          value={qual.degree}
+                          onChange={(e) => updateQualification(index, 'degree', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={5}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Institution/Organization"
+                          value={qual.institution}
+                          onChange={(e) => updateQualification(index, 'institution', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={8} md={2}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          type="number"
+                          label="Year"
+                          value={qual.year}
+                          onChange={(e) => updateQualification(index, 'year', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={4} md={1}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => removeQualification(index)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ))}
+              </Grid>
+
+              {/* Certifications Section */}
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="medium">
+                    Certifications (Optional)
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={addCertification}
+                  >
+                    Add Certification
+                  </Button>
+                </Box>
+                {createFormData.certifications.map((cert, index) => (
+                  <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={5}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Certificate Name"
+                          value={cert.name}
+                          onChange={(e) => updateCertification(index, 'name', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={5}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Issuing Organization"
+                          value={cert.organization}
+                          onChange={(e) => updateCertification(index, 'organization', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={8} md={2}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          type="number"
+                          label="Year"
+                          value={cert.year}
+                          onChange={(e) => updateCertification(index, 'year', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={4} md={1}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => removeCertification(index)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ))}
+              </Grid>
+
+              {/* Languages Section */}
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="medium">
+                    Languages (Optional)
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={addLanguage}
+                  >
+                    Add Language
+                  </Button>
+                </Box>
+                {createFormData.languages.map((lang, index) => (
+                  <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={5}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Language"
+                          value={lang.language}
+                          onChange={(e) => updateLanguage(index, 'language', e.target.value)}
+                          placeholder="e.g., English, Arabic, French"
+                        />
+                      </Grid>
+                      <Grid item xs={8} md={6}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Proficiency</InputLabel>
+                          <Select
+                            value={lang.proficiency}
+                            label="Proficiency"
+                            onChange={(e) => updateLanguage(index, 'proficiency', e.target.value)}
+                          >
+                            <MenuItem value="native">Native</MenuItem>
+                            <MenuItem value="advanced">Fluent/Advanced</MenuItem>
+                            <MenuItem value="intermediate">Intermediate</MenuItem>
+                            <MenuItem value="basic">Basic</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={4} md={1}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => removeLanguage(index)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ))}
+              </Grid>
+
+              {/* Commission Rate */}
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Commission Rate (%) (Optional)"
                   value={createFormData.commissionRate}
                   onChange={(e) => setCreateFormData({ ...createFormData, commissionRate: e.target.value })}
                   inputProps={{ min: 0, max: 100, step: 1 }}
                   helperText="Percentage commission for the trainer (default: 20%)"
                 />
               </Grid>
+
+              {/* Display created trainer info with QR code */}
+              {createdTrainer && createdTrainer.qrCode && (
+                <Grid item xs={12}>
+                  <Alert severity="success" sx={{ mt: 2 }}>
+                    <Typography variant="subtitle2" gutterBottom>
+                      Trainer Created Successfully!
+                    </Typography>
+                    <Typography variant="body2" gutterBottom>
+                      Trainer ID: <strong>{createdTrainer.trainerId}</strong>
+                    </Typography>
+                    {createdTrainer.qrCode && (
+                      <Box sx={{ mt: 2, textAlign: 'center' }}>
+                        <Typography variant="body2" gutterBottom>
+                          QR Code for Verification:
+                        </Typography>
+                        <img 
+                          src={createdTrainer.qrCode} 
+                          alt="Trainer QR Code" 
+                          style={{ maxWidth: '200px', border: '1px solid #ccc', padding: '8px' }}
+                        />
+                        <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+                          Verification URL: {createdTrainer.verificationUrl}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Alert>
+                </Grid>
+              )}
             </Grid>
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={handleCloseCreateDialog}>Cancel</Button>
+          <Button onClick={handleCloseCreateDialog}>Close</Button>
           <Button 
             onClick={handleCreateTrainer}
             variant="contained"
-            disabled={!createFormData.userId || !createFormData.fullName}
+            disabled={!createFormData.userId || !createFormData.fullName || createFormData.fullName.length < 3}
           >
             Create Trainer
           </Button>

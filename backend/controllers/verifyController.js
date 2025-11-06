@@ -2,6 +2,20 @@ const Certificate = require('../models/Certificate');
 const Trainer = require('../models/Trainer');
 const { DEFAULT_CERTIFICATE_ISSUER, DEFAULT_COURSE_TITLE } = require('../utils/constants');
 
+// Helper function to map applicationStatus to verificationStatus
+function getVerificationStatus(applicationStatus) {
+  switch (applicationStatus) {
+    case 'approved':
+      return 'Approved';
+    case 'rejected':
+      return 'Rejected';
+    case 'under_review':
+      return 'Under Review';
+    default:
+      return 'Pending';
+  }
+}
+
 // Helper to read Map<string,string> courseName or populated course title
 function resolveCourseTitle(cert) {
   if (cert.courseName) {
@@ -175,6 +189,7 @@ exports.verifyTrainer = async (req, res, next) => {
         data: {
           trainerId: trainer.trainerId,
           fullName: trainer.fullName,
+          verificationStatus: getVerificationStatus(trainer.applicationStatus),
           isVerified: trainer.isVerified,
           isActive: trainer.isActive
         }
@@ -188,11 +203,14 @@ exports.verifyTrainer = async (req, res, next) => {
       data: {
         trainerId: trainer.trainerId,
         fullName: trainer.fullName,
+        verificationStatus: getVerificationStatus(trainer.applicationStatus),
         title: trainer.title,
+        bio: trainer.bio,
         expertise: trainer.expertise,
         experience: trainer.experience,
         qualifications: trainer.qualifications,
         certifications: trainer.certifications,
+        languages: trainer.languages,
         rating: trainer.rating,
         coursesCount: trainer.coursesCount,
         studentsCount: trainer.studentsCount,

@@ -26,6 +26,7 @@ import Contact from './pages/Contact';
 import NotFound from './pages/NotFound';
 import Forum from './pages/Forum';
 import Chat from './pages/Chat';
+import DynamicPage from './pages/DynamicPage';
 
 // NEW: Quiz pages
 import Quiz from './pages/Quiz';
@@ -343,7 +344,10 @@ function App() {
                     }
                   /> */}
 
-                  {/* 404 */}
+                  {/* Dynamic pages - must be second to last, before 404 */}
+                  <Route path="/:slug" element={<DynamicPage />} />
+
+                  {/* 404 - must be last */}
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Layout>

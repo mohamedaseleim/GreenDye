@@ -175,6 +175,10 @@ exports.verifyTrainer = async (req, res, next) => {
         data: {
           trainerId: trainer.trainerId,
           fullName: trainer.fullName,
+          verificationStatus: trainer.applicationStatus === 'approved' ? 'Approved'
+            : trainer.applicationStatus === 'rejected' ? 'Rejected'
+            : trainer.applicationStatus === 'under_review' ? 'Under Review'
+            : 'Pending',
           isVerified: trainer.isVerified,
           isActive: trainer.isActive
         }
@@ -188,11 +192,17 @@ exports.verifyTrainer = async (req, res, next) => {
       data: {
         trainerId: trainer.trainerId,
         fullName: trainer.fullName,
+        verificationStatus: trainer.applicationStatus === 'approved' ? 'Approved'
+          : trainer.applicationStatus === 'rejected' ? 'Rejected'
+          : trainer.applicationStatus === 'under_review' ? 'Under Review'
+          : 'Pending',
         title: trainer.title,
+        bio: trainer.bio,
         expertise: trainer.expertise,
         experience: trainer.experience,
         qualifications: trainer.qualifications,
         certifications: trainer.certifications,
+        languages: trainer.languages,
         rating: trainer.rating,
         coursesCount: trainer.coursesCount,
         studentsCount: trainer.studentsCount,

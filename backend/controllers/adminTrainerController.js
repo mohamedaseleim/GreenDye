@@ -4,6 +4,7 @@ const User = require('../models/User');
 const Course = require('../models/Course');
 const Enrollment = require('../models/Enrollment');
 const Payment = require('../models/Payment');
+const QRCode = require('qrcode');
 
 // @desc    Get all trainers with filtering and pagination
 // @route   GET /api/admin/trainers
@@ -101,7 +102,7 @@ exports.getTrainerById = async (req, res, next) => {
 // @access  Private/Admin
 exports.createTrainer = async (req, res, next) => {
   try {
-    const { userId, ...trainerData } = req.body;
+    const { userId, verificationStatus, ...trainerData } = req.body;
 
     // Check if user exists
     const user = await User.findById(userId);
@@ -121,13 +122,40 @@ exports.createTrainer = async (req, res, next) => {
       });
     }
 
+    // Map verificationStatus to applicationStatus
+    const applicationStatus = verificationStatus === 'Approved' ? 'approved'
+      : verificationStatus === 'Rejected' ? 'rejected'
+      : 'pending';
+
+    // Determine verification fields based on status
+    const isVerified = applicationStatus === 'approved';
+    const verificationDate = isVerified && !trainerData.verificationDate 
+      ? Date.now() 
+      : trainerData.verificationDate;
+
     // Create trainer profile
     const trainer = await Trainer.create({
       ...trainerData,
       user: userId,
       fullName: trainerData.fullName || user.name,
-      applicationStatus: 'approved' // Admin-created trainers are auto-approved
+      applicationStatus,
+      isVerified,
+      verificationDate
     });
+
+    // Generate QR code with verification URL
+    const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+    const verificationUrl = `${baseUrl}/verify/trainer/${trainer.trainerId}`;
+    
+    try {
+      const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl);
+      trainer.qrCode = qrCodeDataUrl;
+      trainer.verificationUrl = verificationUrl;
+      await trainer.save();
+    } catch (qrError) {
+      console.error('QR code generation error:', qrError);
+      // Continue without QR code if generation fails
+    }
 
     // Update user role to trainer if not already
     if (user.role === 'student') {

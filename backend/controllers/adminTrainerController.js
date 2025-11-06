@@ -125,7 +125,7 @@ exports.createTrainer = async (req, res, next) => {
     const trainer = await Trainer.create({
       ...trainerData,
       user: userId,
-      fullName: user.name,
+      fullName: trainerData.fullName || user.name,
       applicationStatus: 'approved' // Admin-created trainers are auto-approved
     });
 

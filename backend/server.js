@@ -124,6 +124,9 @@ app.use('/api/refunds', require('./routes/refundRoutes'));
 // Public page routes
 app.use('/api/pages', require('./routes/pageRoutes'));
 
+// Public announcement routes
+app.use('/api/announcements', require('./routes/announcementRoutes'));
+
 // Health check endpoint
 app.get('/api/health', (req, res) => {
   res.status(200).json({

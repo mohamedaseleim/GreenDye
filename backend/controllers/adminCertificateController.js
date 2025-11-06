@@ -5,6 +5,7 @@ const AuditTrail = require('../models/AuditTrail');
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const mongoSanitize = require('mongo-sanitize');
+const { DEFAULT_CERTIFICATE_ISSUER } = require('../utils/constants');
 
 // @desc    Get all certificates with filters and pagination (admin)
 // @route   GET /api/admin/certificates
@@ -159,12 +160,14 @@ exports.createCertificate = async (req, res, next) => {
     }
 
     // Set trainee name (with priority: traineeName > userName from user object)
+    // Note: Both traineeName and userName are set for backward compatibility
+    // traineeName is the new field, userName is kept for existing code that expects it
     if (traineeName) {
       certificateData.traineeName = traineeName;
-      certificateData.userName = traineeName; // Keep backward compatibility
+      certificateData.userName = traineeName; // Backward compatibility
     } else if (user) {
       certificateData.traineeName = user.name;
-      certificateData.userName = user.name;
+      certificateData.userName = user.name; // Backward compatibility
     }
 
     // Set course title (with priority: courseTitle > courseName from course object)
@@ -216,7 +219,7 @@ exports.createCertificate = async (req, res, next) => {
     if (issuedBy) {
       certificateData.metadata.issuedBy = issuedBy;
     } else {
-      certificateData.metadata.issuedBy = 'GreenDye Academy';
+      certificateData.metadata.issuedBy = DEFAULT_CERTIFICATE_ISSUER;
     }
 
     if (user?.language) {

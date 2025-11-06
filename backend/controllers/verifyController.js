@@ -1,5 +1,6 @@
 const Certificate = require('../models/Certificate');
 const Trainer = require('../models/Trainer');
+const { DEFAULT_CERTIFICATE_ISSUER } = require('../utils/constants');
 
 // Helper to read Map<string,string> courseName or populated course title
 function resolveCourseTitle(cert) {
@@ -90,7 +91,7 @@ exports.verifyCertificate = async (req, res, next) => {
     if (certificate.metadata?.issuedBy) {
       basePayload.issuedBy = certificate.metadata.issuedBy;
     } else {
-      basePayload.issuedBy = 'GreenDye Academy';
+      basePayload.issuedBy = DEFAULT_CERTIFICATE_ISSUER;
     }
 
     // Add dates

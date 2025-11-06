@@ -285,12 +285,12 @@ const AdminCertificates = () => {
       // Validation - no longer require userId and courseId
       // But at least one identifier should be provided
       if (!formData.userId && !formData.traineeName) {
-        toast.error('Please select a user or enter a trainee name');
+        toast.error('Please provide either a user selection or trainee name');
         return;
       }
 
       if (!formData.courseId && !formData.courseTitle) {
-        toast.error('Please select a course or enter a course title');
+        toast.error('Please provide either a course selection or course title');
         return;
       }
 

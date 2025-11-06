@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const { v4: uuidv4 } = require('uuid');
+const { DEFAULT_CERTIFICATE_ISSUER } = require('../utils/constants');
 
 const CertificateSchema = new mongoose.Schema({
   certificateId: {
@@ -63,7 +64,7 @@ const CertificateSchema = new mongoose.Schema({
   },
   grade: {
     type: String,
-    enum: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'Pass', 'Distinction', ''],
+    enum: ['A+', 'A', 'B+', 'B', 'C+', 'C', 'Pass', 'Distinction'],
     required: false
   },
   score: {
@@ -116,7 +117,7 @@ const CertificateSchema = new mongoose.Schema({
     heldOn: Date,
     issuedBy: {
       type: String,
-      default: 'GreenDye Academy'
+      default: DEFAULT_CERTIFICATE_ISSUER
     }
   },
 

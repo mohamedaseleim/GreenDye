@@ -54,6 +54,19 @@ const AdminCertificates = () => {
   const [filterRevoked, setFilterRevoked] = useState('');
   const [openBulkDialog, setOpenBulkDialog] = useState(false);
   const [bulkData, setBulkData] = useState('');
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [users, setUsers] = useState([]);
+  const [courses, setCourses] = useState([]);
+  const [formData, setFormData] = useState({
+    userId: '',
+    courseId: '',
+    userName: '',
+    grade: 'Pass',
+    score: '',
+    issueDate: '',
+    expiryDate: '',
+    instructorName: ''
+  });
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -194,6 +207,106 @@ const AdminCertificates = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const response = await adminService.getAllUsersForEnrollment();
+      setUsers(response.data || []);
+    } catch (error) {
+      console.error('Error fetching users:', error);
+      toast.error('Failed to fetch users');
+    }
+  };
+
+  const fetchCourses = async () => {
+    try {
+      const response = await adminService.getAllCoursesForEnrollment();
+      setCourses(response.data || []);
+    } catch (error) {
+      console.error('Error fetching courses:', error);
+      toast.error('Failed to fetch courses');
+    }
+  };
+
+  const handleOpenCreateDialog = () => {
+    setOpenCreateDialog(true);
+    // Fetch data asynchronously after opening dialog
+    // Errors are already handled in fetchUsers and fetchCourses with toast messages
+    Promise.all([fetchUsers(), fetchCourses()]);
+  };
+
+  const handleCloseCreateDialog = () => {
+    setOpenCreateDialog(false);
+    setFormData({
+      userId: '',
+      courseId: '',
+      userName: '',
+      grade: 'Pass',
+      score: '',
+      issueDate: '',
+      expiryDate: '',
+      instructorName: ''
+    });
+  };
+
+  const handleFormChange = (field, value) => {
+    setFormData(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+
+  const getCourseDisplayTitle = (course) => {
+    return course.title?.en || course.title?.default || course.title || 'Untitled Course';
+  };
+
+  const validateScore = (scoreString) => {
+    if (!scoreString || !scoreString.trim()) return null; // No score provided is valid
+    const scoreValue = parseFloat(scoreString);
+    if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100) {
+      return 'Score must be a valid number between 0 and 100';
+    }
+    return null; // Valid score
+  };
+
+  const handleCreateCertificate = async () => {
+    try {
+      // Validation
+      if (!formData.userId || !formData.courseId) {
+        toast.error('Please select both user and course');
+        return;
+      }
+
+      // Validate score if provided
+      const scoreError = validateScore(formData.score);
+      if (scoreError) {
+        toast.error(scoreError);
+        return;
+      }
+
+      // Prepare data
+      const data = {
+        userId: formData.userId,
+        courseId: formData.courseId,
+        grade: formData.grade || 'Pass',
+      };
+
+      // Add optional fields if provided
+      if (formData.userName) data.userName = formData.userName;
+      if (formData.score) data.score = parseFloat(formData.score);
+      if (formData.issueDate) data.issueDate = formData.issueDate;
+      if (formData.expiryDate) data.expiryDate = formData.expiryDate;
+      if (formData.instructorName) data.instructorName = formData.instructorName;
+
+      await adminService.createCertificate(data);
+      toast.success('Certificate created successfully');
+      handleCloseCreateDialog();
+      fetchCertificates();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to create certificate');
+      console.error('Error:', error);
+    }
+  };
+
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
       <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
@@ -220,10 +333,7 @@ const AdminCertificates = () => {
           <Button
             variant="contained"
             startIcon={<AddIcon />}
-            onClick={() => {
-              // Future: Add certificate creation dialog
-              toast.info('Certificate creation form coming soon');
-            }}
+            onClick={handleOpenCreateDialog}
           >
             Add Certificate
           </Button>
@@ -392,6 +502,125 @@ const AdminCertificates = () => {
           <Button onClick={() => setOpenBulkDialog(false)}>Cancel</Button>
           <Button onClick={handleBulkUpload} variant="contained">
             Upload
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Create Certificate Dialog */}
+      <Dialog open={openCreateDialog} onClose={handleCloseCreateDialog} maxWidth="md" fullWidth>
+        <DialogTitle>Create Certificate</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Grid container spacing={2}>
+              <Grid item xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel>User</InputLabel>
+                  <Select
+                    value={formData.userId}
+                    onChange={(e) => handleFormChange('userId', e.target.value)}
+                    label="User"
+                  >
+                    <MenuItem value="">Select User</MenuItem>
+                    {users.map((user) => (
+                      <MenuItem key={user._id} value={user._id}>
+                        {user.name} ({user.email})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12}>
+                <FormControl fullWidth required>
+                  <InputLabel>Course</InputLabel>
+                  <Select
+                    value={formData.courseId}
+                    onChange={(e) => handleFormChange('courseId', e.target.value)}
+                    label="Course"
+                  >
+                    <MenuItem value="">Select Course</MenuItem>
+                    {courses.map((course) => (
+                      <MenuItem key={course._id} value={course._id}>
+                        {getCourseDisplayTitle(course)}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="User Name (Optional)"
+                  value={formData.userName}
+                  onChange={(e) => handleFormChange('userName', e.target.value)}
+                  placeholder="Override display name"
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Grade</InputLabel>
+                  <Select
+                    value={formData.grade}
+                    onChange={(e) => handleFormChange('grade', e.target.value)}
+                    label="Grade"
+                  >
+                    <MenuItem value="Pass">Pass</MenuItem>
+                    <MenuItem value="Distinction">Distinction</MenuItem>
+                    <MenuItem value="A+">A+</MenuItem>
+                    <MenuItem value="A">A</MenuItem>
+                    <MenuItem value="B+">B+</MenuItem>
+                    <MenuItem value="B">B</MenuItem>
+                    <MenuItem value="C+">C+</MenuItem>
+                    <MenuItem value="C">C</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Score (Optional)"
+                  type="number"
+                  inputProps={{ min: 0, max: 100 }}
+                  value={formData.score}
+                  onChange={(e) => handleFormChange('score', e.target.value)}
+                  placeholder="0-100"
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Instructor Name (Optional)"
+                  value={formData.instructorName}
+                  onChange={(e) => handleFormChange('instructorName', e.target.value)}
+                  placeholder="Override instructor name"
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Issue Date (Optional)"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.issueDate}
+                  onChange={(e) => handleFormChange('issueDate', e.target.value)}
+                />
+              </Grid>
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Expiry Date (Optional)"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.expiryDate}
+                  onChange={(e) => handleFormChange('expiryDate', e.target.value)}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseCreateDialog}>Cancel</Button>
+          <Button onClick={handleCreateCertificate} variant="contained" color="primary">
+            Create
           </Button>
         </DialogActions>
       </Dialog>

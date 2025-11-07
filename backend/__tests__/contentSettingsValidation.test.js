@@ -69,7 +69,7 @@ describe('Content Settings Validation Tests', () => {
       expect(res.body.message).toBe('Validation failed');
     });
 
-    it('should sanitize script tags from hero title', async () => {
+    it('should escape HTML tags in hero title', async () => {
       const maliciousData = {
         heroTitle: {
           en: 'Title with <script>alert("XSS")</script> tags',
@@ -83,8 +83,9 @@ describe('Content Settings Validation Tests', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.success).toBe(true);
+      // HTML should be escaped (< becomes &lt;, > becomes &gt;)
       expect(res.body.data.heroTitle.en).not.toContain('<script>');
-      expect(res.body.data.heroTitle.en).toContain('Title with  tags');
+      expect(res.body.data.heroTitle.en).toContain('&lt;');
     });
   });
 
@@ -112,7 +113,7 @@ describe('Content Settings Validation Tests', () => {
       expect(res.body.success).toBe(true);
     });
 
-    it('should sanitize iframe tags from mission', async () => {
+    it('should escape HTML tags in mission', async () => {
       const maliciousData = {
         mission: {
           en: 'Mission with <iframe src="evil.com"></iframe> content',
@@ -126,8 +127,9 @@ describe('Content Settings Validation Tests', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.success).toBe(true);
+      // HTML should be escaped
       expect(res.body.data.mission.en).not.toContain('<iframe>');
-      expect(res.body.data.mission.en).toContain('Mission with  content');
+      expect(res.body.data.mission.en).toContain('&lt;');
     });
   });
 
@@ -273,7 +275,7 @@ describe('Content Settings Validation Tests', () => {
       expect(res.body.success).toBe(true);
     });
 
-    it('should sanitize malicious content in address', async () => {
+    it('should escape HTML in address field', async () => {
       const maliciousData = {
         address: 'Address with <script>alert("XSS")</script> tags',
       };
@@ -285,7 +287,9 @@ describe('Content Settings Validation Tests', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.success).toBe(true);
+      // HTML should be escaped
       expect(res.body.data.contactPage.address).not.toContain('<script>');
+      expect(res.body.data.contactPage.address).toContain('&lt;');
     });
   });
 
@@ -308,7 +312,7 @@ describe('Content Settings Validation Tests', () => {
       expect(res.body.data.features).toHaveLength(2);
     });
 
-    it('should sanitize script tags from feature descriptions', async () => {
+    it('should escape HTML tags in feature fields', async () => {
       const maliciousData = {
         features: [
           {
@@ -326,8 +330,11 @@ describe('Content Settings Validation Tests', () => {
 
       expect(res.statusCode).toBe(200);
       expect(res.body.success).toBe(true);
+      // HTML should be escaped
       expect(res.body.data.features[0].title).not.toContain('<script>');
+      expect(res.body.data.features[0].title).toContain('&lt;');
       expect(res.body.data.features[0].description).not.toContain('<iframe>');
+      expect(res.body.data.features[0].description).toContain('&lt;');
     });
   });
 });

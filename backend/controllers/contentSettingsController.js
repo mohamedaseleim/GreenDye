@@ -1,64 +1,6 @@
 const logger = require('../utils/logger');
 const { getOrCreateSettings } = require('../utils/contentSettingsHelper');
 
-/**
- * Sanitize text input to prevent XSS attacks
- * Uses a more robust approach to remove all HTML tags and dangerous content
- * @param {string} text - Text to sanitize
- * @returns {string} Sanitized text
- */
-const sanitizeText = (text) => {
-  if (typeof text !== 'string') return text;
-  
-  // Strip all HTML tags completely for security
-  // This removes all angle brackets and their content
-  let sanitized = text.replace(/<[^>]*>/g, '');
-  
-  // Remove any remaining HTML entities that could be dangerous
-  sanitized = sanitized
-    .replace(/&lt;/g, '')
-    .replace(/&gt;/g, '')
-    .replace(/&quot;/g, '"')
-    .replace(/&#x27;/g, "'")
-    .replace(/&amp;/g, '&');
-  
-  // Remove any JavaScript event handlers
-  sanitized = sanitized.replace(/on\w+\s*=/gi, '');
-  
-  // Remove javascript: protocol
-  sanitized = sanitized.replace(/javascript:/gi, '');
-  
-  return sanitized.trim();
-};
-
-/**
- * Sanitize multilingual object
- * @param {Object} obj - Object with language keys
- * @returns {Object} Sanitized object
- */
-const sanitizeMultilingual = (obj) => {
-  if (!obj || typeof obj !== 'object') return obj;
-  const sanitized = {};
-  for (const [key, value] of Object.entries(obj)) {
-    sanitized[key] = sanitizeText(value);
-  }
-  return sanitized;
-};
-
-/**
- * Sanitize features array
- * @param {Array} features - Array of feature objects
- * @returns {Array} Sanitized features array
- */
-const sanitizeFeatures = (features) => {
-  if (!Array.isArray(features)) return features;
-  return features.map((feature) => ({
-    icon: sanitizeText(feature.icon),
-    title: sanitizeText(feature.title),
-    description: sanitizeText(feature.description),
-  }));
-};
-
 // @desc    Get all content settings
 // @route   GET /api/admin/content-settings
 // @access  Private/Admin
@@ -89,23 +31,24 @@ exports.updateHomeContent = async (req, res) => {
 
     const settings = await getOrCreateSettings();
 
-    // Update home page content with sanitization
+    // Update home page content
+    // Input is already sanitized by express-validator middleware
     if (heroTitle) {
       settings.homePage.heroTitle = {
         ...settings.homePage.heroTitle,
-        ...sanitizeMultilingual(heroTitle),
+        ...heroTitle,
       };
     }
 
     if (heroSubtitle) {
       settings.homePage.heroSubtitle = {
         ...settings.homePage.heroSubtitle,
-        ...sanitizeMultilingual(heroSubtitle),
+        ...heroSubtitle,
       };
     }
 
     if (features) {
-      settings.homePage.features = sanitizeFeatures(features);
+      settings.homePage.features = features;
     }
 
     await settings.save();
@@ -136,23 +79,24 @@ exports.updateAboutContent = async (req, res) => {
 
     const settings = await getOrCreateSettings();
 
-    // Update about page content with sanitization
+    // Update about page content
+    // Input is already sanitized by express-validator middleware
     if (mission) {
       settings.aboutPage.mission = {
         ...settings.aboutPage.mission,
-        ...sanitizeMultilingual(mission),
+        ...mission,
       };
     }
 
     if (vision) {
       settings.aboutPage.vision = {
         ...settings.aboutPage.vision,
-        ...sanitizeMultilingual(vision),
+        ...vision,
       };
     }
 
     if (features) {
-      settings.aboutPage.features = sanitizeFeatures(features);
+      settings.aboutPage.features = features;
     }
 
     await settings.save();
@@ -183,27 +127,23 @@ exports.updateContactContent = async (req, res) => {
 
     const settings = await getOrCreateSettings();
 
-    // Update contact page content with sanitization
-    if (email) settings.contactPage.email = sanitizeText(email);
-    if (phone) settings.contactPage.phone = sanitizeText(phone);
-    if (address) settings.contactPage.address = sanitizeText(address);
+    // Update contact page content
+    // Input is already sanitized by express-validator middleware
+    if (email) settings.contactPage.email = email;
+    if (phone) settings.contactPage.phone = phone;
+    if (address) settings.contactPage.address = address;
 
     if (officeHours) {
       settings.contactPage.officeHours = {
         ...settings.contactPage.officeHours,
-        ...sanitizeMultilingual(officeHours),
+        ...officeHours,
       };
     }
 
     if (socialMedia) {
-      // Sanitize social media URLs
-      const sanitizedSocial = {};
-      for (const [key, value] of Object.entries(socialMedia)) {
-        sanitizedSocial[key] = sanitizeText(value);
-      }
       settings.socialMedia = {
         ...settings.socialMedia,
-        ...sanitizedSocial,
+        ...socialMedia,
       };
     }
 

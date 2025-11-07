@@ -22,16 +22,19 @@ const validateMultilingualField = (field) => [
   body(`${field}.en`)
     .optional()
     .trim()
+    .escape()
     .isLength({ min: 1, max: 1000 })
     .withMessage(`${field} in English must be between 1 and 1000 characters`),
   body(`${field}.ar`)
     .optional()
     .trim()
+    .escape()
     .isLength({ min: 1, max: 1000 })
     .withMessage(`${field} in Arabic must be between 1 and 1000 characters`),
   body(`${field}.fr`)
     .optional()
     .trim()
+    .escape()
     .isLength({ min: 1, max: 1000 })
     .withMessage(`${field} in French must be between 1 and 1000 characters`),
 ];
@@ -41,16 +44,19 @@ const validateFeature = (location) => [
   body(`${location}.*.icon`)
     .optional()
     .trim()
+    .escape()
     .isLength({ min: 1, max: 50 })
     .withMessage('Feature icon must be between 1 and 50 characters'),
   body(`${location}.*.title`)
     .optional()
     .trim()
+    .escape()
     .isLength({ min: 1, max: 200 })
     .withMessage('Feature title must be between 1 and 200 characters'),
   body(`${location}.*.description`)
     .optional()
     .trim()
+    .escape()
     .isLength({ min: 1, max: 500 })
     .withMessage('Feature description must be between 1 and 500 characters'),
 ];
@@ -82,11 +88,13 @@ const validateContactContent = [
   body('phone')
     .optional()
     .trim()
+    .escape()
     .matches(/^[\d\s+\-()]+$/)
     .withMessage('Please provide a valid phone number'),
   body('address')
     .optional()
     .trim()
+    .escape()
     .isLength({ min: 1, max: 500 })
     .withMessage('Address must be between 1 and 500 characters'),
   ...validateMultilingualField('officeHours'),

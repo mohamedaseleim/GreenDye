@@ -8,6 +8,11 @@ const {
   updateContactContent,
 } = require('../controllers/contentSettingsController');
 const { getOrCreateSettings } = require('../utils/contentSettingsHelper');
+const {
+  validateHomeContent,
+  validateAboutContent,
+  validateContactContent,
+} = require('../middleware/contentSettingsValidation');
 
 // Public route to get content settings
 router.get('/public', async (req, res) => {
@@ -35,8 +40,8 @@ router.use(authorize('admin'));
 router.get('/', getContentSettings);
 
 // Update specific page content
-router.put('/home', updateHomeContent);
-router.put('/about', updateAboutContent);
-router.put('/contact', updateContactContent);
+router.put('/home', validateHomeContent, updateHomeContent);
+router.put('/about', validateAboutContent, updateAboutContent);
+router.put('/contact', validateContactContent, updateContactContent);
 
 module.exports = router;

@@ -1,4 +1,3 @@
-const ContentSettings = require('../models/ContentSettings');
 const logger = require('../utils/logger');
 const { getOrCreateSettings } = require('../utils/contentSettingsHelper');
 
@@ -33,6 +32,7 @@ exports.updateHomeContent = async (req, res) => {
     const settings = await getOrCreateSettings();
 
     // Update home page content
+    // Input is already sanitized by express-validator middleware
     if (heroTitle) {
       settings.homePage.heroTitle = {
         ...settings.homePage.heroTitle,
@@ -80,6 +80,7 @@ exports.updateAboutContent = async (req, res) => {
     const settings = await getOrCreateSettings();
 
     // Update about page content
+    // Input is already sanitized by express-validator middleware
     if (mission) {
       settings.aboutPage.mission = {
         ...settings.aboutPage.mission,
@@ -127,6 +128,7 @@ exports.updateContactContent = async (req, res) => {
     const settings = await getOrCreateSettings();
 
     // Update contact page content
+    // Input is already sanitized by express-validator middleware
     if (email) settings.contactPage.email = email;
     if (phone) settings.contactPage.phone = phone;
     if (address) settings.contactPage.address = address;

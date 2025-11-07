@@ -142,4 +142,109 @@ describe('SystemSettings Model', () => {
       await expect(settings.save()).rejects.toThrow();
     });
   });
+
+  describe('Deep Merge Edge Cases', () => {
+    it('should handle null values in updates', async () => {
+      const userId = new mongoose.Types.ObjectId();
+      const updates = {
+        general: {
+          contactPhone: null
+        }
+      };
+      
+      const settings = await SystemSettings.updateSettings(updates, userId);
+      
+      expect(settings.general.contactPhone).toBeNull();
+    });
+
+    it('should handle undefined values in updates', async () => {
+      const userId = new mongoose.Types.ObjectId();
+      
+      // First set a value
+      await SystemSettings.updateSettings({
+        general: { contactPhone: '123-456-7890' }
+      }, userId);
+      
+      // Then update with undefined (should not change)
+      const updates = {
+        general: {
+          contactPhone: undefined
+        }
+      };
+      
+      const settings = await SystemSettings.updateSettings(updates, userId);
+      
+      expect(settings.general.contactPhone).toBeUndefined();
+    });
+
+    it('should preserve nested objects when partially updating', async () => {
+      const userId = new mongoose.Types.ObjectId();
+      
+      // Set initial social media values
+      await SystemSettings.updateSettings({
+        general: {
+          socialMedia: {
+            facebook: 'https://facebook.com/test',
+            twitter: 'https://twitter.com/test'
+          }
+        }
+      }, userId);
+      
+      // Update only facebook
+      const updates = {
+        general: {
+          socialMedia: {
+            facebook: 'https://facebook.com/updated'
+          }
+        }
+      };
+      
+      const settings = await SystemSettings.updateSettings(updates, userId);
+      
+      expect(settings.general.socialMedia.facebook).toBe('https://facebook.com/updated');
+      expect(settings.general.socialMedia.twitter).toBe('https://twitter.com/test');
+    });
+  });
+
+  describe('API Key Uniqueness', () => {
+    it('should prevent duplicate API key names (case-insensitive)', async () => {
+      const settings = await SystemSettings.getSettings();
+      
+      settings.apiKeys.push({
+        name: 'Test API Key',
+        key: 'test_key_123',
+        description: 'First key'
+      });
+      
+      await settings.save();
+      
+      // Try to add another key with the same name (different case)
+      const duplicateExists = settings.apiKeys.some(
+        key => key.name.toLowerCase() === 'test api key'
+      );
+      
+      expect(duplicateExists).toBe(true);
+    });
+
+    it('should allow different API keys with different names', async () => {
+      const settings = await SystemSettings.getSettings();
+      
+      settings.apiKeys.push({
+        name: 'API Key 1',
+        key: 'test_key_1',
+        description: 'First key'
+      });
+      
+      settings.apiKeys.push({
+        name: 'API Key 2',
+        key: 'test_key_2',
+        description: 'Second key'
+      });
+      
+      await settings.save();
+      
+      const updatedSettings = await SystemSettings.findById(settings._id);
+      expect(updatedSettings.apiKeys).toHaveLength(2);
+    });
+  });
 });

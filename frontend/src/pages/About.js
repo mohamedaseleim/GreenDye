@@ -1,40 +1,65 @@
-import React from 'react';
-import { Container, Typography, Box, Grid, Card, CardContent, Paper } from '@mui/material';
-import { School, Verified, Language, People, TrendingUp, Security } from '@mui/icons-material';
+import React, { useState, useEffect } from 'react';
+import { Container, Typography, Box, Grid, Card, CardContent, Paper, CircularProgress } from '@mui/material';
+import { useTranslation } from 'react-i18next';
+import axios from 'axios';
+import { renderIcon, getCurrentLang } from '../utils/contentHelpers';
 
 const About = () => {
-  const features = [
-    {
-      icon: <School fontSize="large" />,
-      title: 'Quality Education',
-      description: 'We provide world-class courses from expert trainers across multiple disciplines and industries.',
-    },
-    {
-      icon: <Verified fontSize="large" />,
-      title: 'Verified Certificates',
-      description: 'Earn verified certificates upon course completion with unique IDs and QR codes for authentication.',
-    },
-    {
-      icon: <Language fontSize="large" />,
-      title: 'Multi-Language',
-      description: 'Learn in your preferred language with full support for Arabic, English, and French.',
-    },
-    {
-      icon: <People fontSize="large" />,
-      title: 'Expert Trainers',
-      description: 'Learn from verified and accredited trainers with proven industry experience and qualifications.',
-    },
-    {
-      icon: <TrendingUp fontSize="large" />,
-      title: 'Career Growth',
-      description: 'Advance your career with practical skills and industry-recognized certifications.',
-    },
-    {
-      icon: <Security fontSize="large" />,
-      title: 'Secure Platform',
-      description: 'Your data is protected with industry-standard security measures and encryption.',
-    },
-  ];
+  const { i18n } = useTranslation();
+  const [loading, setLoading] = useState(true);
+  const [content, setContent] = useState(null);
+
+  useEffect(() => {
+    fetchContent();
+  }, []);
+
+  const fetchContent = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/admin/content-settings/public');
+      setContent(response.data.data);
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      // Fall back to default content if fetch fails
+      setContent({
+        aboutPage: {
+          mission: {
+            en: 'GreenDye Academy is committed to democratizing education by providing accessible, high-quality training and qualification programs to students and professionals across Africa, Asia, and the Middle East, with a primary focus on Egypt. We believe that education is a fundamental right and a powerful tool for personal and professional growth.',
+            ar: 'تلتزم أكاديمية GreenDye بإضفاء الطابع الديمقراطي على التعليم من خلال توفير برامج تدريب وتأهيل عالية الجودة وسهلة المنال للطلاب والمهنيين في جميع أنحاء أفريقيا وآسيا والشرق الأوسط، مع التركيز الأساسي على مصر.',
+            fr: 'GreenDye Academy s\'engage à démocratiser l\'éducation en fournissant des programmes de formation et de qualification accessibles et de haute qualité aux étudiants et professionnels à travers l\'Afrique, l\'Asie et le Moyen-Orient, avec un accent particulier sur l\'Égypte.',
+          },
+          vision: {
+            en: 'To become the leading e-learning platform in the region, recognized for quality education, verified certifications, and excellent learning experiences. We envision a world where anyone, anywhere, can access world-class education and develop the skills they need to succeed in the modern economy.',
+            ar: 'أن تصبح منصة التعليم الإلكتروني الرائدة في المنطقة، المعترف بها من أجل التعليم الجيد والشهادات الموثقة وتجارب التعلم الممتازة.',
+            fr: 'Devenir la plateforme d\'apprentissage en ligne leader dans la région, reconnue pour son éducation de qualité, ses certifications vérifiées et ses excellentes expériences d\'apprentissage.',
+          },
+          features: [
+            { icon: 'School', title: 'Quality Education', description: 'We provide world-class courses from expert trainers across multiple disciplines and industries.' },
+            { icon: 'Verified', title: 'Verified Certificates', description: 'Earn verified certificates upon course completion with unique IDs and QR codes for authentication.' },
+            { icon: 'Language', title: 'Multi-Language', description: 'Learn in your preferred language with full support for Arabic, English, and French.' },
+            { icon: 'People', title: 'Expert Trainers', description: 'Learn from verified and accredited trainers with proven industry experience and qualifications.' },
+            { icon: 'TrendingUp', title: 'Career Growth', description: 'Advance your career with practical skills and industry-recognized certifications.' },
+            { icon: 'Security', title: 'Secure Platform', description: 'Your data is protected with industry-standard security measures and encryption.' },
+          ],
+        },
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const currentLang = getCurrentLang(i18n);
+  const mission = content?.aboutPage?.mission?.[currentLang] || '';
+  const vision = content?.aboutPage?.vision?.[currentLang] || '';
+  const features = content?.aboutPage?.features || [];
 
   return (
     <Box>
@@ -64,30 +89,16 @@ const About = () => {
             <Typography variant="h4" gutterBottom color="primary">
               Our Mission
             </Typography>
-            <Typography variant="body1" paragraph>
-              GreenDye Academy is committed to democratizing education by providing accessible,
-              high-quality training and qualification programs to students and professionals across
-              Africa, Asia, and the Middle East, with a primary focus on Egypt.
-            </Typography>
-            <Typography variant="body1" paragraph>
-              We believe that education is a fundamental right and a powerful tool for personal and
-              professional growth. Our platform breaks down barriers to learning by offering courses
-              in multiple languages and at various skill levels.
+            <Typography variant="body1" paragraph style={{ whiteSpace: 'pre-line' }}>
+              {mission}
             </Typography>
           </Grid>
           <Grid item xs={12} md={6}>
             <Typography variant="h4" gutterBottom color="primary">
               Our Vision
             </Typography>
-            <Typography variant="body1" paragraph>
-              To become the leading e-learning platform in the region, recognized for quality
-              education, verified certifications, and excellent learning experiences.
-            </Typography>
-            <Typography variant="body1" paragraph>
-              We envision a world where anyone, anywhere, can access world-class education and
-              develop the skills they need to succeed in the modern economy. Our commitment to
-              multi-language support and cultural sensitivity ensures that learning is inclusive
-              and accessible to all.
+            <Typography variant="body1" paragraph style={{ whiteSpace: 'pre-line' }}>
+              {vision}
             </Typography>
           </Grid>
         </Grid>
@@ -105,7 +116,7 @@ const About = () => {
                 <Card sx={{ height: '100%', textAlign: 'center' }}>
                   <CardContent>
                     <Box sx={{ color: 'primary.main', mb: 2 }}>
-                      {feature.icon}
+                      {renderIcon(feature.icon)}
                     </Box>
                     <Typography variant="h6" gutterBottom>
                       {feature.title}

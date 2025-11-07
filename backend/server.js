@@ -114,6 +114,7 @@ app.use('/api/admin/settings', require('./routes/systemSettingsRoutes'));
 app.use('/api/admin/email-marketing', require('./routes/adminEmailMarketingRoutes'));
 app.use('/api/admin/backup', require('./routes/backupRoutes'));
 app.use('/api/admin/security', require('./routes/adminSecurityRoutes'));
+app.use('/api/admin/content-settings', require('./routes/contentSettingsRoutes'));
 
 // Settings public routes
 app.use('/api/settings', require('./routes/systemSettingsRoutes'));

@@ -33,7 +33,7 @@ exports.getUsers = async (req, res, next) => {
       query.status = status;
     }
     
-    if (isActive !== undefined) {
+    if (isActive) {
       query.isActive = isActive === 'true';
     }
     

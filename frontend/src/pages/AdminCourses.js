@@ -65,8 +65,6 @@ const AdminCourses = () => {
   
   // Statistics
   const [statistics, setStatistics] = useState(null);
-  const [categories, setCategories] = useState([]);
-  const [tags, setTags] = useState([]);
   
   // Dialogs
   const [openPricingDialog, setOpenPricingDialog] = useState(false);
@@ -87,6 +85,13 @@ const AdminCourses = () => {
   const [selectedCategory, setSelectedCategory] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [newTag, setNewTag] = useState('');
+  const [trainers, setTrainers] = useState([]);
+  const [formTags, setFormTags] = useState([]);
+  const [formPrerequisites, setFormPrerequisites] = useState([]);
+  const [formLearningOutcomes, setFormLearningOutcomes] = useState([]);
+  const [newFormTag, setNewFormTag] = useState('');
+  const [newPrerequisite, setNewPrerequisite] = useState('');
+  const [newLearningOutcome, setNewLearningOutcome] = useState('');
   
   const initialCreateFormData = {
     title: { en: '', ar: '', fr: '' },
@@ -96,8 +101,14 @@ const AdminCourses = () => {
     price: 0,
     currency: 'USD',
     duration: 0,
-    language: 'en',
-    thumbnail: ''
+    language: ['en'],
+    thumbnail: '',
+    instructor: '',
+    approvalStatus: 'approved',
+    isPublished: true,
+    tags: [],
+    prerequisites: [],
+    learningOutcomes: []
   };
   
   const [createFormData, setCreateFormData] = useState(initialCreateFormData);
@@ -111,6 +122,7 @@ const AdminCourses = () => {
     fetchStatistics();
     fetchCategories();
     fetchTags();
+    fetchTrainers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, page, rowsPerPage, search, filterCategory, filterLevel, filterStatus, currentTab]);
 
@@ -162,8 +174,8 @@ const AdminCourses = () => {
 
   const fetchCategories = async () => {
     try {
-      const response = await adminService.getCourseCategories();
-      setCategories(response.data);
+      await adminService.getCourseCategories();
+      // Categories fetched but not stored - used for cache warming
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -171,10 +183,19 @@ const AdminCourses = () => {
 
   const fetchTags = async () => {
     try {
-      const response = await adminService.getCourseTags();
-      setTags(response.data);
+      await adminService.getCourseTags();
+      // Tags fetched but not stored - used for cache warming
     } catch (error) {
       console.error('Error fetching tags:', error);
+    }
+  };
+
+  const fetchTrainers = async () => {
+    try {
+      const response = await adminService.getAllTrainers({ limit: 100 });
+      setTrainers(response.data || []);
+    } catch (error) {
+      console.error('Error fetching trainers:', error);
     }
   };
 
@@ -316,16 +337,58 @@ const AdminCourses = () => {
 
   const handleCreateCourse = async () => {
     try {
-      await adminService.createAdminCourse(createFormData);
+      const courseData = {
+        ...createFormData,
+        tags: formTags,
+        prerequisites: formPrerequisites,
+        learningOutcomes: formLearningOutcomes
+      };
+      await adminService.createAdminCourse(courseData);
       toast.success('Course created successfully');
       setOpenCreateDialog(false);
       setCreateFormData(initialCreateFormData);
+      setFormTags([]);
+      setFormPrerequisites([]);
+      setFormLearningOutcomes([]);
       fetchCourses();
       fetchStatistics();
     } catch (error) {
       console.error('Error creating course:', error);
       toast.error('Failed to create course');
     }
+  };
+
+  const handleAddFormTag = () => {
+    if (newFormTag && !formTags.includes(newFormTag)) {
+      setFormTags([...formTags, newFormTag]);
+      setNewFormTag('');
+    }
+  };
+
+  const handleRemoveFormTag = (tagToRemove) => {
+    setFormTags(formTags.filter(tag => tag !== tagToRemove));
+  };
+
+  const handleAddPrerequisite = () => {
+    if (newPrerequisite && !formPrerequisites.includes(newPrerequisite)) {
+      setFormPrerequisites([...formPrerequisites, newPrerequisite]);
+      setNewPrerequisite('');
+    }
+  };
+
+  const handleRemovePrerequisite = (prereqToRemove) => {
+    setFormPrerequisites(formPrerequisites.filter(prereq => prereq !== prereqToRemove));
+  };
+
+  const handleAddLearningOutcome = () => {
+    if (newLearningOutcome && !formLearningOutcomes.includes(newLearningOutcome)) {
+      setFormLearningOutcomes([...formLearningOutcomes, newLearningOutcome]);
+      setNewLearningOutcome('');
+    }
+  };
+
+  const handleRemoveLearningOutcome = (outcomeToRemove) => {
+    setFormLearningOutcomes(formLearningOutcomes.filter(outcome => outcome !== outcomeToRemove));
   };
 
 
@@ -880,15 +943,25 @@ const AdminCourses = () => {
       </Dialog>
 
       {/* Create Course Dialog */}
-      <Dialog open={openCreateDialog} onClose={() => setOpenCreateDialog(false)} maxWidth="md" fullWidth>
+      <Dialog open={openCreateDialog} onClose={() => setOpenCreateDialog(false)} maxWidth="lg" fullWidth>
         <DialogTitle>Create New Course</DialogTitle>
         <DialogContent>
           <Box sx={{ pt: 2 }}>
-            <Grid container spacing={2}>
-              {/* Title in English */}
+            <Grid container spacing={3}>
+              
+              {/* Basic Information Section */}
               <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom color="primary">
+                  Basic Information
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+              </Grid>
+              
+              {/* Title in English */}
+              <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
+                  required
                   label="Title (English)"
                   value={createFormData.title.en}
                   onChange={(e) => setCreateFormData({
@@ -899,7 +972,7 @@ const AdminCourses = () => {
               </Grid>
               
               {/* Title in Arabic */}
-              <Grid item xs={12}>
+              <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
                   label="Title (Arabic)"
@@ -912,7 +985,7 @@ const AdminCourses = () => {
               </Grid>
               
               {/* Title in French */}
-              <Grid item xs={12}>
+              <Grid item xs={12} md={4}>
                 <TextField
                   fullWidth
                   label="Title (French)"
@@ -928,6 +1001,7 @@ const AdminCourses = () => {
               <Grid item xs={12}>
                 <TextField
                   fullWidth
+                  required
                   multiline
                   rows={3}
                   label="Description (English)"
@@ -940,7 +1014,7 @@ const AdminCourses = () => {
               </Grid>
               
               {/* Description in Arabic */}
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   multiline
@@ -955,7 +1029,7 @@ const AdminCourses = () => {
               </Grid>
               
               {/* Description in French */}
-              <Grid item xs={12}>
+              <Grid item xs={12} md={6}>
                 <TextField
                   fullWidth
                   multiline
@@ -968,10 +1042,18 @@ const AdminCourses = () => {
                   })}
                 />
               </Grid>
+
+              {/* Course Details Section */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom color="primary" sx={{ mt: 2 }}>
+                  Course Details
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+              </Grid>
               
               {/* Category */}
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth required>
                   <InputLabel>Category</InputLabel>
                   <Select
                     value={createFormData.category}
@@ -988,8 +1070,8 @@ const AdminCourses = () => {
               </Grid>
               
               {/* Level */}
-              <Grid item xs={12} md={6}>
-                <FormControl fullWidth>
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth required>
                   <InputLabel>Level</InputLabel>
                   <Select
                     value={createFormData.level}
@@ -999,8 +1081,67 @@ const AdminCourses = () => {
                     <MenuItem value="beginner">Beginner</MenuItem>
                     <MenuItem value="intermediate">Intermediate</MenuItem>
                     <MenuItem value="advanced">Advanced</MenuItem>
+                    <MenuItem value="all">All Levels</MenuItem>
                   </Select>
                 </FormControl>
+              </Grid>
+
+              {/* Duration */}
+              <Grid item xs={12} md={4}>
+                <TextField
+                  fullWidth
+                  required
+                  label="Duration (hours)"
+                  type="number"
+                  value={createFormData.duration}
+                  onChange={(e) => setCreateFormData({ ...createFormData, duration: Number(e.target.value) || 0 })}
+                  inputProps={{ min: 0 }}
+                />
+              </Grid>
+              
+              {/* Instructor */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Instructor (Optional)</InputLabel>
+                  <Select
+                    value={createFormData.instructor}
+                    onChange={(e) => setCreateFormData({ ...createFormData, instructor: e.target.value })}
+                    label="Instructor (Optional)"
+                  >
+                    <MenuItem value="">
+                      <em>None (Assigned to Admin)</em>
+                    </MenuItem>
+                    {trainers.map((trainer) => (
+                      <MenuItem key={trainer._id} value={trainer._id}>
+                        {trainer.name} ({trainer.email})
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Language */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Primary Language</InputLabel>
+                  <Select
+                    value={createFormData.language[0] || 'en'}
+                    onChange={(e) => setCreateFormData({ ...createFormData, language: [e.target.value] })}
+                    label="Primary Language"
+                  >
+                    <MenuItem value="en">English</MenuItem>
+                    <MenuItem value="ar">Arabic</MenuItem>
+                    <MenuItem value="fr">French</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Pricing Section */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom color="primary" sx={{ mt: 2 }}>
+                  Pricing
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
               </Grid>
               
               {/* Price */}
@@ -1011,6 +1152,7 @@ const AdminCourses = () => {
                   type="number"
                   value={createFormData.price}
                   onChange={(e) => setCreateFormData({ ...createFormData, price: Number(e.target.value) || 0 })}
+                  inputProps={{ min: 0, step: 0.01 }}
                 />
               </Grid>
               
@@ -1027,33 +1169,47 @@ const AdminCourses = () => {
                     <MenuItem value="EUR">EUR</MenuItem>
                     <MenuItem value="EGP">EGP</MenuItem>
                     <MenuItem value="SAR">SAR</MenuItem>
+                    <MenuItem value="NGN">NGN</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
-              
-              {/* Duration */}
-              <Grid item xs={12} md={6}>
-                <TextField
-                  fullWidth
-                  label="Duration (hours)"
-                  type="number"
-                  value={createFormData.duration}
-                  onChange={(e) => setCreateFormData({ ...createFormData, duration: Number(e.target.value) || 0 })}
-                />
+
+              {/* Settings Section */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom color="primary" sx={{ mt: 2 }}>
+                  Course Settings
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
               </Grid>
-              
-              {/* Language */}
+
+              {/* Approval Status */}
               <Grid item xs={12} md={6}>
                 <FormControl fullWidth>
-                  <InputLabel>Language</InputLabel>
+                  <InputLabel>Approval Status</InputLabel>
                   <Select
-                    value={createFormData.language}
-                    onChange={(e) => setCreateFormData({ ...createFormData, language: e.target.value })}
-                    label="Language"
+                    value={createFormData.approvalStatus}
+                    onChange={(e) => setCreateFormData({ ...createFormData, approvalStatus: e.target.value })}
+                    label="Approval Status"
                   >
-                    <MenuItem value="en">English</MenuItem>
-                    <MenuItem value="ar">Arabic</MenuItem>
-                    <MenuItem value="fr">French</MenuItem>
+                    <MenuItem value="draft">Draft</MenuItem>
+                    <MenuItem value="pending">Pending</MenuItem>
+                    <MenuItem value="approved">Approved</MenuItem>
+                    <MenuItem value="rejected">Rejected</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Published Status */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Published Status</InputLabel>
+                  <Select
+                    value={createFormData.isPublished}
+                    onChange={(e) => setCreateFormData({ ...createFormData, isPublished: e.target.value })}
+                    label="Published Status"
+                  >
+                    <MenuItem value={true}>Published</MenuItem>
+                    <MenuItem value={false}>Unpublished</MenuItem>
                   </Select>
                 </FormControl>
               </Grid>
@@ -1065,7 +1221,103 @@ const AdminCourses = () => {
                   label="Thumbnail URL"
                   value={createFormData.thumbnail}
                   onChange={(e) => setCreateFormData({ ...createFormData, thumbnail: e.target.value })}
+                  placeholder="https://example.com/thumbnail.jpg"
                 />
+              </Grid>
+
+              {/* Content Section */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom color="primary" sx={{ mt: 2 }}>
+                  Course Content
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+              </Grid>
+
+              {/* Tags */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Tags
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Add Tag"
+                    value={newFormTag}
+                    onChange={(e) => setNewFormTag(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddFormTag()}
+                  />
+                  <Button onClick={handleAddFormTag} variant="outlined">Add</Button>
+                </Box>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {formTags.map((tag) => (
+                    <Chip
+                      key={tag}
+                      label={tag}
+                      onDelete={() => handleRemoveFormTag(tag)}
+                      color="primary"
+                      variant="outlined"
+                    />
+                  ))}
+                </Box>
+              </Grid>
+
+              {/* Prerequisites */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Prerequisites
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Add Prerequisite"
+                    value={newPrerequisite}
+                    onChange={(e) => setNewPrerequisite(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddPrerequisite()}
+                  />
+                  <Button onClick={handleAddPrerequisite} variant="outlined">Add</Button>
+                </Box>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {formPrerequisites.map((prereq, index) => (
+                    <Chip
+                      key={index}
+                      label={prereq}
+                      onDelete={() => handleRemovePrerequisite(prereq)}
+                      color="secondary"
+                      variant="outlined"
+                    />
+                  ))}
+                </Box>
+              </Grid>
+
+              {/* Learning Outcomes */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Learning Outcomes (What Students Will Learn)
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                  <TextField
+                    fullWidth
+                    size="small"
+                    label="Add Learning Outcome"
+                    value={newLearningOutcome}
+                    onChange={(e) => setNewLearningOutcome(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleAddLearningOutcome()}
+                  />
+                  <Button onClick={handleAddLearningOutcome} variant="outlined">Add</Button>
+                </Box>
+                <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1 }}>
+                  {formLearningOutcomes.map((outcome, index) => (
+                    <Chip
+                      key={index}
+                      label={outcome}
+                      onDelete={() => handleRemoveLearningOutcome(outcome)}
+                      color="success"
+                      variant="outlined"
+                    />
+                  ))}
+                </Box>
               </Grid>
             </Grid>
           </Box>

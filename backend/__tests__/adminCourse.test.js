@@ -303,4 +303,93 @@ describe('Admin Course Management API Tests', () => {
       expect(response.body.data.approvalStatus).toBe('rejected');
     });
   });
+
+  describe('POST /api/admin/courses', () => {
+    it('should create a course with admin-specific defaults', async () => {
+      const courseData = {
+        title: { en: 'Admin Created Course', ar: 'دورة منشأة من المشرف', fr: 'Cours créé par admin' },
+        description: { en: 'Admin Course Description', ar: 'وصف الدورة', fr: 'Description du cours' },
+        category: 'technology',
+        level: 'beginner',
+        duration: 15,
+        price: 49.99,
+        currency: 'USD',
+        instructor: trainerUser._id,
+        tags: ['admin', 'test'],
+        prerequisites: ['Basic knowledge'],
+        learningOutcomes: ['Learn new skills']
+      };
+
+      const response = await request(app)
+        .post('/api/admin/courses')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send(courseData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.title.en).toBe('Admin Created Course');
+      expect(response.body.data.approvalStatus).toBe('approved');
+      expect(response.body.data.isPublished).toBe(true);
+      expect(response.body.data.instructor).toBeDefined();
+    });
+
+    it('should create a course with custom approval status', async () => {
+      const courseData = {
+        title: { en: 'Draft Course', ar: 'مسودة', fr: 'Brouillon' },
+        description: { en: 'Draft Description', ar: 'وصف المسودة', fr: 'Description brouillon' },
+        category: 'business',
+        level: 'intermediate',
+        duration: 20,
+        approvalStatus: 'draft',
+        isPublished: false
+      };
+
+      const response = await request(app)
+        .post('/api/admin/courses')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send(courseData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.approvalStatus).toBe('draft');
+      expect(response.body.data.isPublished).toBe(false);
+      expect(response.body.data.instructor).toBeDefined();
+    });
+
+    it('should default instructor to admin if not provided', async () => {
+      const courseData = {
+        title: { en: 'No Instructor Course', ar: 'دورة بدون مدرب', fr: 'Cours sans instructeur' },
+        description: { en: 'Test Description', ar: 'وصف', fr: 'Description' },
+        category: 'science',
+        level: 'advanced',
+        duration: 30
+      };
+
+      const response = await request(app)
+        .post('/api/admin/courses')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send(courseData)
+        .expect(201);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data.instructor._id.toString()).toBe(adminUser._id.toString());
+    });
+
+    it('should deny access without admin token', async () => {
+      const courseData = {
+        title: { en: 'Test Course' },
+        description: { en: 'Test' },
+        category: 'technology',
+        level: 'beginner',
+        duration: 10
+      };
+
+      const response = await request(app)
+        .post('/api/admin/courses')
+        .send(courseData)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+    });
+  });
 });

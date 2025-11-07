@@ -1,10 +1,27 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Link, Grid } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 
 const Footer = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [footerPages, setFooterPages] = useState([]);
+
+  useEffect(() => {
+    fetchFooterPages();
+  }, []);
+
+  const fetchFooterPages = async () => {
+    try {
+      const response = await axios.get('/api/pages', {
+        params: { location: 'footer' }
+      });
+      setFooterPages(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching footer pages:', error);
+    }
+  };
 
   return (
     <Box
@@ -42,6 +59,18 @@ const Footer = () => {
             <Link component={RouterLink} to="/contact" color="inherit" display="block">
               {t('contact')}
             </Link>
+            {/* Dynamic Footer Pages */}
+            {footerPages.map((page) => (
+              <Link 
+                key={page._id}
+                component={RouterLink} 
+                to={`/${page.slug}`} 
+                color="inherit" 
+                display="block"
+              >
+                {page.title?.[i18n.language] || page.title?.en || page.slug}
+              </Link>
+            ))}
           </Grid>
           <Grid item xs={12} sm={4}>
             <Typography variant="h6" gutterBottom>

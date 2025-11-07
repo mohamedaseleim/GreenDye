@@ -83,6 +83,18 @@ const PageSchema = new mongoose.Schema({
     default: true,
     index: true
   },
+  showInHeader: {
+    type: Boolean,
+    default: false
+  },
+  showInFooter: {
+    type: Boolean,
+    default: false
+  },
+  menuOrder: {
+    type: Number,
+    default: 0
+  },
   version: {
     type: Number,
     default: 1

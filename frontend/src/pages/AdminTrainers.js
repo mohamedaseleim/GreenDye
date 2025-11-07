@@ -43,7 +43,9 @@ import {
   AttachMoney as PayoutIcon,
   TrendingUp as MetricsIcon,
   VerifiedUser as VerifiedIcon,
-  HourglassEmpty as PendingIcon
+  HourglassEmpty as PendingIcon,
+  Edit as EditIcon,
+  QrCode as QrCodeIcon
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import adminService from '../services/adminService';
@@ -72,6 +74,8 @@ const AdminTrainers = () => {
   const [openMetricsDialog, setOpenMetricsDialog] = useState(false);
   const [openPayoutDialog, setOpenPayoutDialog] = useState(false);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openQrDialog, setOpenQrDialog] = useState(false);
   
   // Selected data
   const [selectedTrainer, setSelectedTrainer] = useState(null);
@@ -100,6 +104,22 @@ const AdminTrainers = () => {
     expertise: '',
     experience: '',
     verificationDate: '',
+    qualifications: [],
+    certifications: [],
+    languages: [],
+    commissionRate: 20
+  });
+  
+  // Edit trainer form data
+  const [editBioLang, setEditBioLang] = useState('en');
+  const [editFormData, setEditFormData] = useState({
+    fullName: '',
+    title: '',
+    bioEn: '',
+    bioAr: '',
+    bioFr: '',
+    expertise: '',
+    experience: '',
     qualifications: [],
     certifications: [],
     languages: [],
@@ -390,6 +410,119 @@ const AdminTrainers = () => {
     });
   };
 
+  const handleOpenEditDialog = (trainer) => {
+    setSelectedTrainer(trainer);
+    
+    // Extract bio by language
+    const bio = trainer.bio || {};
+    const bioEn = typeof bio === 'object' && bio.en ? bio.en : '';
+    const bioAr = typeof bio === 'object' && bio.ar ? bio.ar : '';
+    const bioFr = typeof bio === 'object' && bio.fr ? bio.fr : '';
+    
+    // Extract title
+    const title = trainer.title || {};
+    const titleEn = typeof title === 'object' && title.en ? title.en : '';
+    
+    // Extract expertise as comma-separated string
+    const expertise = Array.isArray(trainer.expertise) ? trainer.expertise.join(', ') : '';
+    
+    setEditFormData({
+      fullName: trainer.fullName || '',
+      title: titleEn,
+      bioEn,
+      bioAr,
+      bioFr,
+      expertise,
+      experience: trainer.experience || '',
+      qualifications: trainer.qualifications || [],
+      certifications: trainer.certifications || [],
+      languages: trainer.languages || [],
+      commissionRate: trainer.commissionRate || 20
+    });
+    setOpenEditDialog(true);
+  };
+
+  const handleUpdateTrainer = async () => {
+    if (!editFormData.fullName || editFormData.fullName.length < 3) {
+      toast.error('Please enter a full name (minimum 3 characters)');
+      return;
+    }
+
+    try {
+      const requestData = {
+        fullName: editFormData.fullName,
+        commissionRate: editFormData.commissionRate !== '' && editFormData.commissionRate !== null 
+          ? parseFloat(editFormData.commissionRate) 
+          : 20
+      };
+
+      // Add optional fields if provided
+      if (editFormData.title) {
+        requestData.title = { en: editFormData.title };
+      }
+      
+      // Add bio with multi-language support
+      const bio = {};
+      if (editFormData.bioEn) bio.en = editFormData.bioEn;
+      if (editFormData.bioAr) bio.ar = editFormData.bioAr;
+      if (editFormData.bioFr) bio.fr = editFormData.bioFr;
+      if (Object.keys(bio).length > 0) {
+        requestData.bio = bio;
+      }
+      
+      if (editFormData.expertise) {
+        const expertiseArray = editFormData.expertise.split(',').map(e => e.trim()).filter(e => e);
+        if (expertiseArray.length > 0) {
+          requestData.expertise = expertiseArray;
+        }
+      }
+      
+      if (editFormData.experience) {
+        const exp = parseFloat(editFormData.experience);
+        if (!isNaN(exp) && exp >= 0 && exp <= MAX_EXPERIENCE_YEARS) {
+          requestData.experience = exp;
+        }
+      }
+      
+      if (editFormData.qualifications && editFormData.qualifications.length > 0) {
+        requestData.qualifications = editFormData.qualifications;
+      }
+      
+      if (editFormData.certifications && editFormData.certifications.length > 0) {
+        requestData.certifications = editFormData.certifications;
+      }
+      
+      if (editFormData.languages && editFormData.languages.length > 0) {
+        requestData.languages = editFormData.languages;
+      }
+
+      await adminService.updateTrainer(selectedTrainer._id, requestData);
+      toast.success('Trainer profile updated successfully');
+      
+      setOpenEditDialog(false);
+      setSelectedTrainer(null);
+      fetchTrainers();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update trainer profile');
+      console.error('Error:', error);
+    }
+  };
+
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false);
+    setSelectedTrainer(null);
+  };
+
+  const handleViewQrCode = (trainer) => {
+    setSelectedTrainer(trainer);
+    setOpenQrDialog(true);
+  };
+
+  const handleCloseQrDialog = () => {
+    setOpenQrDialog(false);
+    setSelectedTrainer(null);
+  };
+
   const handlePageChange = (event, newPage) => {
     setPage(newPage);
   };
@@ -463,6 +596,67 @@ const AdminTrainers = () => {
     const updated = [...createFormData.languages];
     updated[index] = { ...updated[index], [field]: value };
     setCreateFormData({ ...createFormData, languages: updated });
+  };
+
+  // Helper functions for managing dynamic arrays in edit form
+  const addEditQualification = () => {
+    setEditFormData({
+      ...editFormData,
+      qualifications: [...editFormData.qualifications, { degree: '', institution: '', year: '' }]
+    });
+  };
+  
+  const removeEditQualification = (index) => {
+    setEditFormData({
+      ...editFormData,
+      qualifications: editFormData.qualifications.filter((_, i) => i !== index)
+    });
+  };
+  
+  const updateEditQualification = (index, field, value) => {
+    const updated = [...editFormData.qualifications];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditFormData({ ...editFormData, qualifications: updated });
+  };
+  
+  const addEditCertification = () => {
+    setEditFormData({
+      ...editFormData,
+      certifications: [...editFormData.certifications, { name: '', organization: '', year: '' }]
+    });
+  };
+  
+  const removeEditCertification = (index) => {
+    setEditFormData({
+      ...editFormData,
+      certifications: editFormData.certifications.filter((_, i) => i !== index)
+    });
+  };
+  
+  const updateEditCertification = (index, field, value) => {
+    const updated = [...editFormData.certifications];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditFormData({ ...editFormData, certifications: updated });
+  };
+  
+  const addEditLanguage = () => {
+    setEditFormData({
+      ...editFormData,
+      languages: [...editFormData.languages, { language: '', proficiency: 'intermediate' }]
+    });
+  };
+  
+  const removeEditLanguage = (index) => {
+    setEditFormData({
+      ...editFormData,
+      languages: editFormData.languages.filter((_, i) => i !== index)
+    });
+  };
+  
+  const updateEditLanguage = (index, field, value) => {
+    const updated = [...editFormData.languages];
+    updated[index] = { ...updated[index], [field]: value };
+    setEditFormData({ ...editFormData, languages: updated });
   };
 
   const getStatusChip = (trainer) => {
@@ -610,9 +804,19 @@ const AdminTrainers = () => {
                     <TableCell>{trainer.commissionRate}%</TableCell>
                     <TableCell>${trainer.pendingPayout?.toFixed(2) || '0.00'}</TableCell>
                     <TableCell>
+                      <Tooltip title="View QR Code">
+                        <IconButton size="small" onClick={() => handleViewQrCode(trainer)}>
+                          <QrCodeIcon />
+                        </IconButton>
+                      </Tooltip>
                       <Tooltip title="View Details">
                         <IconButton size="small" onClick={() => handleViewDetails(trainer)}>
                           <ViewIcon />
+                        </IconButton>
+                      </Tooltip>
+                      <Tooltip title="Edit">
+                        <IconButton size="small" onClick={() => handleOpenEditDialog(trainer)}>
+                          <EditIcon />
                         </IconButton>
                       </Tooltip>
                       <Tooltip title="Metrics">
@@ -1355,6 +1559,369 @@ const AdminTrainers = () => {
             disabled={!createFormData.userId || !createFormData.fullName || createFormData.fullName.length < 3}
           >
             Create Trainer
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* QR Code Dialog */}
+      <Dialog 
+        open={openQrDialog} 
+        onClose={handleCloseQrDialog}
+        maxWidth="sm"
+        fullWidth
+      >
+        <DialogTitle>Trainer QR Code</DialogTitle>
+        <DialogContent>
+          {selectedTrainer && (
+            <Box sx={{ mt: 2, textAlign: 'center' }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Trainer ID: <strong>{selectedTrainer.trainerId}</strong>
+              </Typography>
+              <Typography variant="body2" color="textSecondary" gutterBottom>
+                Name: {selectedTrainer.fullName}
+              </Typography>
+              <Divider sx={{ my: 2 }} />
+              {selectedTrainer.qrCode ? (
+                <>
+                  <Typography variant="body2" gutterBottom>
+                    Scan this QR code to verify the trainer:
+                  </Typography>
+                  <Box sx={{ mt: 2, mb: 2 }}>
+                    <img 
+                      src={selectedTrainer.qrCode} 
+                      alt="Trainer QR Code" 
+                      style={{ maxWidth: '300px', border: '2px solid #2e7d32', padding: '16px', borderRadius: '8px' }}
+                    />
+                  </Box>
+                  {selectedTrainer.verificationUrl && (
+                    <Box sx={{ mt: 2, p: 2, bgcolor: '#f5f5f5', borderRadius: 1 }}>
+                      <Typography variant="caption" display="block" color="textSecondary">
+                        Verification URL:
+                      </Typography>
+                      <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                        {selectedTrainer.verificationUrl}
+                      </Typography>
+                    </Box>
+                  )}
+                </>
+              ) : (
+                <Alert severity="warning">
+                  QR code not available for this trainer. It may have been created before the QR code feature was implemented.
+                </Alert>
+              )}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseQrDialog}>Close</Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Trainer Dialog */}
+      <Dialog 
+        open={openEditDialog} 
+        onClose={handleCloseEditDialog}
+        maxWidth="lg"
+        fullWidth
+        scroll="paper"
+      >
+        <DialogTitle>Edit Trainer Profile</DialogTitle>
+        <DialogContent dividers>
+          <Box sx={{ mt: 1 }}>
+            <Grid container spacing={3}>
+              {/* Full Name */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  required
+                  label="Full Name (Required)"
+                  value={editFormData.fullName}
+                  onChange={(e) => setEditFormData({ ...editFormData, fullName: e.target.value })}
+                  helperText="Minimum 3 characters"
+                />
+              </Grid>
+
+              {/* Professional Title */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Professional Title (Optional)"
+                  value={editFormData.title}
+                  onChange={(e) => setEditFormData({ ...editFormData, title: e.target.value })}
+                  placeholder="e.g., Senior Web Development Instructor"
+                />
+              </Grid>
+
+              {/* Biography - Multi-language */}
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Biography (Optional - Multi-language)
+                </Typography>
+                <Tabs value={editBioLang} onChange={(e, val) => setEditBioLang(val)} sx={{ mb: 1 }}>
+                  <Tab label="English" value="en" />
+                  <Tab label="Arabic" value="ar" />
+                  <Tab label="French" value="fr" />
+                </Tabs>
+                {editBioLang === 'en' && (
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Biography (English)"
+                    value={editFormData.bioEn}
+                    onChange={(e) => setEditFormData({ ...editFormData, bioEn: e.target.value })}
+                  />
+                )}
+                {editBioLang === 'ar' && (
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Biography (Arabic)"
+                    value={editFormData.bioAr}
+                    onChange={(e) => setEditFormData({ ...editFormData, bioAr: e.target.value })}
+                  />
+                )}
+                {editBioLang === 'fr' && (
+                  <TextField
+                    fullWidth
+                    multiline
+                    rows={3}
+                    label="Biography (French)"
+                    value={editFormData.bioFr}
+                    onChange={(e) => setEditFormData({ ...editFormData, bioFr: e.target.value })}
+                  />
+                )}
+              </Grid>
+
+              {/* Areas of Expertise */}
+              <Grid item xs={12}>
+                <TextField
+                  fullWidth
+                  label="Areas of Expertise (Optional)"
+                  value={editFormData.expertise}
+                  onChange={(e) => setEditFormData({ ...editFormData, expertise: e.target.value })}
+                  placeholder="Web Development, React, Node.js"
+                  helperText="Comma-separated list of expertise areas"
+                />
+              </Grid>
+
+              {/* Years of Experience */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Years of Experience (Optional)"
+                  value={editFormData.experience}
+                  onChange={(e) => setEditFormData({ ...editFormData, experience: e.target.value })}
+                  inputProps={{ min: 0, max: MAX_EXPERIENCE_YEARS, step: 0.5 }}
+                  helperText={`Maximum ${MAX_EXPERIENCE_YEARS} years (can include decimals like 2.5)`}
+                />
+              </Grid>
+
+              {/* Commission Rate */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  type="number"
+                  label="Commission Rate (%) (Optional)"
+                  value={editFormData.commissionRate}
+                  onChange={(e) => setEditFormData({ ...editFormData, commissionRate: e.target.value })}
+                  inputProps={{ min: 0, max: 100, step: 1 }}
+                  helperText="Percentage commission for the trainer (default: 20%)"
+                />
+              </Grid>
+
+              {/* Qualifications Section */}
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="medium">
+                    Qualifications (Optional)
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={addEditQualification}
+                  >
+                    Add Qualification
+                  </Button>
+                </Box>
+                {editFormData.qualifications.map((qual, index) => (
+                  <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={5}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Degree/Name"
+                          value={qual.degree}
+                          onChange={(e) => updateEditQualification(index, 'degree', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={5}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Institution/Organization"
+                          value={qual.institution}
+                          onChange={(e) => updateEditQualification(index, 'institution', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={8} md={2}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          type="number"
+                          label="Year"
+                          value={qual.year}
+                          onChange={(e) => updateEditQualification(index, 'year', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={4} md={1}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => removeEditQualification(index)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ))}
+              </Grid>
+
+              {/* Certifications Section */}
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="medium">
+                    Certifications (Optional)
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={addEditCertification}
+                  >
+                    Add Certification
+                  </Button>
+                </Box>
+                {editFormData.certifications.map((cert, index) => (
+                  <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={5}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Certificate Name"
+                          value={cert.name}
+                          onChange={(e) => updateEditCertification(index, 'name', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={12} md={5}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Issuing Organization"
+                          value={cert.organization}
+                          onChange={(e) => updateEditCertification(index, 'organization', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={8} md={2}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          type="number"
+                          label="Year"
+                          value={cert.year}
+                          onChange={(e) => updateEditCertification(index, 'year', e.target.value)}
+                        />
+                      </Grid>
+                      <Grid item xs={4} md={1}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => removeEditCertification(index)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ))}
+              </Grid>
+
+              {/* Languages Section */}
+              <Grid item xs={12}>
+                <Divider sx={{ my: 2 }} />
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
+                  <Typography variant="subtitle1" fontWeight="medium">
+                    Languages (Optional)
+                  </Typography>
+                  <Button
+                    size="small"
+                    variant="outlined"
+                    startIcon={<AddIcon />}
+                    onClick={addEditLanguage}
+                  >
+                    Add Language
+                  </Button>
+                </Box>
+                {editFormData.languages.map((lang, index) => (
+                  <Box key={index} sx={{ mb: 2, p: 2, border: '1px solid #e0e0e0', borderRadius: 1 }}>
+                    <Grid container spacing={2}>
+                      <Grid item xs={12} md={5}>
+                        <TextField
+                          fullWidth
+                          size="small"
+                          label="Language"
+                          value={lang.language}
+                          onChange={(e) => updateEditLanguage(index, 'language', e.target.value)}
+                          placeholder="e.g., English, Arabic, French"
+                        />
+                      </Grid>
+                      <Grid item xs={8} md={6}>
+                        <FormControl fullWidth size="small">
+                          <InputLabel>Proficiency</InputLabel>
+                          <Select
+                            value={lang.proficiency}
+                            label="Proficiency"
+                            onChange={(e) => updateEditLanguage(index, 'proficiency', e.target.value)}
+                          >
+                            <MenuItem value="native">Native</MenuItem>
+                            <MenuItem value="advanced">Fluent/Advanced</MenuItem>
+                            <MenuItem value="intermediate">Intermediate</MenuItem>
+                            <MenuItem value="basic">Basic</MenuItem>
+                          </Select>
+                        </FormControl>
+                      </Grid>
+                      <Grid item xs={4} md={1}>
+                        <IconButton
+                          size="small"
+                          color="error"
+                          onClick={() => removeEditLanguage(index)}
+                        >
+                          <DeleteIcon />
+                        </IconButton>
+                      </Grid>
+                    </Grid>
+                  </Box>
+                ))}
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditDialog}>Cancel</Button>
+          <Button 
+            onClick={handleUpdateTrainer}
+            variant="contained"
+            disabled={!editFormData.fullName || editFormData.fullName.length < 3}
+          >
+            Update Trainer
           </Button>
         </DialogActions>
       </Dialog>

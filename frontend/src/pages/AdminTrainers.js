@@ -68,6 +68,7 @@ const AdminTrainers = () => {
   
   // Constants
   const MAX_EXPERIENCE_YEARS = 50;
+  const DEFAULT_COMMISSION_RATE = 20;
   
   // Dialogs
   const [openDetailsDialog, setOpenDetailsDialog] = useState(false);
@@ -107,7 +108,7 @@ const AdminTrainers = () => {
     qualifications: [],
     certifications: [],
     languages: [],
-    commissionRate: 20
+    commissionRate: DEFAULT_COMMISSION_RATE
   });
   
   // Edit trainer form data
@@ -123,7 +124,7 @@ const AdminTrainers = () => {
     qualifications: [],
     certifications: [],
     languages: [],
-    commissionRate: 20
+    commissionRate: DEFAULT_COMMISSION_RATE
   });
 
   useEffect(() => {
@@ -311,7 +312,7 @@ const AdminTrainers = () => {
         fullName: createFormData.fullName,
         commissionRate: createFormData.commissionRate !== '' && createFormData.commissionRate !== null 
           ? parseFloat(createFormData.commissionRate) 
-          : 20
+          : DEFAULT_COMMISSION_RATE
       };
 
       // Add optional fields if provided
@@ -379,7 +380,7 @@ const AdminTrainers = () => {
         qualifications: [],
         certifications: [],
         languages: [],
-        commissionRate: 20
+        commissionRate: DEFAULT_COMMISSION_RATE
       });
       setOpenCreateDialog(false);
       fetchTrainers();
@@ -406,7 +407,7 @@ const AdminTrainers = () => {
       qualifications: [],
       certifications: [],
       languages: [],
-      commissionRate: 20
+      commissionRate: DEFAULT_COMMISSION_RATE
     });
   };
 
@@ -437,7 +438,7 @@ const AdminTrainers = () => {
       qualifications: trainer.qualifications || [],
       certifications: trainer.certifications || [],
       languages: trainer.languages || [],
-      commissionRate: trainer.commissionRate || 20
+      commissionRate: trainer.commissionRate || DEFAULT_COMMISSION_RATE
     });
     setOpenEditDialog(true);
   };
@@ -453,7 +454,7 @@ const AdminTrainers = () => {
         fullName: editFormData.fullName,
         commissionRate: editFormData.commissionRate !== '' && editFormData.commissionRate !== null 
           ? parseFloat(editFormData.commissionRate) 
-          : 20
+          : DEFAULT_COMMISSION_RATE
       };
 
       // Add optional fields if provided
@@ -804,62 +805,64 @@ const AdminTrainers = () => {
                     <TableCell>{trainer.commissionRate}%</TableCell>
                     <TableCell>${trainer.pendingPayout?.toFixed(2) || '0.00'}</TableCell>
                     <TableCell>
-                      <Tooltip title="View QR Code">
-                        <IconButton size="small" onClick={() => handleViewQrCode(trainer)}>
-                          <QrCodeIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="View Details">
-                        <IconButton size="small" onClick={() => handleViewDetails(trainer)}>
-                          <ViewIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Edit">
-                        <IconButton size="small" onClick={() => handleOpenEditDialog(trainer)}>
-                          <EditIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Metrics">
-                        <IconButton size="small" onClick={() => handleViewMetrics(trainer)}>
-                          <MetricsIcon />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Payouts">
-                        <IconButton size="small" onClick={() => handleViewPayouts(trainer)}>
-                          <PayoutIcon />
-                        </IconButton>
-                      </Tooltip>
-                      {trainer.applicationStatus === 'pending' && (
-                        <>
-                          <Tooltip title="Approve">
-                            <IconButton 
-                              size="small" 
-                              color="success"
-                              onClick={() => handleApprove(trainer._id)}
-                            >
-                              <ApproveIcon />
-                            </IconButton>
-                          </Tooltip>
-                          <Tooltip title="Reject">
-                            <IconButton 
-                              size="small" 
-                              color="error"
-                              onClick={() => handleReject(trainer._id)}
-                            >
-                              <RejectIcon />
-                            </IconButton>
-                          </Tooltip>
-                        </>
-                      )}
-                      <Tooltip title="Delete">
-                        <IconButton 
-                          size="small" 
-                          color="error"
-                          onClick={() => handleDelete(trainer._id)}
-                        >
-                          <DeleteIcon />
-                        </IconButton>
-                      </Tooltip>
+                      <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap' }}>
+                        <Tooltip title="View QR Code">
+                          <IconButton size="small" onClick={() => handleViewQrCode(trainer)}>
+                            <QrCodeIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="View Details">
+                          <IconButton size="small" onClick={() => handleViewDetails(trainer)}>
+                            <ViewIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Edit">
+                          <IconButton size="small" onClick={() => handleOpenEditDialog(trainer)}>
+                            <EditIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Metrics">
+                          <IconButton size="small" onClick={() => handleViewMetrics(trainer)}>
+                            <MetricsIcon />
+                          </IconButton>
+                        </Tooltip>
+                        <Tooltip title="Payouts">
+                          <IconButton size="small" onClick={() => handleViewPayouts(trainer)}>
+                            <PayoutIcon />
+                          </IconButton>
+                        </Tooltip>
+                        {trainer.applicationStatus === 'pending' && (
+                          <>
+                            <Tooltip title="Approve">
+                              <IconButton 
+                                size="small" 
+                                color="success"
+                                onClick={() => handleApprove(trainer._id)}
+                              >
+                                <ApproveIcon />
+                              </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Reject">
+                              <IconButton 
+                                size="small" 
+                                color="error"
+                                onClick={() => handleReject(trainer._id)}
+                              >
+                                <RejectIcon />
+                              </IconButton>
+                            </Tooltip>
+                          </>
+                        )}
+                        <Tooltip title="Delete">
+                          <IconButton 
+                            size="small" 
+                            color="error"
+                            onClick={() => handleDelete(trainer._id)}
+                          >
+                            <DeleteIcon />
+                          </IconButton>
+                        </Tooltip>
+                      </Box>
                     </TableCell>
                   </TableRow>
                 ))}
@@ -1587,10 +1590,11 @@ const AdminTrainers = () => {
                     Scan this QR code to verify the trainer:
                   </Typography>
                   <Box sx={{ mt: 2, mb: 2 }}>
-                    <img 
-                      src={selectedTrainer.qrCode} 
-                      alt="Trainer QR Code" 
-                      style={{ maxWidth: '300px', border: '2px solid #2e7d32', padding: '16px', borderRadius: '8px' }}
+                    <Box
+                      component="img"
+                      src={selectedTrainer.qrCode}
+                      alt="Trainer QR Code"
+                      sx={{ maxWidth: '300px', border: '2px solid #2e7d32', p: 2, borderRadius: 1 }}
                     />
                   </Box>
                   {selectedTrainer.verificationUrl && (
@@ -1598,7 +1602,7 @@ const AdminTrainers = () => {
                       <Typography variant="caption" display="block" color="textSecondary">
                         Verification URL:
                       </Typography>
-                      <Typography variant="body2" sx={{ wordBreak: 'break-all' }}>
+                      <Typography variant="body2" sx={{ wordBreak: 'break-word' }}>
                         {selectedTrainer.verificationUrl}
                       </Typography>
                     </Box>

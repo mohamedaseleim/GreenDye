@@ -91,7 +91,8 @@ exports.uploadMedia = async (req, res, next) => {
       const isValidVideo = mediaType === 'video' && ALLOWED_VIDEO_TYPES.test(ext);
       const isValidDoc = mediaType === 'document' && ALLOWED_DOC_TYPES.test(ext);
       
-      if (!isValidImage && !isValidVideo && !isValidDoc && mediaType !== 'other') {
+      // Reject files that don't pass validation - no 'other' bypass allowed
+      if (!isValidImage && !isValidVideo && !isValidDoc) {
         // Don't expose filename in error to prevent information disclosure
         throw new Error('File type mismatch: MIME type does not match file extension');
       }

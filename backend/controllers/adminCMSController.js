@@ -365,16 +365,20 @@ exports.deleteMedia = async (req, res, next) => {
       const resolvedPath = path.resolve(filePath);
       const resolvedUploadsDir = path.resolve(uploadsDir);
       
-      if (!resolvedPath.startsWith(resolvedUploadsDir)) {
+      // Use path.relative for more robust cross-platform path traversal detection
+      const relativePath = path.relative(resolvedUploadsDir, resolvedPath);
+      
+      // If relative path starts with '..' or is absolute, it's outside uploads directory
+      if (relativePath.startsWith('..') || path.isAbsolute(relativePath)) {
         throw new Error('Invalid file path detected');
       }
       
       await fs.unlink(resolvedPath);
     } catch (err) {
       // File may already be deleted or not exist, or invalid path
-      // Log warning but don't fail the deletion operation
+      // Log only generic message to prevent information disclosure
       // eslint-disable-next-line no-console
-      console.warn(`Failed to delete file for media ${media._id}: ${err.message}`);
+      console.warn('Failed to delete media file during cleanup operation');
     }
 
     // Audit log

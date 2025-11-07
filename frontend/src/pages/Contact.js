@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Container,
   Typography,
@@ -9,11 +9,16 @@ import {
   Paper,
   Card,
   CardContent,
+  CircularProgress,
+  IconButton,
 } from '@mui/material';
-import { Email, Phone, LocationOn, Send } from '@mui/icons-material';
+import { Email, Phone, LocationOn, Send, Facebook, Twitter, LinkedIn, Instagram, YouTube } from '@mui/icons-material';
 import { toast } from 'react-toastify';
+import { useTranslation } from 'react-i18next';
+import axios from 'axios';
 
 const Contact = () => {
+  const { i18n } = useTranslation();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -21,6 +26,44 @@ const Contact = () => {
     message: '',
   });
   const [loading, setLoading] = useState(false);
+  const [contentLoading, setContentLoading] = useState(true);
+  const [content, setContent] = useState(null);
+
+  useEffect(() => {
+    fetchContent();
+  }, []);
+
+  const fetchContent = async () => {
+    try {
+      setContentLoading(true);
+      const response = await axios.get('/api/admin/content-settings/public');
+      setContent(response.data.data);
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      // Fall back to default content if fetch fails
+      setContent({
+        contactPage: {
+          email: 'info@greendye-academy.com',
+          phone: '+20 123 456 7890',
+          address: 'Cairo, Egypt',
+          officeHours: {
+            en: 'Sunday - Thursday: 9:00 AM - 6:00 PM',
+            ar: 'الأحد - الخميس: 9:00 صباحًا - 6:00 مساءً',
+            fr: 'Dimanche - Jeudi: 9h00 - 18h00',
+          },
+        },
+        socialMedia: {
+          facebook: '',
+          twitter: '',
+          linkedin: '',
+          instagram: '',
+          youtube: '',
+        },
+      });
+    } finally {
+      setContentLoading(false);
+    }
+  };
 
   const handleChange = (e) => {
     setFormData({
@@ -46,26 +89,56 @@ const Contact = () => {
     }, 1000);
   };
 
+  const getCurrentLang = () => {
+    const lang = i18n.language;
+    if (lang === 'ar') return 'ar';
+    if (lang === 'fr') return 'fr';
+    return 'en';
+  };
+
+  if (contentLoading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const currentLang = getCurrentLang();
+  const email = content?.contactPage?.email || 'info@greendye-academy.com';
+  const phone = content?.contactPage?.phone || '+20 123 456 7890';
+  const address = content?.contactPage?.address || 'Cairo, Egypt';
+  const officeHours = content?.contactPage?.officeHours?.[currentLang] || 'Sunday - Thursday: 9:00 AM - 6:00 PM';
+  const socialMedia = content?.socialMedia || {};
+
   const contactInfo = [
     {
       icon: <Email fontSize="large" />,
       title: 'Email',
-      content: 'info@greendye-academy.com',
-      link: 'mailto:info@greendye-academy.com',
+      content: email,
+      link: `mailto:${email}`,
     },
     {
       icon: <Phone fontSize="large" />,
       title: 'Phone',
-      content: '+20 123 456 7890',
-      link: 'tel:+201234567890',
+      content: phone,
+      link: `tel:${phone.replace(/\s/g, '')}`,
     },
     {
       icon: <LocationOn fontSize="large" />,
       title: 'Address',
-      content: 'Cairo, Egypt',
+      content: address,
       link: null,
     },
   ];
+
+  const socialLinks = [
+    { name: 'Facebook', icon: <Facebook />, url: socialMedia.facebook },
+    { name: 'Twitter', icon: <Twitter />, url: socialMedia.twitter },
+    { name: 'LinkedIn', icon: <LinkedIn />, url: socialMedia.linkedin },
+    { name: 'Instagram', icon: <Instagram />, url: socialMedia.instagram },
+    { name: 'YouTube', icon: <YouTube />, url: socialMedia.youtube },
+  ].filter(link => link.url && link.url.trim() !== '');
 
   return (
     <Box>
@@ -195,16 +268,34 @@ const Contact = () => {
               <Typography variant="h6" gutterBottom>
                 Office Hours
               </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Monday - Friday: 9:00 AM - 6:00 PM
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Saturday: 10:00 AM - 4:00 PM
-              </Typography>
-              <Typography variant="body2" color="text.secondary">
-                Sunday: Closed
+              <Typography variant="body2" color="text.secondary" style={{ whiteSpace: 'pre-line' }}>
+                {officeHours}
               </Typography>
             </Box>
+
+            {/* Social Media Links */}
+            {socialLinks.length > 0 && (
+              <Box sx={{ mt: 4, p: 3, bgcolor: 'grey.50', borderRadius: 1 }}>
+                <Typography variant="h6" gutterBottom>
+                  Follow Us
+                </Typography>
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  {socialLinks.map((social) => (
+                    <IconButton
+                      key={social.name}
+                      component="a"
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      sx={{ color: 'primary.main' }}
+                      aria-label={social.name}
+                    >
+                      {social.icon}
+                    </IconButton>
+                  ))}
+                </Box>
+              </Box>
+            )}
           </Grid>
         </Grid>
       </Container>

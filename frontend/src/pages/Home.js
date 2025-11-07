@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Container,
@@ -7,37 +7,83 @@ import {
   Box,
   Grid,
   Card,
-  CardContent
+  CardContent,
+  CircularProgress,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import { School, Verified, Language, People } from '@mui/icons-material';
+import * as Icons from '@mui/icons-material';
+import axios from 'axios';
 
 const Home = () => {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
+  const [content, setContent] = useState(null);
 
-  const features = [
-    {
-      icon: <School fontSize="large" />,
-      title: 'Quality Education',
-      description: 'Access world-class courses from expert trainers'
-    },
-    {
-      icon: <Verified fontSize="large" />,
-      title: 'Verified Certificates',
-      description: 'Earn verified certificates upon course completion'
-    },
-    {
-      icon: <Language fontSize="large" />,
-      title: 'Multi-Language Support',
-      description: 'Learn in Arabic, English, or French'
-    },
-    {
-      icon: <People fontSize="large" />,
-      title: 'Expert Trainers',
-      description: 'Learn from verified and accredited trainers'
+  useEffect(() => {
+    fetchContent();
+  }, []);
+
+  const fetchContent = async () => {
+    try {
+      setLoading(true);
+      const response = await axios.get('/api/admin/content-settings/public');
+      setContent(response.data.data);
+    } catch (error) {
+      console.error('Error fetching content:', error);
+      // Fall back to default content if fetch fails
+      setContent({
+        homePage: {
+          heroTitle: {
+            en: 'Welcome to GreenDye Academy',
+            ar: 'مرحبًا بك في أكاديمية GreenDye',
+            fr: 'Bienvenue à l\'Académie GreenDye',
+          },
+          heroSubtitle: {
+            en: 'Learn, Grow, and Succeed with Quality Education',
+            ar: 'تعلم، انمو، وانجح مع التعليم الجيد',
+            fr: 'Apprendre, Grandir et Réussir avec une Éducation de Qualité',
+          },
+          features: [
+            { icon: 'School', title: 'Quality Education', description: 'Access world-class courses from expert trainers' },
+            { icon: 'Verified', title: 'Verified Certificates', description: 'Earn verified certificates upon course completion' },
+            { icon: 'Language', title: 'Multi-Language Support', description: 'Learn in Arabic, English, or French' },
+            { icon: 'People', title: 'Expert Trainers', description: 'Learn from verified and accredited trainers' },
+          ],
+        },
+      });
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
+
+  const renderIcon = (iconName) => {
+    const IconComponent = Icons[iconName];
+    if (!IconComponent) {
+      return <Icons.School fontSize="large" />;
+    }
+    return <IconComponent fontSize="large" />;
+  };
+
+  const getCurrentLang = () => {
+    const lang = i18n.language;
+    if (lang === 'ar') return 'ar';
+    if (lang === 'fr') return 'fr';
+    return 'en';
+  };
+
+  if (loading) {
+    return (
+      <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  const currentLang = getCurrentLang();
+  const heroTitle = content?.homePage?.heroTitle?.[currentLang] || t('heroTitle');
+  const heroSubtitle = content?.homePage?.heroSubtitle?.[currentLang] || t('heroSubtitle');
+  const features = content?.homePage?.features || [];
 
   return (
     <Box>
@@ -52,10 +98,10 @@ const Home = () => {
       >
         <Container maxWidth="md">
           <Typography variant="h2" component="h1" gutterBottom>
-            {t('heroTitle')}
+            {heroTitle}
           </Typography>
           <Typography variant="h5" component="p" gutterBottom>
-            {t('heroSubtitle')}
+            {heroSubtitle}
           </Typography>
           <Box sx={{ mt: 4 }}>
             <Button
@@ -89,7 +135,7 @@ const Home = () => {
             <Grid item xs={12} sm={6} md={3} key={index}>
               <Card sx={{ height: '100%', textAlign: 'center', p: 2 }}>
                 <Box sx={{ color: 'primary.main', mb: 2 }}>
-                  {feature.icon}
+                  {renderIcon(feature.icon)}
                 </Box>
                 <CardContent>
                   <Typography variant="h6" gutterBottom>

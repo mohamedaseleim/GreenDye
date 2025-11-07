@@ -34,6 +34,8 @@ import {
   Publish as PublishIcon
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import adminService from '../services/adminService';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -56,6 +58,31 @@ const AdminPages = () => {
     showInFooter: false,
     menuOrder: 0
   });
+
+  // Quill editor configuration
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      [{ 'align': [] }],
+      ['link', 'image', 'video'],
+      [{ 'color': [] }, { 'background': [] }],
+      ['blockquote', 'code-block'],
+      ['clean']
+    ]
+  };
+
+  const quillFormats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet', 'indent',
+    'align',
+    'link', 'image', 'video',
+    'color', 'background',
+    'blockquote', 'code-block'
+  ];
 
   useEffect(() => {
     if (!user || user.role !== 'admin') {
@@ -361,14 +388,20 @@ const AdminPages = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={6}
-                label="Content (EN)"
-                value={formData.content.en}
-                onChange={(e) => handleInputChange('content', e.target.value, 'en')}
-              />
+              <Box>
+                <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                  Content (EN)
+                </Typography>
+                <Box sx={{ '& .quill': { height: '300px', mb: '50px' } }}>
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.content.en}
+                    onChange={(value) => handleInputChange('content', value, 'en')}
+                    modules={quillModules}
+                    formats={quillFormats}
+                  />
+                </Box>
+              </Box>
             </Grid>
             <Grid item xs={12}>
               <TextField
@@ -395,15 +428,20 @@ const AdminPages = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Content (AR)"
-                value={formData.content.ar}
-                onChange={(e) => handleInputChange('content', e.target.value, 'ar')}
-                inputProps={{ dir: 'rtl' }}
-              />
+              <Box>
+                <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                  Content (AR)
+                </Typography>
+                <Box sx={{ '& .quill': { height: '300px', mb: '50px' }, direction: 'rtl' }}>
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.content.ar}
+                    onChange={(value) => handleInputChange('content', value, 'ar')}
+                    modules={quillModules}
+                    formats={quillFormats}
+                  />
+                </Box>
+              </Box>
             </Grid>
 
             {/* French Content */}
@@ -421,14 +459,20 @@ const AdminPages = () => {
               />
             </Grid>
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={4}
-                label="Content (FR)"
-                value={formData.content.fr}
-                onChange={(e) => handleInputChange('content', e.target.value, 'fr')}
-              />
+              <Box>
+                <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
+                  Content (FR)
+                </Typography>
+                <Box sx={{ '& .quill': { height: '300px', mb: '50px' } }}>
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.content.fr}
+                    onChange={(value) => handleInputChange('content', value, 'fr')}
+                    modules={quillModules}
+                    formats={quillFormats}
+                  />
+                </Box>
+              </Box>
             </Grid>
           </Grid>
         </DialogContent>

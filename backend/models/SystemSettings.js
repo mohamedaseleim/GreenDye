@@ -203,14 +203,29 @@ SystemSettingsSchema.statics.getSettings = async function() {
 SystemSettingsSchema.statics.updateSettings = async function(updates, userId) {
   const settings = await this.getSettings();
   
-  // Deep merge helper function
+  // Deep merge helper function with improved edge case handling
   const deepMerge = (target, source) => {
+    // Handle null or undefined target
+    if (!target) {
+      target = {};
+    }
+    
     const result = { ...target };
+    
     for (const key in source) {
-      if (source[key] !== null && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-        result[key] = deepMerge(result[key] || {}, source[key]);
-      } else {
-        result[key] = source[key];
+      if (Object.prototype.hasOwnProperty.call(source, key)) {
+        const sourceValue = source[key];
+        
+        // Handle null and undefined explicitly
+        if (sourceValue === null || sourceValue === undefined) {
+          result[key] = sourceValue;
+        } else if (typeof sourceValue === 'object' && !Array.isArray(sourceValue)) {
+          // Recursively merge nested objects
+          result[key] = deepMerge(result[key] || {}, sourceValue);
+        } else {
+          // Directly assign primitive values and arrays
+          result[key] = sourceValue;
+        }
       }
     }
     return result;

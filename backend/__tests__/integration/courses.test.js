@@ -19,7 +19,8 @@ describe('Course API Endpoints', () => {
         description: { en: 'Description 1' },
         instructor: trainerAuth.user._id,
         category: 'programming',
-        isPublished: true
+        isPublished: true,
+        approvalStatus: 'approved'
       });
 
       await Course.create({
@@ -27,7 +28,8 @@ describe('Course API Endpoints', () => {
         description: { en: 'Description 2' },
         instructor: trainerAuth.user._id,
         category: 'design',
-        isPublished: true
+        isPublished: true,
+        approvalStatus: 'approved'
       });
 
       const response = await request(app)
@@ -44,7 +46,8 @@ describe('Course API Endpoints', () => {
         description: { en: 'Description' },
         instructor: trainerAuth.user._id,
         category: 'programming',
-        isPublished: true
+        isPublished: true,
+        approvalStatus: 'approved'
       });
 
       await Course.create({
@@ -70,7 +73,8 @@ describe('Course API Endpoints', () => {
         description: { en: 'Description' },
         instructor: trainerAuth.user._id,
         category: 'programming',
-        isPublished: true
+        isPublished: true,
+        approvalStatus: 'approved'
       });
 
       await Course.create({
@@ -78,7 +82,8 @@ describe('Course API Endpoints', () => {
         description: { en: 'Description' },
         instructor: trainerAuth.user._id,
         category: 'design',
-        isPublished: true
+        isPublished: true,
+        approvalStatus: 'approved'
       });
 
       const response = await request(app)
@@ -88,6 +93,43 @@ describe('Course API Endpoints', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data).toHaveLength(1);
       expect(response.body.data[0].category).toBe('programming');
+    });
+
+    it('should not return published but unapproved courses', async () => {
+      await Course.create({
+        title: { en: 'Published Approved Course' },
+        description: { en: 'Description' },
+        instructor: trainerAuth.user._id,
+        category: 'technology',
+        isPublished: true,
+        approvalStatus: 'approved'
+      });
+
+      await Course.create({
+        title: { en: 'Published Pending Course' },
+        description: { en: 'Description' },
+        instructor: trainerAuth.user._id,
+        category: 'technology',
+        isPublished: true,
+        approvalStatus: 'pending'
+      });
+
+      await Course.create({
+        title: { en: 'Published Draft Course' },
+        description: { en: 'Description' },
+        instructor: trainerAuth.user._id,
+        category: 'technology',
+        isPublished: true,
+        approvalStatus: 'draft'
+      });
+
+      const response = await request(app)
+        .get('/api/courses')
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.data).toHaveLength(1);
+      expect(response.body.data[0].title.en).toBe('Published Approved Course');
     });
   });
 

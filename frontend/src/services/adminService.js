@@ -845,6 +845,27 @@ const adminService = {
     const response = await axios.post(`${API_URL}/email-marketing/newsletters/${id}/publish`, {}, getAuthHeader());
     return response.data;
   },
+
+  // ========== CONTENT SETTINGS ==========
+  getContentSettings: async () => {
+    const response = await axios.get(`${API_URL}/content-settings`, getAuthHeader());
+    return response.data;
+  },
+
+  updateHomeContent: async (data) => {
+    const response = await axios.put(`${API_URL}/content-settings/home`, data, getAuthHeader());
+    return response.data;
+  },
+
+  updateAboutContent: async (data) => {
+    const response = await axios.put(`${API_URL}/content-settings/about`, data, getAuthHeader());
+    return response.data;
+  },
+
+  updateContactContent: async (data) => {
+    const response = await axios.put(`${API_URL}/content-settings/contact`, data, getAuthHeader());
+    return response.data;
+  },
 };
 
 export default adminService;

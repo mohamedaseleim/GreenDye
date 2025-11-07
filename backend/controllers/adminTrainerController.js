@@ -154,7 +154,7 @@ exports.createTrainer = async (req, res, next) => {
       await trainer.save();
     } catch (qrError) {
       // Log warning but continue - QR code is not critical for trainer creation
-      console.warn(`QR code generation failed for trainer: ${trainer.trainerId}. Error: ${qrError.message}. Note: Trainer profile created successfully but QR code can be regenerated later if needed`);
+      console.warn(`QR code generation failed for trainer ID: ${trainer.trainerId}. Note: Trainer profile created successfully but QR code can be regenerated later if needed`);
       // Trainer was created successfully, just without QR code
     }
 
@@ -196,6 +196,21 @@ exports.updateTrainer = async (req, res, next) => {
         runValidators: true
       }
     ).populate('user', 'name email avatar');
+
+    // Generate QR code if it doesn't exist
+    if (!trainer.qrCode && trainer.trainerId) {
+      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const verificationUrl = `${baseUrl}/verify/trainer/${trainer.trainerId}`;
+      
+      try {
+        const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl);
+        trainer.qrCode = qrCodeDataUrl;
+        trainer.verificationUrl = verificationUrl;
+        await trainer.save();
+      } catch (qrError) {
+        console.warn(`QR code generation failed for trainer ID: ${trainer.trainerId}`);
+      }
+    }
 
     res.status(200).json({
       success: true,

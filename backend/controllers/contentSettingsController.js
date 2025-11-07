@@ -1,6 +1,48 @@
-const ContentSettings = require('../models/ContentSettings');
 const logger = require('../utils/logger');
 const { getOrCreateSettings } = require('../utils/contentSettingsHelper');
+
+/**
+ * Sanitize text input to prevent XSS attacks
+ * @param {string} text - Text to sanitize
+ * @returns {string} Sanitized text
+ */
+const sanitizeText = (text) => {
+  if (typeof text !== 'string') return text;
+  // Remove script tags and potentially dangerous HTML
+  return text
+    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '')
+    .trim();
+};
+
+/**
+ * Sanitize multilingual object
+ * @param {Object} obj - Object with language keys
+ * @returns {Object} Sanitized object
+ */
+const sanitizeMultilingual = (obj) => {
+  if (!obj || typeof obj !== 'object') return obj;
+  const sanitized = {};
+  for (const [key, value] of Object.entries(obj)) {
+    sanitized[key] = sanitizeText(value);
+  }
+  return sanitized;
+};
+
+/**
+ * Sanitize features array
+ * @param {Array} features - Array of feature objects
+ * @returns {Array} Sanitized features array
+ */
+const sanitizeFeatures = (features) => {
+  if (!Array.isArray(features)) return features;
+  return features.map((feature) => ({
+    icon: sanitizeText(feature.icon),
+    title: sanitizeText(feature.title),
+    description: sanitizeText(feature.description),
+  }));
+};
 
 // @desc    Get all content settings
 // @route   GET /api/admin/content-settings
@@ -32,23 +74,23 @@ exports.updateHomeContent = async (req, res) => {
 
     const settings = await getOrCreateSettings();
 
-    // Update home page content
+    // Update home page content with sanitization
     if (heroTitle) {
       settings.homePage.heroTitle = {
         ...settings.homePage.heroTitle,
-        ...heroTitle,
+        ...sanitizeMultilingual(heroTitle),
       };
     }
 
     if (heroSubtitle) {
       settings.homePage.heroSubtitle = {
         ...settings.homePage.heroSubtitle,
-        ...heroSubtitle,
+        ...sanitizeMultilingual(heroSubtitle),
       };
     }
 
     if (features) {
-      settings.homePage.features = features;
+      settings.homePage.features = sanitizeFeatures(features);
     }
 
     await settings.save();
@@ -79,23 +121,23 @@ exports.updateAboutContent = async (req, res) => {
 
     const settings = await getOrCreateSettings();
 
-    // Update about page content
+    // Update about page content with sanitization
     if (mission) {
       settings.aboutPage.mission = {
         ...settings.aboutPage.mission,
-        ...mission,
+        ...sanitizeMultilingual(mission),
       };
     }
 
     if (vision) {
       settings.aboutPage.vision = {
         ...settings.aboutPage.vision,
-        ...vision,
+        ...sanitizeMultilingual(vision),
       };
     }
 
     if (features) {
-      settings.aboutPage.features = features;
+      settings.aboutPage.features = sanitizeFeatures(features);
     }
 
     await settings.save();
@@ -126,22 +168,27 @@ exports.updateContactContent = async (req, res) => {
 
     const settings = await getOrCreateSettings();
 
-    // Update contact page content
-    if (email) settings.contactPage.email = email;
-    if (phone) settings.contactPage.phone = phone;
-    if (address) settings.contactPage.address = address;
+    // Update contact page content with sanitization
+    if (email) settings.contactPage.email = sanitizeText(email);
+    if (phone) settings.contactPage.phone = sanitizeText(phone);
+    if (address) settings.contactPage.address = sanitizeText(address);
 
     if (officeHours) {
       settings.contactPage.officeHours = {
         ...settings.contactPage.officeHours,
-        ...officeHours,
+        ...sanitizeMultilingual(officeHours),
       };
     }
 
     if (socialMedia) {
+      // Sanitize social media URLs
+      const sanitizedSocial = {};
+      for (const [key, value] of Object.entries(socialMedia)) {
+        sanitizedSocial[key] = sanitizeText(value);
+      }
       settings.socialMedia = {
         ...settings.socialMedia,
-        ...socialMedia,
+        ...sanitizedSocial,
       };
     }
 

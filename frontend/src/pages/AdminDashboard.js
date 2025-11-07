@@ -24,7 +24,8 @@ import {
   Settings as SettingsIcon,
   LibraryBooks as EnrollmentIcon,
   Email as EmailIcon,
-  Backup as BackupIcon
+  Backup as BackupIcon,
+  EditNote as ContentIcon
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -77,6 +78,7 @@ const AdminDashboard = () => {
       '/admin/enrollments',
       '/admin/email-marketing',
       '/admin/backup',
+      '/admin/content-settings',
       '/admin/settings'
     ];
     
@@ -114,6 +116,7 @@ const AdminDashboard = () => {
           <Tab label="Enrollments" icon={<EnrollmentIcon />} iconPosition="start" />
           <Tab label="Email Marketing" icon={<EmailIcon />} iconPosition="start" />
           <Tab label="Backup & Export" icon={<BackupIcon />} iconPosition="start" />
+          <Tab label="Content Settings" icon={<ContentIcon />} iconPosition="start" />
           <Tab label="Settings" icon={<SettingsIcon />} iconPosition="start" />
         </Tabs>
       </Box>

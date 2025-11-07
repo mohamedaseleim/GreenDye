@@ -3,17 +3,32 @@ const { getOrCreateSettings } = require('../utils/contentSettingsHelper');
 
 /**
  * Sanitize text input to prevent XSS attacks
+ * Uses a more robust approach to remove all HTML tags and dangerous content
  * @param {string} text - Text to sanitize
  * @returns {string} Sanitized text
  */
 const sanitizeText = (text) => {
   if (typeof text !== 'string') return text;
-  // Remove script tags and potentially dangerous HTML
-  return text
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<iframe\b[^<]*(?:(?!<\/iframe>)<[^<]*)*<\/iframe>/gi, '')
-    .replace(/on\w+="[^"]*"/gi, '')
-    .trim();
+  
+  // Strip all HTML tags completely for security
+  // This removes all angle brackets and their content
+  let sanitized = text.replace(/<[^>]*>/g, '');
+  
+  // Remove any remaining HTML entities that could be dangerous
+  sanitized = sanitized
+    .replace(/&lt;/g, '')
+    .replace(/&gt;/g, '')
+    .replace(/&quot;/g, '"')
+    .replace(/&#x27;/g, "'")
+    .replace(/&amp;/g, '&');
+  
+  // Remove any JavaScript event handlers
+  sanitized = sanitized.replace(/on\w+\s*=/gi, '');
+  
+  // Remove javascript: protocol
+  sanitized = sanitized.replace(/javascript:/gi, '');
+  
+  return sanitized.trim();
 };
 
 /**

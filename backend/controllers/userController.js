@@ -392,12 +392,16 @@ exports.bulkUpdateUsers = async (req, res, next) => {
       { runValidators: true }
     );
 
-    // Log action
+    // Log action (only log field names for privacy, not values)
     await AuditTrail.create({
       user: req.user._id,
       action: 'BULK_UPDATE_USERS',
       details: `Bulk updated ${result.modifiedCount} users`,
-      metadata: { userIds, updates, modifiedCount: result.modifiedCount },
+      metadata: { 
+        userCount: userIds.length, 
+        updatedFields: Object.keys(sanitizedUpdates), 
+        modifiedCount: result.modifiedCount 
+      },
       ipAddress: req.ip
     });
 

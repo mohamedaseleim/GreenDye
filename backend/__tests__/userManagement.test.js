@@ -1,45 +1,26 @@
 const request = require('supertest');
 const mongoose = require('mongoose');
-const app = require('../server');
+const { app } = require('../server');
 const User = require('../models/User');
 const AuditTrail = require('../models/AuditTrail');
+const { createAuthenticatedUser } = require('./utils/testHelpers');
 
 describe('User Management API Tests', () => {
   let adminToken;
   let adminUser;
   let testUser;
+  let testUserToken;
 
-  beforeAll(async () => {
-    // Connect to test database
-    if (mongoose.connection.readyState === 0) {
-      await mongoose.connect(process.env.MONGO_URI_TEST || process.env.MONGO_URI);
-    }
+  beforeEach(async () => {
+    // Create admin user with token
+    const adminAuth = await createAuthenticatedUser('admin');
+    adminUser = adminAuth.user;
+    adminToken = adminAuth.token;
 
-    // Create admin user
-    adminUser = await User.create({
-      name: 'Admin User',
-      email: 'admin@test.com',
-      password: 'password123',
-      role: 'admin'
-    });
-    adminToken = adminUser.generateAuthToken();
-
-    // Create test user
-    testUser = await User.create({
-      name: 'Test User',
-      email: 'testuser@test.com',
-      password: 'password123',
-      role: 'student',
-      status: 'active',
-      isActive: true
-    });
-  });
-
-  afterAll(async () => {
-    // Clean up
-    await User.deleteMany({});
-    await AuditTrail.deleteMany({});
-    await mongoose.connection.close();
+    // Create test user with token
+    const testAuth = await createAuthenticatedUser('student');
+    testUser = testAuth.user;
+    testUserToken = testAuth.token;
   });
 
   describe('GET /api/users', () => {
@@ -79,10 +60,9 @@ describe('User Management API Tests', () => {
     });
 
     it('should deny access to non-admin users', async () => {
-      const userToken = testUser.generateAuthToken();
       const response = await request(app)
         .get('/api/users')
-        .set('Authorization', `Bearer ${userToken}`)
+        .set('Authorization', `Bearer ${testUserToken}`)
         .expect(403);
 
       expect(response.body.success).toBe(false);
@@ -220,16 +200,16 @@ describe('User Management API Tests', () => {
   describe('POST /api/users/bulk-update', () => {
     let user1, user2;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       user1 = await User.create({
         name: 'Bulk User 1',
-        email: 'bulk1@test.com',
+        email: `bulk1-${Date.now()}@test.com`,
         password: 'password123',
         role: 'student'
       });
       user2 = await User.create({
         name: 'Bulk User 2',
-        email: 'bulk2@test.com',
+        email: `bulk2-${Date.now()}@test.com`,
         password: 'password123',
         role: 'student'
       });
@@ -295,22 +275,22 @@ describe('User Management API Tests', () => {
   describe('POST /api/users/bulk-delete', () => {
     let user1, user2, adminUser2;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       user1 = await User.create({
         name: 'Delete User 1',
-        email: 'delete1@test.com',
+        email: `delete1-${Date.now()}@test.com`,
         password: 'password123',
         role: 'student'
       });
       user2 = await User.create({
         name: 'Delete User 2',
-        email: 'delete2@test.com',
+        email: `delete2-${Date.now()}@test.com`,
         password: 'password123',
         role: 'student'
       });
       adminUser2 = await User.create({
         name: 'Admin User 2',
-        email: 'admin2@test.com',
+        email: `admin2-${Date.now()}@test.com`,
         password: 'password123',
         role: 'admin'
       });
@@ -383,6 +363,27 @@ describe('User Management API Tests', () => {
       expect(response.body.success).toBe(true);
       expect(response.body.data.name).toBe('Updated Name');
       expect(response.body.data.role).toBe('trainer');
+    });
+
+    it('should not allow password update via updateUser endpoint', async () => {
+      const originalUser = await User.findById(testUser._id).select('+password');
+      const originalPassword = originalUser.password;
+
+      await request(app)
+        .put(`/api/users/${testUser._id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          password: 'newpassword123',
+          name: 'Updated Name'
+        })
+        .expect(200);
+
+      // Verify password was NOT changed
+      const updatedUser = await User.findById(testUser._id).select('+password');
+      expect(updatedUser.password).toBe(originalPassword);
+      
+      // Verify other fields were updated
+      expect(updatedUser.name).toBe('Updated Name');
     });
   });
 

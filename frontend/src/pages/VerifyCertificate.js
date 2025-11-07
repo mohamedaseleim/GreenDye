@@ -48,9 +48,16 @@ const VerifyCertificate = () => {
     setVerified(null);
 
     try {
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/verify/certificate/${certificateId}`
-      );
+      // Get verification token from URL query parameters if available
+      const token = searchParams.get('t');
+      
+      // Build the verification URL with token if present
+      let verificationUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/verify/certificate/${certificateId}`;
+      if (token) {
+        verificationUrl += `?t=${token}`;
+      }
+      
+      const response = await axios.get(verificationUrl);
       
       setCertificate(response.data.data);
       setVerified(response.data.verified);

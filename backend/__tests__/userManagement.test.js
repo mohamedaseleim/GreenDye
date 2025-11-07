@@ -364,6 +364,27 @@ describe('User Management API Tests', () => {
       expect(response.body.data.name).toBe('Updated Name');
       expect(response.body.data.role).toBe('trainer');
     });
+
+    it('should not allow password update via updateUser endpoint', async () => {
+      const originalUser = await User.findById(testUser._id).select('+password');
+      const originalPassword = originalUser.password;
+
+      await request(app)
+        .put(`/api/users/${testUser._id}`)
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          password: 'newpassword123',
+          name: 'Updated Name'
+        })
+        .expect(200);
+
+      // Verify password was NOT changed
+      const updatedUser = await User.findById(testUser._id).select('+password');
+      expect(updatedUser.password).toBe(originalPassword);
+      
+      // Verify other fields were updated
+      expect(updatedUser.name).toBe('Updated Name');
+    });
   });
 
   describe('DELETE /api/users/:id', () => {

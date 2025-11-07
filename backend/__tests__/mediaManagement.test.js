@@ -4,7 +4,7 @@ const fs = require('fs').promises;
 const User = require('../models/User');
 const Media = require('../models/Media');
 const AuditTrail = require('../models/AuditTrail');
-const { getAllMedia, getMedia, updateMedia, deleteMedia } = require('../controllers/adminCMSController');
+const { getAllMedia, updateMedia, deleteMedia } = require('../controllers/adminCMSController');
 const { uploadMedia } = require('../controllers/adminMediaController');
 
 describe('Media Management Security Tests', () => {
@@ -108,7 +108,7 @@ describe('Media Management Security Tests', () => {
       Media.create = originalCreate;
 
       // Cleanup
-      await fs.rmdir(uploadDir, { recursive: true }).catch(() => {});
+      await fs.rm(uploadDir, { recursive: true, force: true }).catch(() => {});
     });
   });
 

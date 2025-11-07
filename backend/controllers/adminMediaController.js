@@ -25,20 +25,20 @@ const storage = multer.diskStorage({
   }
 });
 
+// Allowed file types (extracted as constants for reuse)
+const ALLOWED_IMAGE_TYPES = /jpeg|jpg|png|gif|webp|svg/;
+const ALLOWED_VIDEO_TYPES = /mp4|webm|ogg|avi|mov/;
+const ALLOWED_DOC_TYPES = /pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv/;
+
 // File filter
 const fileFilter = (req, file, cb) => {
-  // Allowed file types
-  const allowedImageTypes = /jpeg|jpg|png|gif|webp|svg/;
-  const allowedVideoTypes = /mp4|webm|ogg|avi|mov/;
-  const allowedDocTypes = /pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv/;
-  
   const extname = path.extname(file.originalname).toLowerCase().replace('.', '');
   
   // Check if file type is allowed
   if (
-    allowedImageTypes.test(extname) ||
-    allowedVideoTypes.test(extname) ||
-    allowedDocTypes.test(extname)
+    ALLOWED_IMAGE_TYPES.test(extname) ||
+    ALLOWED_VIDEO_TYPES.test(extname) ||
+    ALLOWED_DOC_TYPES.test(extname)
   ) {
     cb(null, true);
   } else {
@@ -87,12 +87,13 @@ exports.uploadMedia = async (req, res, next) => {
       
       // Validate MIME type matches file extension
       const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
-      const isValidImage = mediaType === 'image' && /jpeg|jpg|png|gif|webp|svg/.test(ext);
-      const isValidVideo = mediaType === 'video' && /mp4|webm|ogg|avi|mov/.test(ext);
-      const isValidDoc = mediaType === 'document' && /pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv/.test(ext);
+      const isValidImage = mediaType === 'image' && ALLOWED_IMAGE_TYPES.test(ext);
+      const isValidVideo = mediaType === 'video' && ALLOWED_VIDEO_TYPES.test(ext);
+      const isValidDoc = mediaType === 'document' && ALLOWED_DOC_TYPES.test(ext);
       
       if (!isValidImage && !isValidVideo && !isValidDoc && mediaType !== 'other') {
-        throw new Error(`File type mismatch for ${file.originalname}: MIME type ${file.mimetype} does not match extension .${ext}`);
+        // Don't expose filename in error to prevent information disclosure
+        throw new Error('File type mismatch: MIME type does not match file extension');
       }
       
       const mediaData = {
@@ -137,8 +138,9 @@ exports.uploadMedia = async (req, res, next) => {
         await fs.unlink(filePath);
       } catch (cleanupError) {
         // Log cleanup errors but don't throw - we want to report the original error
+        // Don't log full path to avoid potential information disclosure
         // eslint-disable-next-line no-console
-        console.error(`Failed to clean up file ${filePath}:`, cleanupError);
+        console.error('Failed to clean up uploaded file during error recovery:', cleanupError.message);
       }
     }
     next(error);

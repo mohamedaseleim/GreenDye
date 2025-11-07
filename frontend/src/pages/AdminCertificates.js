@@ -460,9 +460,9 @@ const AdminCertificates = () => {
               {certificates.map((cert) => (
                 <TableRow key={cert._id}>
                   <TableCell>{cert.certificateId}</TableCell>
-                  <TableCell>{cert.userName}</TableCell>
+                  <TableCell>{cert.userName || cert.traineeName || cert.user?.name || 'N/A'}</TableCell>
                   <TableCell>
-                    {cert.course?.title?.en || cert.courseName?.en || 'N/A'}
+                    {cert.courseTitle || cert.course?.title?.en || cert.courseName?.en || 'N/A'}
                   </TableCell>
                   <TableCell>{cert.grade}</TableCell>
                   <TableCell>

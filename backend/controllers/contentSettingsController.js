@@ -1,18 +1,13 @@
 const ContentSettings = require('../models/ContentSettings');
 const logger = require('../utils/logger');
+const { getOrCreateSettings } = require('../utils/contentSettingsHelper');
 
 // @desc    Get all content settings
 // @route   GET /api/admin/content-settings
 // @access  Private/Admin
 exports.getContentSettings = async (req, res) => {
   try {
-    // Get or create content settings (singleton pattern)
-    let settings = await ContentSettings.findOne();
-    
-    if (!settings) {
-      // Create default settings if none exist
-      settings = await ContentSettings.create({});
-    }
+    const settings = await getOrCreateSettings();
 
     res.status(200).json({
       success: true,
@@ -35,12 +30,7 @@ exports.updateHomeContent = async (req, res) => {
   try {
     const { heroTitle, heroSubtitle, features } = req.body;
 
-    // Get or create content settings
-    let settings = await ContentSettings.findOne();
-    
-    if (!settings) {
-      settings = await ContentSettings.create({});
-    }
+    const settings = await getOrCreateSettings();
 
     // Update home page content
     if (heroTitle) {
@@ -87,12 +77,7 @@ exports.updateAboutContent = async (req, res) => {
   try {
     const { mission, vision, features } = req.body;
 
-    // Get or create content settings
-    let settings = await ContentSettings.findOne();
-    
-    if (!settings) {
-      settings = await ContentSettings.create({});
-    }
+    const settings = await getOrCreateSettings();
 
     // Update about page content
     if (mission) {
@@ -139,12 +124,7 @@ exports.updateContactContent = async (req, res) => {
   try {
     const { email, phone, address, officeHours, socialMedia } = req.body;
 
-    // Get or create content settings
-    let settings = await ContentSettings.findOne();
-    
-    if (!settings) {
-      settings = await ContentSettings.create({});
-    }
+    const settings = await getOrCreateSettings();
 
     // Update contact page content
     if (email) settings.contactPage.email = email;

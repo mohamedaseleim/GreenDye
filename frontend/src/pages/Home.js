@@ -27,6 +27,7 @@ const Home = () => {
   const fetchContent = async () => {
     try {
       setLoading(true);
+      // Use relative path for API call
       const response = await axios.get('/api/admin/content-settings/public');
       setContent(response.data.data);
     } catch (error) {

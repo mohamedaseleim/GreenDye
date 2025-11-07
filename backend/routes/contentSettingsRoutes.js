@@ -7,16 +7,12 @@ const {
   updateAboutContent,
   updateContactContent,
 } = require('../controllers/contentSettingsController');
+const { getOrCreateSettings } = require('../utils/contentSettingsHelper');
 
 // Public route to get content settings
 router.get('/public', async (req, res) => {
   try {
-    const ContentSettings = require('../models/ContentSettings');
-    let settings = await ContentSettings.findOne();
-    
-    if (!settings) {
-      settings = await ContentSettings.create({});
-    }
+    const settings = await getOrCreateSettings();
 
     res.status(200).json({
       success: true,

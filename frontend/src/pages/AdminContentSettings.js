@@ -182,9 +182,10 @@ const AdminContentSettings = () => {
     try {
       setSaving(true);
 
+      let response;
       if (activeTab === 0) {
         // Save Home Page
-        await adminService.updateHomeContent({
+        response = await adminService.updateHomeContent({
           heroTitle: settings.homePage.heroTitle,
           heroSubtitle: settings.homePage.heroSubtitle,
           features: settings.homePage.features,
@@ -192,7 +193,7 @@ const AdminContentSettings = () => {
         toast.success('Home page content updated successfully');
       } else if (activeTab === 1) {
         // Save About Page
-        await adminService.updateAboutContent({
+        response = await adminService.updateAboutContent({
           mission: settings.aboutPage.mission,
           vision: settings.aboutPage.vision,
           features: settings.aboutPage.features,
@@ -200,7 +201,7 @@ const AdminContentSettings = () => {
         toast.success('About page content updated successfully');
       } else if (activeTab === 2) {
         // Save Contact Page
-        await adminService.updateContactContent({
+        response = await adminService.updateContactContent({
           email: settings.contactPage.email,
           phone: settings.contactPage.phone,
           address: settings.contactPage.address,
@@ -210,7 +211,19 @@ const AdminContentSettings = () => {
         toast.success('Contact page content updated successfully');
       }
 
-      await fetchSettings();
+      // Use response data instead of refetching
+      if (response && response.data) {
+        // Merge the updated data into settings
+        setSettings(prev => ({
+          ...prev,
+          ...(activeTab === 0 && { homePage: response.data }),
+          ...(activeTab === 1 && { aboutPage: response.data }),
+          ...(activeTab === 2 && { 
+            contactPage: response.data.contactPage,
+            socialMedia: response.data.socialMedia 
+          }),
+        }));
+      }
     } catch (error) {
       console.error('Error saving settings:', error);
       toast.error('Failed to save content settings');

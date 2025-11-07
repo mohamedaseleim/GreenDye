@@ -16,6 +16,7 @@ import { Email, Phone, LocationOn, Send, Facebook, Twitter, LinkedIn, Instagram,
 import { toast } from 'react-toastify';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import { getCurrentLang } from '../utils/contentHelpers';
 
 const Contact = () => {
   const { i18n } = useTranslation();
@@ -89,13 +90,6 @@ const Contact = () => {
     }, 1000);
   };
 
-  const getCurrentLang = () => {
-    const lang = i18n.language;
-    if (lang === 'ar') return 'ar';
-    if (lang === 'fr') return 'fr';
-    return 'en';
-  };
-
   if (contentLoading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
@@ -104,7 +98,7 @@ const Contact = () => {
     );
   }
 
-  const currentLang = getCurrentLang();
+  const currentLang = getCurrentLang(i18n);
   const email = content?.contactPage?.email || 'info@greendye-academy.com';
   const phone = content?.contactPage?.phone || '+20 123 456 7890';
   const address = content?.contactPage?.address || 'Cairo, Egypt';

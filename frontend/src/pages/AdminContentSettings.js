@@ -213,22 +213,40 @@ const AdminContentSettings = () => {
 
       // Use response data instead of refetching
       if (response && response.data) {
-        // Merge the updated data into settings
-        setSettings(prev => ({
-          ...prev,
-          ...(activeTab === 0 && { homePage: response.data }),
-          ...(activeTab === 1 && { aboutPage: response.data }),
-          ...(activeTab === 2 && { 
-            contactPage: response.data.contactPage,
-            socialMedia: response.data.socialMedia 
-          }),
-        }));
+        // Update settings with new data based on active tab
+        updateSettingsFromResponse(response.data, activeTab);
       }
     } catch (error) {
       console.error('Error saving settings:', error);
       toast.error('Failed to save content settings');
     } finally {
       setSaving(false);
+    }
+  };
+
+  const updateSettingsFromResponse = (data, tab) => {
+    switch (tab) {
+      case 0: // Home Page
+        setSettings(prev => ({
+          ...prev,
+          homePage: data,
+        }));
+        break;
+      case 1: // About Page
+        setSettings(prev => ({
+          ...prev,
+          aboutPage: data,
+        }));
+        break;
+      case 2: // Contact Page
+        setSettings(prev => ({
+          ...prev,
+          contactPage: data.contactPage,
+          socialMedia: data.socialMedia,
+        }));
+        break;
+      default:
+        break;
     }
   };
 

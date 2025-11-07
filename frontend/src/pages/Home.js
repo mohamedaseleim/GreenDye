@@ -11,8 +11,8 @@ import {
   CircularProgress,
 } from '@mui/material';
 import { useTranslation } from 'react-i18next';
-import * as Icons from '@mui/icons-material';
 import axios from 'axios';
+import { renderIcon, getCurrentLang } from '../utils/contentHelpers';
 
 const Home = () => {
   const { t, i18n } = useTranslation();
@@ -27,7 +27,6 @@ const Home = () => {
   const fetchContent = async () => {
     try {
       setLoading(true);
-      // Use relative path for API call
       const response = await axios.get('/api/admin/content-settings/public');
       setContent(response.data.data);
     } catch (error) {
@@ -58,21 +57,6 @@ const Home = () => {
     }
   };
 
-  const renderIcon = (iconName) => {
-    const IconComponent = Icons[iconName];
-    if (!IconComponent) {
-      return <Icons.School fontSize="large" />;
-    }
-    return <IconComponent fontSize="large" />;
-  };
-
-  const getCurrentLang = () => {
-    const lang = i18n.language;
-    if (lang === 'ar') return 'ar';
-    if (lang === 'fr') return 'fr';
-    return 'en';
-  };
-
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
@@ -81,7 +65,7 @@ const Home = () => {
     );
   }
 
-  const currentLang = getCurrentLang();
+  const currentLang = getCurrentLang(i18n);
   const heroTitle = content?.homePage?.heroTitle?.[currentLang] || t('heroTitle');
   const heroSubtitle = content?.homePage?.heroSubtitle?.[currentLang] || t('heroSubtitle');
   const features = content?.homePage?.features || [];

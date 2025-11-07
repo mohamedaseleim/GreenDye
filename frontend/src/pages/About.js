@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Container, Typography, Box, Grid, Card, CardContent, Paper, CircularProgress } from '@mui/material';
-import * as Icons from '@mui/icons-material';
 import { useTranslation } from 'react-i18next';
 import axios from 'axios';
+import { renderIcon, getCurrentLang } from '../utils/contentHelpers';
 
 const About = () => {
   const { i18n } = useTranslation();
@@ -48,21 +48,6 @@ const About = () => {
     }
   };
 
-  const renderIcon = (iconName) => {
-    const IconComponent = Icons[iconName];
-    if (!IconComponent) {
-      return <Icons.School fontSize="large" />;
-    }
-    return <IconComponent fontSize="large" />;
-  };
-
-  const getCurrentLang = () => {
-    const lang = i18n.language;
-    if (lang === 'ar') return 'ar';
-    if (lang === 'fr') return 'fr';
-    return 'en';
-  };
-
   if (loading) {
     return (
       <Box display="flex" justifyContent="center" alignItems="center" minHeight="60vh">
@@ -71,7 +56,7 @@ const About = () => {
     );
   }
 
-  const currentLang = getCurrentLang();
+  const currentLang = getCurrentLang(i18n);
   const mission = content?.aboutPage?.mission?.[currentLang] || '';
   const vision = content?.aboutPage?.vision?.[currentLang] || '';
   const features = content?.aboutPage?.features || [];

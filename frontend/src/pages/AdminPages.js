@@ -340,8 +340,9 @@ const AdminPages = () => {
                 type="number"
                 label="Menu Order"
                 value={formData.menuOrder}
-                onChange={(e) => handleInputChange('menuOrder', parseInt(e.target.value) || 0)}
+                onChange={(e) => handleInputChange('menuOrder', Math.max(0, parseInt(e.target.value, 10) || 0))}
                 helperText="Lower numbers appear first"
+                inputProps={{ min: 0 }}
               />
             </Grid>
 

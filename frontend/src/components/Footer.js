@@ -2,10 +2,12 @@ import React, { useState, useEffect } from 'react';
 import { Box, Container, Typography, Link, Grid } from '@mui/material';
 import { Link as RouterLink } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useLanguage } from '../contexts/LanguageContext';
 import axios from 'axios';
 
 const Footer = () => {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [footerPages, setFooterPages] = useState([]);
 
   useEffect(() => {
@@ -68,7 +70,7 @@ const Footer = () => {
                 color="inherit" 
                 display="block"
               >
-                {page.title?.[i18n.language] || page.title?.en || page.slug}
+                {page.title?.[language] || page.title?.en || page.slug}
               </Link>
             ))}
           </Grid>

@@ -11,7 +11,6 @@ describe('Admin Forum Moderation', () => {
   let adminUser;
   let studentUser;
   let course;
-  let forumPost;
 
   beforeAll(async () => {
     // Create admin user
@@ -48,7 +47,7 @@ describe('Admin Forum Moderation', () => {
     });
 
     // Create forum post
-    forumPost = await ForumPost.create({
+    await ForumPost.create({
       title: 'Test Forum Post',
       content: 'This is test content for moderation',
       author: studentUser._id,

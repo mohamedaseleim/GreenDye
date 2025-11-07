@@ -67,6 +67,30 @@ describe('User Management API Tests', () => {
 
       expect(response.body.success).toBe(false);
     });
+
+    it('should return all users when isActive filter is empty string', async () => {
+      const response = await request(app)
+        .get('/api/users?isActive=')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(Array.isArray(response.body.data)).toBe(true);
+      // Should return both active and inactive users (at least 2 from setup)
+      expect(response.body.data.length).toBeGreaterThanOrEqual(2);
+    });
+
+    it('should filter users by isActive when value is provided', async () => {
+      const response = await request(app)
+        .get('/api/users?isActive=true')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      response.body.data.forEach(user => {
+        expect(user.isActive).toBe(true);
+      });
+    });
   });
 
   describe('PUT /api/users/:id/suspend', () => {

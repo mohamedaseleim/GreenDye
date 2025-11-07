@@ -554,7 +554,18 @@ exports.getPendingForumPosts = async (req, res, next) => {
 // @access  Private/Admin
 exports.moderateForumPost = async (req, res, next) => {
   try {
-    const { status, reason } = req.body;
+    // Sanitize input to prevent MongoDB injection
+    const sanitizedBody = mongoSanitize(req.body);
+    const { status, reason } = sanitizedBody;
+
+    // Validate status
+    const validStatuses = ['pending', 'approved', 'rejected'];
+    if (!status || !validStatuses.includes(status)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid status. Must be one of: ${validStatuses.join(', ')}`
+      });
+    }
 
     const post = await ForumPost.findById(req.params.id);
 

@@ -1,5 +1,6 @@
 const Review = require('../models/Review');
 const Course = require('../models/Course');
+const AuditTrail = require('../models/AuditTrail');
 const logger = require('../utils/logger');
 const mongoSanitize = require('mongo-sanitize');
 
@@ -106,7 +107,8 @@ exports.getReviewDetails = async (req, res) => {
 exports.approveReview = async (req, res) => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const sanitizedBody = mongoSanitize(req.body);
+    const { reason } = sanitizedBody;
 
     const review = await Review.findById(id);
 
@@ -132,6 +134,16 @@ exports.approveReview = async (req, res) => {
     // Recalculate course rating with approved reviews
     await recalculateCourseRating(review.course);
 
+    // Create audit trail
+    await AuditTrail.create({
+      user: req.user.id,
+      action: 'approve',
+      resourceType: 'Review',
+      resourceId: review._id,
+      details: `Approved review for course ${review.course}`,
+      ipAddress: req.ip
+    });
+
     logger.info(`Review ${id} approved by admin ${req.user.id}`);
 
     res.status(200).json({
@@ -155,7 +167,8 @@ exports.approveReview = async (req, res) => {
 exports.rejectReview = async (req, res) => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const sanitizedBody = mongoSanitize(req.body);
+    const { reason } = sanitizedBody;
 
     if (!reason) {
       return res.status(400).json({
@@ -188,6 +201,16 @@ exports.rejectReview = async (req, res) => {
     // Recalculate course rating without rejected review
     await recalculateCourseRating(review.course);
 
+    // Create audit trail
+    await AuditTrail.create({
+      user: req.user.id,
+      action: 'reject',
+      resourceType: 'Review',
+      resourceId: review._id,
+      details: `Rejected review for course ${review.course}: ${reason}`,
+      ipAddress: req.ip
+    });
+
     logger.info(`Review ${id} rejected by admin ${req.user.id}`);
 
     res.status(200).json({
@@ -211,7 +234,8 @@ exports.rejectReview = async (req, res) => {
 exports.flagReview = async (req, res) => {
   try {
     const { id } = req.params;
-    const { reason, description } = req.body;
+    const sanitizedBody = mongoSanitize(req.body);
+    const { reason, description } = sanitizedBody;
 
     if (!reason) {
       return res.status(400).json({
@@ -260,6 +284,16 @@ exports.flagReview = async (req, res) => {
     // Recalculate course rating without flagged review
     await recalculateCourseRating(review.course);
 
+    // Create audit trail
+    await AuditTrail.create({
+      user: req.user.id,
+      action: 'flag',
+      resourceType: 'Review',
+      resourceId: review._id,
+      details: `Flagged review for course ${review.course}: ${reason}`,
+      ipAddress: req.ip
+    });
+
     logger.info(`Review ${id} flagged by admin ${req.user.id} for reason: ${reason}`);
 
     res.status(200).json({
@@ -283,7 +317,8 @@ exports.flagReview = async (req, res) => {
 exports.removeReview = async (req, res) => {
   try {
     const { id } = req.params;
-    const { reason } = req.body;
+    const sanitizedBody = mongoSanitize(req.body);
+    const { reason } = sanitizedBody;
 
     const review = await Review.findById(id);
 
@@ -295,6 +330,16 @@ exports.removeReview = async (req, res) => {
     }
 
     const courseId = review.course;
+
+    // Create audit trail before deletion
+    await AuditTrail.create({
+      user: req.user.id,
+      action: 'delete',
+      resourceType: 'Review',
+      resourceId: review._id,
+      details: `Deleted review for course ${courseId}: ${reason || 'No reason provided'}`,
+      ipAddress: req.ip
+    });
 
     // Delete the review
     await Review.findByIdAndDelete(id);
@@ -324,7 +369,8 @@ exports.removeReview = async (req, res) => {
 exports.respondToReview = async (req, res) => {
   try {
     const { id } = req.params;
-    const { response } = req.body;
+    const sanitizedBody = mongoSanitize(req.body);
+    const { response } = sanitizedBody;
 
     if (!response || response.trim().length === 0) {
       return res.status(400).json({
@@ -350,6 +396,16 @@ exports.respondToReview = async (req, res) => {
     };
 
     await review.save();
+
+    // Create audit trail
+    await AuditTrail.create({
+      user: req.user.id,
+      action: 'respond',
+      resourceType: 'Review',
+      resourceId: review._id,
+      details: `Responded to review for course ${review.course}`,
+      ipAddress: req.ip
+    });
 
     logger.info(`Admin ${req.user.id} responded to review ${id}`);
 

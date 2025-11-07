@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link as RouterLink } from 'react-router-dom';
 import {
   AppBar,
@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { useLanguage } from '../contexts/LanguageContext';
 import { useCurrency } from '../contexts/CurrencyContext';
+import axios from 'axios';
 
 const Header = () => {
   const { t } = useTranslation();
@@ -30,6 +31,7 @@ const Header = () => {
   const { currency, changeCurrency } = useCurrency();
   const [anchorEl, setAnchorEl] = useState(null);
   const [mobileMenuAnchor, setMobileMenuAnchor] = useState(null);
+  const [dynamicPages, setDynamicPages] = useState([]);
 
   const handleMenu = (event) => {
     setAnchorEl(event.currentTarget);
@@ -51,6 +53,21 @@ const Header = () => {
     logout();
     handleClose();
     navigate('/');
+  };
+
+  useEffect(() => {
+    fetchPublishedPages();
+  }, []);
+
+  const fetchPublishedPages = async () => {
+    try {
+      const response = await axios.get('/api/pages', {
+        params: { location: 'header' }
+      });
+      setDynamicPages(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching pages:', error);
+    }
   };
 
   return (
@@ -86,6 +103,18 @@ const Header = () => {
             <Button color="inherit" component={RouterLink} to="/contact">
               {t('contact')}
             </Button>
+
+            {/* Dynamic Pages */}
+            {dynamicPages.map((page) => (
+              <Button 
+                key={page._id} 
+                color="inherit" 
+                component={RouterLink} 
+                to={`/${page.slug}`}
+              >
+                {page.title?.[language] || page.title?.en || page.slug}
+              </Button>
+            ))}
 
             {/* Analytics links: shown only when logged in */}
             {isAuthenticated && (
@@ -242,6 +271,18 @@ const Header = () => {
               >
                 {t('contact')}
               </MenuItem>
+              {/* Dynamic Pages */}
+              {dynamicPages.map((page) => (
+                <MenuItem
+                  key={page._id}
+                  onClick={() => {
+                    navigate(`/${page.slug}`);
+                    handleMobileMenuClose();
+                  }}
+                >
+                  {page.title?.[language] || page.title?.en || page.slug}
+                </MenuItem>
+              ))}
               {isAuthenticated && (
                 <>
                   {/* Mobile analytics menu items */}

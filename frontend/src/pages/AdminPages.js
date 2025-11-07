@@ -23,7 +23,9 @@ import {
   Select,
   FormControl,
   InputLabel,
-  CircularProgress
+  CircularProgress,
+  Checkbox,
+  FormControlLabel
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -49,7 +51,10 @@ const AdminPages = () => {
     content: { en: '', ar: '', fr: '' },
     metaDescription: { en: '', ar: '', fr: '' },
     template: 'default',
-    status: 'draft'
+    status: 'draft',
+    showInHeader: false,
+    showInFooter: false,
+    menuOrder: 0
   });
 
   useEffect(() => {
@@ -82,7 +87,10 @@ const AdminPages = () => {
         content: page.content || { en: '', ar: '', fr: '' },
         metaDescription: page.metaDescription || { en: '', ar: '', fr: '' },
         template: page.template || 'default',
-        status: page.status || 'draft'
+        status: page.status || 'draft',
+        showInHeader: page.showInHeader || false,
+        showInFooter: page.showInFooter || false,
+        menuOrder: page.menuOrder || 0
       });
     } else {
       setSelectedPage(null);
@@ -92,7 +100,10 @@ const AdminPages = () => {
         content: { en: '', ar: '', fr: '' },
         metaDescription: { en: '', ar: '', fr: '' },
         template: 'default',
-        status: 'draft'
+        status: 'draft',
+        showInHeader: false,
+        showInFooter: false,
+        menuOrder: 0
       });
     }
     setOpenDialog(true);
@@ -293,6 +304,46 @@ const AdminPages = () => {
                   <MenuItem value="archived">Archived</MenuItem>
                 </Select>
               </FormControl>
+            </Grid>
+
+            {/* Navigation Settings */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>
+                Navigation Settings
+              </Typography>
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.showInHeader}
+                    onChange={(e) => handleInputChange('showInHeader', e.target.checked)}
+                  />
+                }
+                label="Show in Header Navigation"
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <FormControlLabel
+                control={
+                  <Checkbox
+                    checked={formData.showInFooter}
+                    onChange={(e) => handleInputChange('showInFooter', e.target.checked)}
+                  />
+                }
+                label="Show in Footer Navigation"
+              />
+            </Grid>
+            <Grid item xs={12} md={4}>
+              <TextField
+                fullWidth
+                type="number"
+                label="Menu Order"
+                value={formData.menuOrder}
+                onChange={(e) => handleInputChange('menuOrder', Math.max(0, parseInt(e.target.value, 10) || 0))}
+                helperText="Lower numbers appear first"
+                inputProps={{ min: 0 }}
+              />
             </Grid>
 
             {/* English Content */}

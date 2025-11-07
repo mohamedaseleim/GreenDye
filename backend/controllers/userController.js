@@ -1,12 +1,12 @@
 const User = require('../models/User');
 const AuditTrail = require('../models/AuditTrail');
+const mongoSanitize = require('mongo-sanitize');
 
 // @desc    Get all users with filtering, sorting, and pagination
 // @route   GET /api/users
 // @access  Private/Admin
 exports.getUsers = async (req, res, next) => {
   try {
-    const mongoSanitize = require('mongo-sanitize');
     
     const {
       role,
@@ -102,8 +102,6 @@ exports.getUser = async (req, res, next) => {
 // @access  Private/Admin
 exports.createUser = async (req, res, next) => {
   try {
-    const mongoSanitize = require('mongo-sanitize');
-    
     // Sanitize input to prevent NoSQL injection
     const sanitizedBody = mongoSanitize(req.body);
     
@@ -133,8 +131,6 @@ exports.createUser = async (req, res, next) => {
 // @access  Private/Admin
 exports.updateUser = async (req, res, next) => {
   try {
-    const mongoSanitize = require('mongo-sanitize');
-    
     // Sanitize input to prevent NoSQL injection
     const sanitizedBody = mongoSanitize(req.body);
     
@@ -154,14 +150,14 @@ exports.updateUser = async (req, res, next) => {
       });
     }
 
-    // Log action
+    // Log action (only log field names for privacy, not values)
     await AuditTrail.create({
       user: req.user._id,
       action: 'UPDATE_USER',
       targetType: 'User',
       targetId: user._id,
       details: `Updated user: ${user.email}`,
-      metadata: sanitizedBody,
+      metadata: { updatedFields: Object.keys(sanitizedBody) },
       ipAddress: req.ip
     });
 
@@ -366,8 +362,6 @@ exports.resetUserPassword = async (req, res, next) => {
 // @access  Private/Admin
 exports.bulkUpdateUsers = async (req, res, next) => {
   try {
-    const mongoSanitize = require('mongo-sanitize');
-    
     const { userIds, updates } = req.body;
 
     if (!userIds || !Array.isArray(userIds) || userIds.length === 0) {

@@ -1,6 +1,6 @@
 # Admin Course Creation Fix - Implementation Summary
 
-## Problem Identified
+## Problem Identified (Original Issue)
 
 Courses created via the admin dashboard were not appearing because:
 
@@ -19,9 +19,17 @@ Courses created via the admin dashboard were not appearing because:
    - Missing Learning Outcomes field
    - Missing Tags field
 
+## Additional Problem Identified (Current Fix)
+
+After implementing the admin course creation feature, courses created via admin dashboard were STILL not showing on the public courses page because:
+
+**Public Course Query Missing Approval Filter**: The public courses API endpoints (`GET /api/courses`, `GET /api/courses/featured`, etc.) were only filtering by `isPublished: true` but NOT checking `approvalStatus: 'approved'`. This meant:
+- Published but unapproved courses (status: pending/draft/rejected) could potentially appear publicly
+- The query was incomplete for proper course visibility control
+
 ## Solution Implemented
 
-### Backend Changes
+### Part 1: Original Backend and Frontend Changes
 
 #### 1. New `createAdminCourse` Controller
 **File**: `backend/controllers/adminCourseController.js`
@@ -79,6 +87,48 @@ Added comprehensive tests for the new controller:
 - Creates course with custom approval status
 - Defaults instructor to admin if not provided
 - Denies access without admin token
+
+### Part 2: Public Course Visibility Fix (Current)
+
+#### 4. Updated Public Course Queries
+**File**: `backend/controllers/courseController.js`
+
+Updated all public course query endpoints to filter by BOTH `isPublished: true` AND `approvalStatus: 'approved'`:
+
+**Changes Made:**
+1. **`getCourses`** - Main courses listing endpoint
+   - Changed from: `{ isPublished: true }`
+   - Changed to: `{ isPublished: true, approvalStatus: 'approved' }`
+
+2. **`getFeaturedCourses`** - Featured courses endpoint
+   - Changed from: `{ isFeatured: true, isPublished: true }`
+   - Changed to: `{ isFeatured: true, isPublished: true, approvalStatus: 'approved' }`
+
+3. **`getCoursesByCategory`** - Category filter endpoint
+   - Added: `approvalStatus: 'approved'` to the query
+
+4. **`searchCourses`** - Search endpoint
+   - Added: `approvalStatus: 'approved'` to the query
+
+**Rationale:**
+- Ensures only approved AND published courses are visible to the public
+- Prevents courses with status 'draft', 'pending', or 'rejected' from appearing publicly
+- Maintains proper content quality control workflow
+- Admin-created courses (which default to 'approved') now appear correctly
+
+#### 5. Updated Integration Tests
+**File**: `backend/__tests__/integration/courses.test.js`
+
+Updated test data to include `approvalStatus: 'approved'` on all test courses that should appear publicly:
+- Updated "should get all published courses" test
+- Updated "should not return unpublished courses to students" test
+- Updated "should filter courses by category" test
+- Added new test: "should not return published but unapproved courses"
+
+The new test specifically verifies that:
+- Published + Approved courses ARE returned ✅
+- Published + Pending courses are NOT returned ✅
+- Published + Draft courses are NOT returned ✅
 
 ### Frontend Changes
 
@@ -153,7 +203,9 @@ const initialCreateFormData = {
 
 ## Benefits
 
-1. **Immediate Visibility**: Courses created by admin now appear immediately in the courses list because they default to `approved` and `published` status.
+1. **Immediate Visibility**: Courses created by admin now appear immediately in the public courses list because:
+   - They default to `approved` and `published` status on creation
+   - Public course queries now correctly filter by both `isPublished: true` AND `approvalStatus: 'approved'`
 
 2. **Full Control**: Admin has complete control over all course properties including:
    - Approval status
@@ -172,10 +224,12 @@ const initialCreateFormData = {
    - Better course discoverability with tags
    - Clear prerequisites and learning outcomes for students
 
-5. **Security**: 
+5. **Security & Quality Control**: 
    - Input sanitization prevents NoSQL injection
    - Admin-only access enforced
    - Audit logging for compliance
+   - Proper content workflow: only approved courses appear publicly
+   - Prevents accidental publication of unapproved content
 
 ## Testing
 

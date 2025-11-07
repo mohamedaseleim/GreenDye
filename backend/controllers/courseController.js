@@ -16,7 +16,7 @@ exports.getCourses = async (req, res, next) => {
       currency,
     } = req.query;
 
-    const query = { isPublished: true };
+    const query = { isPublished: true, approvalStatus: 'approved' };
 
     if (category) query.category = category;
     if (level) query.level = level;
@@ -218,7 +218,7 @@ exports.deleteCourse = async (req, res, next) => {
 // @access  Public
 exports.getFeaturedCourses = async (req, res, next) => {
   try {
-    const courses = await Course.find({ isFeatured: true, isPublished: true })
+    const courses = await Course.find({ isFeatured: true, isPublished: true, approvalStatus: 'approved' })
       .populate('instructor', 'name avatar')
       .limit(6);
 
@@ -240,6 +240,7 @@ exports.getCoursesByCategory = async (req, res, next) => {
     const courses = await Course.find({
       category: req.params.category,
       isPublished: true,
+      approvalStatus: 'approved',
     }).populate('instructor', 'name avatar');
 
     res.status(200).json({
@@ -276,6 +277,7 @@ exports.searchCourses = async (req, res, next) => {
         { 'description.fr': { $regex: q, $options: 'i' } },
       ],
       isPublished: true,
+      approvalStatus: 'approved',
     }).populate('instructor', 'name avatar');
 
     res.status(200).json({

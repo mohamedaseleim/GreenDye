@@ -392,14 +392,15 @@ const AdminPages = () => {
                 <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
                   Content (EN)
                 </Typography>
-                <ReactQuill
-                  theme="snow"
-                  value={formData.content.en}
-                  onChange={(value) => handleInputChange('content', value, 'en')}
-                  modules={quillModules}
-                  formats={quillFormats}
-                  style={{ height: '300px', marginBottom: '50px' }}
-                />
+                <Box sx={{ '& .quill': { height: '300px', mb: '50px' } }}>
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.content.en}
+                    onChange={(value) => handleInputChange('content', value, 'en')}
+                    modules={quillModules}
+                    formats={quillFormats}
+                  />
+                </Box>
               </Box>
             </Grid>
             <Grid item xs={12}>
@@ -431,14 +432,15 @@ const AdminPages = () => {
                 <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
                   Content (AR)
                 </Typography>
-                <ReactQuill
-                  theme="snow"
-                  value={formData.content.ar}
-                  onChange={(value) => handleInputChange('content', value, 'ar')}
-                  modules={quillModules}
-                  formats={quillFormats}
-                  style={{ height: '250px', marginBottom: '50px', direction: 'rtl' }}
-                />
+                <Box sx={{ '& .quill': { height: '300px', mb: '50px' }, direction: 'rtl' }}>
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.content.ar}
+                    onChange={(value) => handleInputChange('content', value, 'ar')}
+                    modules={quillModules}
+                    formats={quillFormats}
+                  />
+                </Box>
               </Box>
             </Grid>
 
@@ -461,14 +463,15 @@ const AdminPages = () => {
                 <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
                   Content (FR)
                 </Typography>
-                <ReactQuill
-                  theme="snow"
-                  value={formData.content.fr}
-                  onChange={(value) => handleInputChange('content', value, 'fr')}
-                  modules={quillModules}
-                  formats={quillFormats}
-                  style={{ height: '250px', marginBottom: '50px' }}
-                />
+                <Box sx={{ '& .quill': { height: '300px', mb: '50px' } }}>
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.content.fr}
+                    onChange={(value) => handleInputChange('content', value, 'fr')}
+                    modules={quillModules}
+                    formats={quillFormats}
+                  />
+                </Box>
               </Box>
             </Grid>
           </Grid>

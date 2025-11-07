@@ -218,7 +218,18 @@ const AdminContentSettings = () => {
       }
     } catch (error) {
       console.error('Error saving settings:', error);
-      toast.error('Failed to save content settings');
+      
+      // Display validation errors if available
+      if (error.response && error.response.data && error.response.data.errors) {
+        const validationErrors = error.response.data.errors;
+        validationErrors.forEach((err) => {
+          toast.error(`${err.param}: ${err.msg}`);
+        });
+      } else if (error.response && error.response.data && error.response.data.message) {
+        toast.error(error.response.data.message);
+      } else {
+        toast.error('Failed to save content settings');
+      }
     } finally {
       setSaving(false);
     }
@@ -573,6 +584,7 @@ const AdminContentSettings = () => {
                   type="email"
                   value={settings.contactPage.email}
                   onChange={(e) => handleContactChange('email', e.target.value)}
+                  helperText="Valid email format required (e.g., contact@example.com)"
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -581,6 +593,7 @@ const AdminContentSettings = () => {
                   label="Phone"
                   value={settings.contactPage.phone}
                   onChange={(e) => handleContactChange('phone', e.target.value)}
+                  helperText="Phone number with digits, spaces, +, -, ( ) allowed"
                 />
               </Grid>
               <Grid item xs={12}>
@@ -625,6 +638,8 @@ const AdminContentSettings = () => {
                   label="Facebook URL"
                   value={settings.socialMedia.facebook}
                   onChange={(e) => handleSocialMediaChange('facebook', e.target.value)}
+                  helperText="e.g., https://facebook.com/yourpage"
+                  placeholder="https://facebook.com/greendye"
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -633,6 +648,8 @@ const AdminContentSettings = () => {
                   label="Twitter URL"
                   value={settings.socialMedia.twitter}
                   onChange={(e) => handleSocialMediaChange('twitter', e.target.value)}
+                  helperText="e.g., https://twitter.com/yourhandle or https://x.com/yourhandle"
+                  placeholder="https://twitter.com/greendye"
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -641,6 +658,8 @@ const AdminContentSettings = () => {
                   label="LinkedIn URL"
                   value={settings.socialMedia.linkedin}
                   onChange={(e) => handleSocialMediaChange('linkedin', e.target.value)}
+                  helperText="e.g., https://linkedin.com/company/yourcompany"
+                  placeholder="https://linkedin.com/company/greendye"
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -649,6 +668,8 @@ const AdminContentSettings = () => {
                   label="Instagram URL"
                   value={settings.socialMedia.instagram}
                   onChange={(e) => handleSocialMediaChange('instagram', e.target.value)}
+                  helperText="e.g., https://instagram.com/yourhandle"
+                  placeholder="https://instagram.com/greendye"
                 />
               </Grid>
               <Grid item xs={12} md={6}>
@@ -657,6 +678,8 @@ const AdminContentSettings = () => {
                   label="YouTube URL"
                   value={settings.socialMedia.youtube}
                   onChange={(e) => handleSocialMediaChange('youtube', e.target.value)}
+                  helperText="e.g., https://youtube.com/yourchannel"
+                  placeholder="https://youtube.com/greendye"
                 />
               </Grid>
             </Grid>

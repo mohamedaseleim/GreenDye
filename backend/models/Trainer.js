@@ -57,8 +57,7 @@ const TrainerSchema = new mongoose.Schema({
   }],
   languages: [{
     language: {
-      type: String,
-      enum: ['en', 'ar', 'fr', 'es', 'de']
+      type: String
     },
     proficiency: {
       type: String,

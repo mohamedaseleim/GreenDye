@@ -197,6 +197,21 @@ exports.updateTrainer = async (req, res, next) => {
       }
     ).populate('user', 'name email avatar');
 
+    // Generate QR code if it doesn't exist
+    if (!trainer.qrCode && trainer.trainerId) {
+      const baseUrl = process.env.FRONTEND_URL || 'http://localhost:3000';
+      const verificationUrl = `${baseUrl}/verify/trainer/${trainer.trainerId}`;
+      
+      try {
+        const qrCodeDataUrl = await QRCode.toDataURL(verificationUrl);
+        trainer.qrCode = qrCodeDataUrl;
+        trainer.verificationUrl = verificationUrl;
+        await trainer.save();
+      } catch (qrError) {
+        console.warn(`QR code generation failed for trainer: ${trainer.trainerId}. Error: ${qrError.message}`);
+      }
+    }
+
     res.status(200).json({
       success: true,
       message: 'Trainer profile updated successfully',

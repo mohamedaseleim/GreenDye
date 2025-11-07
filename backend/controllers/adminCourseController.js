@@ -109,7 +109,7 @@ exports.createAdminCourse = async (req, res, next) => {
     const courseData = {
       ...sanitizedData,
       approvalStatus: sanitizedData.approvalStatus || 'approved',
-      isPublished: sanitizedData.isPublished !== undefined ? sanitizedData.isPublished : true
+      isPublished: sanitizedData.isPublished ?? true
     };
 
     // If no instructor is provided, set to admin's ID

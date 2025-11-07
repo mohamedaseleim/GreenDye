@@ -67,6 +67,8 @@ const getMediaType = (mimetype) => {
 // @route   POST /api/admin/cms/media/upload
 // @access  Private/Admin
 exports.uploadMedia = async (req, res, next) => {
+  const uploadedFiles = [];
+  
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({
@@ -78,8 +80,20 @@ exports.uploadMedia = async (req, res, next) => {
     const uploadedMedia = [];
 
     for (const file of req.files) {
+      uploadedFiles.push(file.path); // Track for cleanup on error
+      
       const category = req.body.category || 'general';
       const mediaType = getMediaType(file.mimetype);
+      
+      // Validate MIME type matches file extension
+      const ext = path.extname(file.originalname).toLowerCase().replace('.', '');
+      const isValidImage = mediaType === 'image' && /jpeg|jpg|png|gif|webp|svg/.test(ext);
+      const isValidVideo = mediaType === 'video' && /mp4|webm|ogg|avi|mov/.test(ext);
+      const isValidDoc = mediaType === 'document' && /pdf|doc|docx|xls|xlsx|ppt|pptx|txt|csv/.test(ext);
+      
+      if (!isValidImage && !isValidVideo && !isValidDoc && mediaType !== 'other') {
+        throw new Error(`File type mismatch for ${file.originalname}: MIME type ${file.mimetype} does not match extension .${ext}`);
+      }
       
       const mediaData = {
         filename: file.filename,
@@ -92,7 +106,7 @@ exports.uploadMedia = async (req, res, next) => {
         category: category,
         uploadedBy: req.user.id,
         metadata: {
-          format: path.extname(file.originalname).toLowerCase().replace('.', '')
+          format: ext
         }
       };
 
@@ -117,6 +131,14 @@ exports.uploadMedia = async (req, res, next) => {
       data: uploadedMedia
     });
   } catch (error) {
+    // Clean up uploaded files on error
+    for (const filePath of uploadedFiles) {
+      try {
+        await fs.unlink(filePath);
+      } catch (cleanupError) {
+        console.error(`Failed to clean up file ${filePath}:`, cleanupError);
+      }
+    }
     next(error);
   }
 };

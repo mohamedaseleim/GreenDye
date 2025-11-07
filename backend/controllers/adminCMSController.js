@@ -356,11 +356,23 @@ exports.deleteMedia = async (req, res, next) => {
       });
     }
 
-    // Delete file from filesystem
+    // Delete file from filesystem with path traversal protection
     try {
-      await fs.unlink(path.join(__dirname, '..', media.path));
+      const uploadsDir = path.join(__dirname, '..', 'uploads');
+      const filePath = path.join(__dirname, '..', media.path);
+      
+      // Ensure the resolved path is within the uploads directory (prevent path traversal)
+      const resolvedPath = path.resolve(filePath);
+      const resolvedUploadsDir = path.resolve(uploadsDir);
+      
+      if (!resolvedPath.startsWith(resolvedUploadsDir)) {
+        throw new Error('Invalid file path detected');
+      }
+      
+      await fs.unlink(resolvedPath);
     } catch (err) {
-      // File may already be deleted or not exist
+      // File may already be deleted or not exist, or invalid path
+      console.warn(`Failed to delete file for media ${media._id}: ${err.message}`);
     }
 
     // Audit log

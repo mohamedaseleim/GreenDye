@@ -136,6 +136,8 @@ exports.uploadMedia = async (req, res, next) => {
       try {
         await fs.unlink(filePath);
       } catch (cleanupError) {
+        // Log cleanup errors but don't throw - we want to report the original error
+        // eslint-disable-next-line no-console
         console.error(`Failed to clean up file ${filePath}:`, cleanupError);
       }
     }

@@ -372,6 +372,8 @@ exports.deleteMedia = async (req, res, next) => {
       await fs.unlink(resolvedPath);
     } catch (err) {
       // File may already be deleted or not exist, or invalid path
+      // Log warning but don't fail the deletion operation
+      // eslint-disable-next-line no-console
       console.warn(`Failed to delete file for media ${media._id}: ${err.message}`);
     }
 

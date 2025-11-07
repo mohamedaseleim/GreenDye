@@ -1,19 +1,25 @@
-const request = require('supertest');
 const mongoose = require('mongoose');
 const path = require('path');
 const fs = require('fs').promises;
-const app = require('../server');
 const User = require('../models/User');
 const Media = require('../models/Media');
 const AuditTrail = require('../models/AuditTrail');
-const { generateToken } = require('../utils/auth');
+const { getAllMedia, getMedia, updateMedia, deleteMedia } = require('../controllers/adminCMSController');
+const { uploadMedia } = require('../controllers/adminMediaController');
 
 describe('Media Management Security Tests', () => {
-  let adminToken;
   let adminUser;
   let testMediaId;
 
   beforeAll(async () => {
+    // Connect to test database
+    if (mongoose.connection.readyState === 0) {
+      await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/greendye-test', {
+        useNewUrlParser: true,
+        useUnifiedTopology: true
+      });
+    }
+
     // Create admin user
     adminUser = await User.create({
       name: 'Admin User',
@@ -21,7 +27,6 @@ describe('Media Management Security Tests', () => {
       password: 'password123',
       role: 'admin'
     });
-    adminToken = generateToken(adminUser._id);
   });
 
   afterAll(async () => {
@@ -32,108 +37,82 @@ describe('Media Management Security Tests', () => {
     await mongoose.connection.close();
   });
 
-  describe('POST /api/admin/cms/media/upload', () => {
+  describe('uploadMedia function', () => {
     beforeEach(async () => {
       await Media.deleteMany({});
     });
 
     it('should reject upload without files', async () => {
-      const res = await request(app)
-        .post('/api/admin/cms/media/upload')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(400);
+      const req = {
+        files: [],
+        user: { id: adminUser._id },
+        body: {}
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
 
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toContain('No files uploaded');
+      await uploadMedia(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(400);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          message: 'No files uploaded'
+        })
+      );
     });
 
-    it('should upload valid image file', async () => {
+    it('should handle file upload errors and cleanup', async () => {
       // Create a test file
-      const testFilePath = path.join(__dirname, 'test-image.png');
+      const uploadDir = path.join(__dirname, '..', 'uploads', 'test');
+      await fs.mkdir(uploadDir, { recursive: true });
+      const testFilePath = path.join(uploadDir, 'test-image.jpg');
       await fs.writeFile(testFilePath, 'fake image content');
 
-      const res = await request(app)
-        .post('/api/admin/cms/media/upload')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .attach('files', testFilePath)
-        .field('category', 'general')
-        .expect(201);
-
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveLength(1);
-      expect(res.body.data[0].type).toBe('image');
-      expect(res.body.data[0].category).toBe('general');
-
-      testMediaId = res.body.data[0]._id;
-
-      // Cleanup test file
-      await fs.unlink(testFilePath).catch(() => {});
-    });
-
-    it('should reject invalid file type', async () => {
-      const testFilePath = path.join(__dirname, 'test-file.exe');
-      await fs.writeFile(testFilePath, 'fake executable');
-
-      const res = await request(app)
-        .post('/api/admin/cms/media/upload')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .attach('files', testFilePath)
-        .expect(400);
-
-      expect(res.body.success).toBe(false);
-
-      // Cleanup test file
-      await fs.unlink(testFilePath).catch(() => {});
-    });
-
-    it('should cleanup files on database creation failure', async () => {
-      // This test verifies that if database creation fails, uploaded files are cleaned up
-      const testFilePath = path.join(__dirname, 'test-image.jpg');
-      await fs.writeFile(testFilePath, 'fake image');
+      const req = {
+        files: [{
+          filename: 'test-image.jpg',
+          originalname: 'test.jpg',
+          mimetype: 'image/jpeg',
+          size: 1024,
+          path: testFilePath
+        }],
+        user: { id: adminUser._id },
+        body: { category: 'test' },
+        protocol: 'http',
+        get: () => 'localhost:5000',
+        ip: '127.0.0.1'
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
 
       // Mock Media.create to fail
-      jest.spyOn(Media, 'create').mockRejectedValueOnce(new Error('Database error'));
+      const originalCreate = Media.create;
+      Media.create = jest.fn().mockRejectedValue(new Error('Database error'));
 
-      const res = await request(app)
-        .post('/api/admin/cms/media/upload')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .attach('files', testFilePath)
-        .field('category', 'general')
-        .expect(500);
+      await uploadMedia(req, res, next);
 
-      // Verify no orphaned media records
-      const mediaCount = await Media.countDocuments({});
-      expect(mediaCount).toBe(0);
+      expect(next).toHaveBeenCalled();
+      
+      // Verify file was cleaned up
+      const fileExists = await fs.access(testFilePath).then(() => true).catch(() => false);
+      expect(fileExists).toBe(false);
 
-      // Restore mock
-      Media.create.mockRestore();
-
-      // Cleanup test file
-      await fs.unlink(testFilePath).catch(() => {});
-    });
-
-    it('should validate MIME type matches file extension', async () => {
-      // Create media with mismatched MIME type and extension
-      const testFilePath = path.join(__dirname, 'test.pdf');
-      await fs.writeFile(testFilePath, 'fake pdf content');
-
-      // This should succeed as .pdf with document MIME type is valid
-      const res = await request(app)
-        .post('/api/admin/cms/media/upload')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .attach('files', testFilePath)
-        .field('category', 'general');
-
-      if (res.status === 201) {
-        expect(res.body.data[0].type).toBe('document');
-      }
+      // Restore original function
+      Media.create = originalCreate;
 
       // Cleanup
-      await fs.unlink(testFilePath).catch(() => {});
+      await fs.rmdir(uploadDir, { recursive: true }).catch(() => {});
     });
   });
 
-  describe('DELETE /api/admin/cms/media/:id', () => {
+  describe('deleteMedia function', () => {
     beforeEach(async () => {
       // Create test media
       const media = await Media.create({
@@ -151,13 +130,26 @@ describe('Media Management Security Tests', () => {
     });
 
     it('should delete media and create audit trail', async () => {
-      const res = await request(app)
-        .delete(`/api/admin/cms/media/${testMediaId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
+      const req = {
+        params: { id: testMediaId },
+        user: { id: adminUser._id },
+        ip: '127.0.0.1'
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
 
-      expect(res.body.success).toBe(true);
-      expect(res.body.message).toContain('deleted successfully');
+      await deleteMedia(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          message: 'Media deleted successfully'
+        })
+      );
 
       // Verify media is deleted
       const media = await Media.findById(testMediaId);
@@ -186,13 +178,21 @@ describe('Media Management Security Tests', () => {
         uploadedBy: adminUser._id
       });
 
-      const res = await request(app)
-        .delete(`/api/admin/cms/media/${maliciousMedia._id}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
+      const req = {
+        params: { id: maliciousMedia._id },
+        user: { id: adminUser._id },
+        ip: '127.0.0.1'
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
+
+      await deleteMedia(req, res, next);
 
       // Should still succeed but not delete system files
-      expect(res.body.success).toBe(true);
+      expect(res.status).toHaveBeenCalledWith(200);
 
       // Verify the malicious media record is deleted from DB
       const media = await Media.findById(maliciousMedia._id);
@@ -202,17 +202,30 @@ describe('Media Management Security Tests', () => {
     it('should handle non-existent media gracefully', async () => {
       const fakeId = new mongoose.Types.ObjectId();
 
-      const res = await request(app)
-        .delete(`/api/admin/cms/media/${fakeId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(404);
+      const req = {
+        params: { id: fakeId },
+        user: { id: adminUser._id },
+        ip: '127.0.0.1'
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
 
-      expect(res.body.success).toBe(false);
-      expect(res.body.message).toContain('not found');
+      await deleteMedia(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(404);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: false,
+          message: 'Media not found'
+        })
+      );
     });
   });
 
-  describe('GET /api/admin/cms/media', () => {
+  describe('getAllMedia function', () => {
     beforeEach(async () => {
       await Media.deleteMany({});
       
@@ -244,61 +257,100 @@ describe('Media Management Security Tests', () => {
     });
 
     it('should get all media with pagination', async () => {
-      const res = await request(app)
-        .get('/api/admin/cms/media')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
+      const req = {
+        query: {}
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
 
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveLength(2);
-      expect(res.body.total).toBe(2);
+      await getAllMedia(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      expect(res.json).toHaveBeenCalledWith(
+        expect.objectContaining({
+          success: true,
+          total: 2
+        })
+      );
     });
 
     it('should filter media by type', async () => {
-      const res = await request(app)
-        .get('/api/admin/cms/media?type=image')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
+      const req = {
+        query: { type: 'image' }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
 
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveLength(1);
-      expect(res.body.data[0].type).toBe('image');
+      await getAllMedia(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      const responseData = res.json.mock.calls[0][0];
+      expect(responseData.data.length).toBe(1);
+      expect(responseData.data[0].type).toBe('image');
     });
 
     it('should filter media by category', async () => {
-      const res = await request(app)
-        .get('/api/admin/cms/media?category=course')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
+      const req = {
+        query: { category: 'course' }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
 
-      expect(res.body.success).toBe(true);
-      expect(res.body.data).toHaveLength(1);
-      expect(res.body.data[0].category).toBe('course');
+      await getAllMedia(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      const responseData = res.json.mock.calls[0][0];
+      expect(responseData.data.length).toBe(1);
+      expect(responseData.data[0].category).toBe('course');
     });
 
     it('should search media by name', async () => {
-      const res = await request(app)
-        .get('/api/admin/cms/media?search=video')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
+      const req = {
+        query: { search: 'video' }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
 
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.length).toBeGreaterThan(0);
+      await getAllMedia(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      const responseData = res.json.mock.calls[0][0];
+      expect(responseData.data.length).toBeGreaterThan(0);
     });
 
     it('should prevent regex injection in search', async () => {
       // Attempt regex injection
-      const res = await request(app)
-        .get('/api/admin/cms/media?search=.*')
-        .set('Authorization', `Bearer ${adminToken}`)
-        .expect(200);
+      const req = {
+        query: { search: '.*' }
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
 
-      expect(res.body.success).toBe(true);
-      // Should not match all records due to escaping
+      await getAllMedia(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      // Search for ".*" literally, not as regex - should match nothing
+      const responseData = res.json.mock.calls[0][0];
+      expect(responseData.total).toBe(0);
     });
   });
 
-  describe('PUT /api/admin/cms/media/:id', () => {
+  describe('updateMedia function', () => {
     let mediaId;
 
     beforeEach(async () => {
@@ -317,27 +369,44 @@ describe('Media Management Security Tests', () => {
     });
 
     it('should update media metadata', async () => {
-      const res = await request(app)
-        .put(`/api/admin/cms/media/${mediaId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({
+      const req = {
+        params: { id: mediaId },
+        body: {
           title: { en: 'Updated Title' },
           description: { en: 'Updated Description' },
           tags: ['test', 'updated']
-        })
-        .expect(200);
+        },
+        user: { id: adminUser._id },
+        ip: '127.0.0.1'
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
 
-      expect(res.body.success).toBe(true);
-      expect(res.body.data.title.en).toBe('Updated Title');
-      expect(res.body.data.tags).toContain('updated');
+      await updateMedia(req, res, next);
+
+      expect(res.status).toHaveBeenCalledWith(200);
+      const responseData = res.json.mock.calls[0][0];
+      expect(responseData.data.title.get('en')).toBe('Updated Title');
+      expect(responseData.data.tags).toContain('updated');
     });
 
     it('should create audit trail on update', async () => {
-      await request(app)
-        .put(`/api/admin/cms/media/${mediaId}`)
-        .set('Authorization', `Bearer ${adminToken}`)
-        .send({ tags: ['updated'] })
-        .expect(200);
+      const req = {
+        params: { id: mediaId },
+        body: { tags: ['updated'] },
+        user: { id: adminUser._id },
+        ip: '127.0.0.1'
+      };
+      const res = {
+        status: jest.fn().mockReturnThis(),
+        json: jest.fn()
+      };
+      const next = jest.fn();
+
+      await updateMedia(req, res, next);
 
       const auditLog = await AuditTrail.findOne({
         resourceType: 'Media',

@@ -31,12 +31,19 @@ exports.updateGeneralSettings = asyncHandler(async (req, res) => {
   
   // Validate URL format for social media links if provided
   if (updates.socialMedia) {
-    const urlRegex = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
+    // Safer URL validation with strict pattern to prevent ReDoS
+    const urlRegex = /^https?:\/\/[\w.-]+\.[\w.-]+(:\d+)?(\/[\w\-._~:/?#[\]@!$&'()*+,;=%]*)?$/i;
     const socialMediaFields = ['facebook', 'twitter', 'linkedin', 'instagram', 'youtube'];
     
     for (const field of socialMediaFields) {
       if (updates.socialMedia[field] && updates.socialMedia[field].trim() !== '') {
-        if (!urlRegex.test(updates.socialMedia[field])) {
+        const url = updates.socialMedia[field].trim();
+        // Additional length check to prevent extremely long URLs
+        if (url.length > 2048) {
+          res.status(400);
+          throw new Error(`URL for ${field} is too long (max 2048 characters)`);
+        }
+        if (!urlRegex.test(url)) {
           res.status(400);
           throw new Error(`Invalid URL format for ${field}`);
         }
@@ -254,24 +261,9 @@ exports.createApiKey = asyncHandler(async (req, res) => {
     throw new Error('An API key with this name already exists');
   }
   
-  // Generate a secure random API key with uniqueness check
-  let key;
-  let attempts = 0;
-  const maxAttempts = 5;
-  
-  do {
-    key = `gd_${crypto.randomBytes(32).toString('hex')}`;
-    attempts++;
-    
-    // Check if key already exists (highly unlikely but possible)
-    const existingKey = settings.apiKeys.find(apiKey => apiKey.key === key);
-    if (!existingKey) break;
-    
-    if (attempts >= maxAttempts) {
-      res.status(500);
-      throw new Error('Failed to generate unique API key. Please try again.');
-    }
-  } while (attempts < maxAttempts);
+  // Generate a secure random API key (64 hex characters = 256 bits of entropy)
+  // Collision probability is astronomically low (~2^-128 for UUID v4 equivalence)
+  const key = `gd_${crypto.randomBytes(32).toString('hex')}`;
   
   settings.apiKeys.push({
     name: name.trim(),
@@ -283,16 +275,7 @@ exports.createApiKey = asyncHandler(async (req, res) => {
   });
   
   settings.updatedBy = req.user._id;
-  
-  try {
-    await settings.save();
-  } catch (error) {
-    if (error.code === 11000) {
-      res.status(400);
-      throw new Error('API key already exists. Please try again.');
-    }
-    throw error;
-  }
+  await settings.save();
   
   res.status(201).json({
     success: true,

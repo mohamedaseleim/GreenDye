@@ -186,8 +186,11 @@ const AdminCertificates = () => {
       expiryDate: cert.expiryDate ? new Date(cert.expiryDate).toISOString().split('T')[0] : ''
     });
     setOpenEditDialog(true);
-    // Fetch data asynchronously after opening dialog
-    Promise.all([fetchUsers(), fetchCourses()]);
+    // Fetch data asynchronously after opening dialog - errors are handled in fetchUsers/fetchCourses
+    Promise.all([fetchUsers(), fetchCourses()]).catch(err => {
+      console.error('Error fetching users/courses:', err);
+      // User will already see error toasts from fetchUsers/fetchCourses
+    });
   };
 
   const handleCloseEditDialog = () => {
@@ -244,7 +247,12 @@ const AdminCertificates = () => {
       if (formData.heldIn) data.heldIn = formData.heldIn;
       if (formData.issuedBy) data.issuedBy = formData.issuedBy;
       if (formData.issueDate) data.issueDate = formData.issueDate;
-      if (formData.expiryDate !== undefined) data.expiryDate = formData.expiryDate || null;
+      // Allow clearing expiry date by setting to null if empty string
+      if (formData.expiryDate) {
+        data.expiryDate = formData.expiryDate;
+      } else if (formData.expiryDate === '') {
+        data.expiryDate = null;
+      }
 
       await adminService.updateCertificate(selectedCertificate._id, data);
       toast.success('Certificate updated successfully');

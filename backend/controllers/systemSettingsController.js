@@ -18,8 +18,41 @@ exports.getSettings = asyncHandler(async (req, res) => {
 // @route   PUT /api/admin/settings/general
 // @access  Private/Admin
 exports.updateGeneralSettings = asyncHandler(async (req, res) => {
+  const updates = req.body;
+  
+  // Validate email format if contactEmail is provided
+  if (updates.contactEmail) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(updates.contactEmail)) {
+      res.status(400);
+      throw new Error('Invalid email format for contact email');
+    }
+  }
+  
+  // Validate URL format for social media links if provided
+  if (updates.socialMedia) {
+    // Safer URL validation with strict pattern to prevent ReDoS
+    const urlRegex = /^https?:\/\/[\w.-]+\.[\w.-]+(:\d+)?(\/[\w\-._~:/?#[\]@!$&'()*+,;=%]*)?$/i;
+    const socialMediaFields = ['facebook', 'twitter', 'linkedin', 'instagram', 'youtube'];
+    
+    for (const field of socialMediaFields) {
+      if (updates.socialMedia[field] && updates.socialMedia[field].trim() !== '') {
+        const url = updates.socialMedia[field].trim();
+        // Additional length check to prevent extremely long URLs
+        if (url.length > 2048) {
+          res.status(400);
+          throw new Error(`URL for ${field} is too long (max 2048 characters)`);
+        }
+        if (!urlRegex.test(url)) {
+          res.status(400);
+          throw new Error(`Invalid URL format for ${field}`);
+        }
+      }
+    }
+  }
+  
   const settings = await SystemSettings.updateSettings(
-    { general: req.body },
+    { general: updates },
     req.user._id
   );
   
@@ -34,8 +67,35 @@ exports.updateGeneralSettings = asyncHandler(async (req, res) => {
 // @route   PUT /api/admin/settings/email-templates
 // @access  Private/Admin
 exports.updateEmailTemplates = asyncHandler(async (req, res) => {
+  const updates = req.body;
+  
+  // Validate email template types
+  const validTemplateTypes = ['welcome', 'passwordReset', 'courseEnrollment', 'certificateIssued'];
+  
+  // Check for invalid template types
+  for (const templateType in updates) {
+    if (!validTemplateTypes.includes(templateType)) {
+      res.status(400);
+      throw new Error(`Invalid email template type: ${templateType}. Valid types are: ${validTemplateTypes.join(', ')}`);
+    }
+    
+    // Validate template structure
+    const template = updates[templateType];
+    if (template && typeof template === 'object') {
+      // Both subject and body should be strings if provided
+      if (template.subject !== undefined && typeof template.subject !== 'string') {
+        res.status(400);
+        throw new Error(`Email template subject must be a string for ${templateType}`);
+      }
+      if (template.body !== undefined && typeof template.body !== 'string') {
+        res.status(400);
+        throw new Error(`Email template body must be a string for ${templateType}`);
+      }
+    }
+  }
+  
   const settings = await SystemSettings.updateSettings(
-    { emailTemplates: req.body },
+    { emailTemplates: updates },
     req.user._id
   );
   
@@ -66,8 +126,63 @@ exports.updateNotificationSettings = asyncHandler(async (req, res) => {
 // @route   PUT /api/admin/settings/localization
 // @access  Private/Admin
 exports.updateLocalizationSettings = asyncHandler(async (req, res) => {
+  const updates = req.body;
+  
+  // Validate language if provided
+  const validLanguages = ['en', 'ar', 'fr'];
+  if (updates.defaultLanguage && !validLanguages.includes(updates.defaultLanguage)) {
+    res.status(400);
+    throw new Error(`Invalid language. Must be one of: ${validLanguages.join(', ')}`);
+  }
+  
+  // Validate currency if provided
+  const validCurrencies = ['USD', 'EUR', 'EGP', 'SAR', 'NGN'];
+  if (updates.defaultCurrency && !validCurrencies.includes(updates.defaultCurrency)) {
+    res.status(400);
+    throw new Error(`Invalid currency. Must be one of: ${validCurrencies.join(', ')}`);
+  }
+  
+  // Validate date format if provided
+  const validDateFormats = ['MM/DD/YYYY', 'DD/MM/YYYY', 'YYYY-MM-DD'];
+  if (updates.dateFormat && !validDateFormats.includes(updates.dateFormat)) {
+    res.status(400);
+    throw new Error(`Invalid date format. Must be one of: ${validDateFormats.join(', ')}`);
+  }
+  
+  // Validate availableLanguages if provided
+  if (updates.availableLanguages) {
+    if (!Array.isArray(updates.availableLanguages)) {
+      res.status(400);
+      throw new Error('Available languages must be an array');
+    }
+    
+    const invalidLanguages = updates.availableLanguages.filter(
+      lang => !validLanguages.includes(lang)
+    );
+    if (invalidLanguages.length > 0) {
+      res.status(400);
+      throw new Error(`Invalid languages: ${invalidLanguages.join(', ')}`);
+    }
+  }
+  
+  // Validate availableCurrencies if provided
+  if (updates.availableCurrencies) {
+    if (!Array.isArray(updates.availableCurrencies)) {
+      res.status(400);
+      throw new Error('Available currencies must be an array');
+    }
+    
+    const invalidCurrencies = updates.availableCurrencies.filter(
+      curr => !validCurrencies.includes(curr)
+    );
+    if (invalidCurrencies.length > 0) {
+      res.status(400);
+      throw new Error(`Invalid currencies: ${invalidCurrencies.join(', ')}`);
+    }
+  }
+  
   const settings = await SystemSettings.updateSettings(
-    { localization: req.body },
+    { localization: updates },
     req.user._id
   );
   
@@ -96,15 +211,64 @@ exports.getApiKeys = asyncHandler(async (req, res) => {
 exports.createApiKey = asyncHandler(async (req, res) => {
   const { name, description, permissions, expiresAt } = req.body;
   
-  // Generate a secure random API key
-  const key = `gd_${crypto.randomBytes(32).toString('hex')}`;
+  // Validate required fields
+  if (!name || !name.trim()) {
+    res.status(400);
+    throw new Error('API key name is required');
+  }
+  
+  // Validate permissions if provided
+  if (permissions) {
+    if (!Array.isArray(permissions)) {
+      res.status(400);
+      throw new Error('Permissions must be an array');
+    }
+    
+    const validPermissions = ['read', 'write', 'delete', 'admin'];
+    const invalidPermissions = permissions.filter(
+      perm => !validPermissions.includes(perm)
+    );
+    
+    if (invalidPermissions.length > 0) {
+      res.status(400);
+      throw new Error(`Invalid permissions: ${invalidPermissions.join(', ')}. Valid permissions are: ${validPermissions.join(', ')}`);
+    }
+  }
+  
+  // Validate expiresAt if provided
+  if (expiresAt) {
+    const expiryDate = new Date(expiresAt);
+    if (isNaN(expiryDate.getTime())) {
+      res.status(400);
+      throw new Error('Invalid expiration date format');
+    }
+    
+    if (expiryDate <= new Date()) {
+      res.status(400);
+      throw new Error('Expiration date must be in the future');
+    }
+  }
   
   const settings = await SystemSettings.getSettings();
   
+  // Check if an API key with the same name already exists
+  const existingKeyByName = settings.apiKeys.find(
+    apiKey => apiKey.name.toLowerCase() === name.trim().toLowerCase()
+  );
+  
+  if (existingKeyByName) {
+    res.status(400);
+    throw new Error('An API key with this name already exists');
+  }
+  
+  // Generate a secure random API key (64 hex characters = 256 bits of entropy)
+  // Collision probability is astronomically low (~2^-128 for UUID v4 equivalence)
+  const key = `gd_${crypto.randomBytes(32).toString('hex')}`;
+  
   settings.apiKeys.push({
-    name,
+    name: name.trim(),
     key,
-    description,
+    description: description ? description.trim() : '',
     permissions: permissions || ['read'],
     expiresAt: expiresAt || null,
     isActive: true
@@ -135,11 +299,78 @@ exports.updateApiKey = asyncHandler(async (req, res) => {
     throw new Error('API key not found');
   }
   
-  if (name) apiKey.name = name;
-  if (description !== undefined) apiKey.description = description;
-  if (permissions) apiKey.permissions = permissions;
-  if (isActive !== undefined) apiKey.isActive = isActive;
-  if (expiresAt !== undefined) apiKey.expiresAt = expiresAt;
+  // Validate name if provided
+  if (name !== undefined) {
+    if (!name || !name.trim()) {
+      res.status(400);
+      throw new Error('API key name cannot be empty');
+    }
+    
+    // Check if another API key with the same name already exists
+    const existingKeyByName = settings.apiKeys.find(
+      key => key._id.toString() !== keyId && 
+             key.name.toLowerCase() === name.trim().toLowerCase()
+    );
+    
+    if (existingKeyByName) {
+      res.status(400);
+      throw new Error('An API key with this name already exists');
+    }
+    
+    apiKey.name = name.trim();
+  }
+  
+  if (description !== undefined) {
+    apiKey.description = description ? description.trim() : '';
+  }
+  
+  // Validate permissions if provided
+  if (permissions !== undefined) {
+    if (!Array.isArray(permissions)) {
+      res.status(400);
+      throw new Error('Permissions must be an array');
+    }
+    
+    const validPermissions = ['read', 'write', 'delete', 'admin'];
+    const invalidPermissions = permissions.filter(
+      perm => !validPermissions.includes(perm)
+    );
+    
+    if (invalidPermissions.length > 0) {
+      res.status(400);
+      throw new Error(`Invalid permissions: ${invalidPermissions.join(', ')}. Valid permissions are: ${validPermissions.join(', ')}`);
+    }
+    
+    apiKey.permissions = permissions;
+  }
+  
+  if (isActive !== undefined) {
+    if (typeof isActive !== 'boolean') {
+      res.status(400);
+      throw new Error('isActive must be a boolean value');
+    }
+    apiKey.isActive = isActive;
+  }
+  
+  // Validate expiresAt if provided
+  if (expiresAt !== undefined) {
+    if (expiresAt !== null) {
+      const expiryDate = new Date(expiresAt);
+      if (isNaN(expiryDate.getTime())) {
+        res.status(400);
+        throw new Error('Invalid expiration date format');
+      }
+      
+      if (expiryDate <= new Date()) {
+        res.status(400);
+        throw new Error('Expiration date must be in the future');
+      }
+      
+      apiKey.expiresAt = expiryDate;
+    } else {
+      apiKey.expiresAt = null;
+    }
+  }
   
   settings.updatedBy = req.user._id;
   await settings.save();
@@ -239,6 +470,7 @@ exports.getPublicSettings = asyncHandler(async (req, res) => {
         favicon: settings.general.favicon,
         contactEmail: settings.general.contactEmail,
         contactPhone: settings.general.contactPhone,
+        contactAddress: settings.general.contactAddress,
         socialMedia: settings.general.socialMedia
       },
       localization: settings.localization

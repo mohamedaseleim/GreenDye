@@ -34,7 +34,9 @@ import {
   Block as BlockIcon,
   Restore as RestoreIcon,
   FileDownload as DownloadIcon,
-  Upload as UploadIcon
+  Upload as UploadIcon,
+  Edit as EditIcon,
+  QrCode as QrCodeIcon
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import adminService from '../services/adminService';
@@ -55,6 +57,9 @@ const AdminCertificates = () => {
   const [openBulkDialog, setOpenBulkDialog] = useState(false);
   const [bulkData, setBulkData] = useState('');
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
+  const [openQrDialog, setOpenQrDialog] = useState(false);
+  const [selectedCertificate, setSelectedCertificate] = useState(null);
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [formData, setFormData] = useState({
@@ -159,6 +164,109 @@ const AdminCertificates = () => {
       toast.error('Failed to delete certificate');
       console.error('Error:', error);
     }
+  };
+
+  const handleOpenEditDialog = (cert) => {
+    setSelectedCertificate(cert);
+    setFormData({
+      userId: cert.user?._id || '',
+      courseId: cert.course?._id || '',
+      traineeName: cert.traineeName || cert.userName || '',
+      courseTitle: cert.courseTitle || '',
+      certificateLevel: cert.certificateLevel || '',
+      grade: cert.grade || '',
+      score: cert.score || '',
+      tutorName: cert.metadata?.instructor || '',
+      scheme: cert.metadata?.scheme || '',
+      heldOn: cert.metadata?.heldOn ? new Date(cert.metadata.heldOn).toISOString().split('T')[0] : '',
+      duration: cert.metadata?.duration || '',
+      heldIn: cert.metadata?.heldIn || '',
+      issuedBy: cert.metadata?.issuedBy || 'GreenDye Academy',
+      issueDate: cert.issueDate ? new Date(cert.issueDate).toISOString().split('T')[0] : '',
+      expiryDate: cert.expiryDate ? new Date(cert.expiryDate).toISOString().split('T')[0] : ''
+    });
+    setOpenEditDialog(true);
+    // Fetch data asynchronously after opening dialog - errors are handled in fetchUsers/fetchCourses
+    Promise.all([fetchUsers(), fetchCourses()]).catch(err => {
+      console.error('Error fetching users/courses:', err);
+      // User will already see error toasts from fetchUsers/fetchCourses
+    });
+  };
+
+  const handleCloseEditDialog = () => {
+    setOpenEditDialog(false);
+    setSelectedCertificate(null);
+    setFormData({
+      userId: '',
+      courseId: '',
+      traineeName: '',
+      courseTitle: '',
+      certificateLevel: '',
+      grade: '',
+      score: '',
+      tutorName: '',
+      scheme: '',
+      heldOn: '',
+      duration: '',
+      heldIn: '',
+      issuedBy: 'GreenDye Academy',
+      issueDate: '',
+      expiryDate: ''
+    });
+  };
+
+  const handleUpdateCertificate = async () => {
+    try {
+      // Validate score if provided
+      const scoreError = validateScore(formData.score);
+      if (scoreError) {
+        toast.error(scoreError);
+        return;
+      }
+
+      // Validate duration if provided
+      const durationError = validateDuration(formData.duration);
+      if (durationError) {
+        toast.error(durationError);
+        return;
+      }
+
+      // Prepare data - only include fields that have values
+      const data = {};
+
+      // Add all optional fields if provided
+      if (formData.traineeName) data.traineeName = formData.traineeName;
+      if (formData.courseTitle) data.courseTitle = formData.courseTitle;
+      if (formData.certificateLevel) data.certificateLevel = formData.certificateLevel;
+      if (formData.grade) data.grade = formData.grade;
+      if (formData.score) data.score = parseFloat(formData.score);
+      if (formData.tutorName) data.tutorName = formData.tutorName;
+      if (formData.scheme) data.scheme = formData.scheme;
+      if (formData.heldOn) data.heldOn = formData.heldOn;
+      if (formData.duration) data.duration = parseFloat(formData.duration);
+      if (formData.heldIn) data.heldIn = formData.heldIn;
+      if (formData.issuedBy) data.issuedBy = formData.issuedBy;
+      if (formData.issueDate) data.issueDate = formData.issueDate;
+      // Allow clearing expiry date by setting to null if empty string
+      if (formData.expiryDate) {
+        data.expiryDate = formData.expiryDate;
+      } else if (formData.expiryDate === '') {
+        data.expiryDate = null;
+      }
+
+      await adminService.updateCertificate(selectedCertificate._id, data);
+      toast.success('Certificate updated successfully');
+      handleCloseEditDialog();
+      fetchCertificates();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update certificate');
+      console.error('Error:', error);
+    }
+  };
+
+  const handleShowQrCode = (cert) => {
+    setSelectedCertificate(cert);
+    setOpenQrDialog(true);
   };
 
   const handleRegenerate = async (id) => {
@@ -448,6 +556,7 @@ const AdminCertificates = () => {
             <TableHead>
               <TableRow>
                 <TableCell>Certificate ID</TableCell>
+                <TableCell>QR Code</TableCell>
                 <TableCell>User Name</TableCell>
                 <TableCell>Course</TableCell>
                 <TableCell>Grade</TableCell>
@@ -460,6 +569,19 @@ const AdminCertificates = () => {
               {certificates.map((cert) => (
                 <TableRow key={cert._id}>
                   <TableCell>{cert.certificateId}</TableCell>
+                  <TableCell>
+                    {cert.qrCode ? (
+                      <IconButton
+                        size="small"
+                        onClick={() => handleShowQrCode(cert)}
+                        title="View QR Code"
+                      >
+                        <QrCodeIcon />
+                      </IconButton>
+                    ) : (
+                      <Typography variant="caption" color="text.secondary">N/A</Typography>
+                    )}
+                  </TableCell>
                   <TableCell>{cert.userName || cert.traineeName || cert.user?.name || 'N/A'}</TableCell>
                   <TableCell>
                     {cert.courseTitle || cert.course?.title?.en || cert.courseName?.en || 'N/A'}
@@ -478,6 +600,13 @@ const AdminCertificates = () => {
                     )}
                   </TableCell>
                   <TableCell align="right">
+                    <IconButton
+                      size="small"
+                      onClick={() => handleOpenEditDialog(cert)}
+                      title="Edit"
+                    >
+                      <EditIcon />
+                    </IconButton>
                     <IconButton
                       size="small"
                       onClick={() => handleRegenerate(cert._id)}
@@ -762,6 +891,214 @@ const AdminCertificates = () => {
           <Button onClick={handleCreateCertificate} variant="contained" color="primary">
             Create
           </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit Certificate Dialog */}
+      <Dialog open={openEditDialog} onClose={handleCloseEditDialog} maxWidth="md" fullWidth>
+        <DialogTitle>Edit Certificate</DialogTitle>
+        <DialogContent>
+          <Box sx={{ pt: 2 }}>
+            <Grid container spacing={2}>
+              {/* Trainee Name */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Trainee Name"
+                  value={formData.traineeName}
+                  onChange={(e) => handleFormChange('traineeName', e.target.value)}
+                  placeholder="Enter trainee name"
+                />
+              </Grid>
+
+              {/* Course Title */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Course Title"
+                  value={formData.courseTitle}
+                  onChange={(e) => handleFormChange('courseTitle', e.target.value)}
+                  placeholder="Enter course title"
+                />
+              </Grid>
+
+              {/* Certificate Level */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Certificate Level"
+                  value={formData.certificateLevel}
+                  onChange={(e) => handleFormChange('certificateLevel', e.target.value)}
+                  placeholder="e.g., Foundation, Advanced, Professional"
+                />
+              </Grid>
+
+              {/* Grade */}
+              <Grid item xs={12} md={6}>
+                <FormControl fullWidth>
+                  <InputLabel>Grade</InputLabel>
+                  <Select
+                    value={formData.grade}
+                    onChange={(e) => handleFormChange('grade', e.target.value)}
+                    label="Grade"
+                  >
+                    <MenuItem value="">None</MenuItem>
+                    <MenuItem value="A+">A+</MenuItem>
+                    <MenuItem value="A">A</MenuItem>
+                    <MenuItem value="B+">B+</MenuItem>
+                    <MenuItem value="B">B</MenuItem>
+                    <MenuItem value="C+">C+</MenuItem>
+                    <MenuItem value="C">C</MenuItem>
+                    <MenuItem value="Pass">Pass</MenuItem>
+                    <MenuItem value="Distinction">Distinction</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              {/* Score */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Score"
+                  type="number"
+                  inputProps={{ min: 0, max: 100 }}
+                  value={formData.score}
+                  onChange={(e) => handleFormChange('score', e.target.value)}
+                  placeholder="0-100"
+                />
+              </Grid>
+
+              {/* Tutor Name */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Tutor Name"
+                  value={formData.tutorName}
+                  onChange={(e) => handleFormChange('tutorName', e.target.value)}
+                  placeholder="Enter tutor name"
+                />
+              </Grid>
+
+              {/* Scheme */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Scheme"
+                  value={formData.scheme}
+                  onChange={(e) => handleFormChange('scheme', e.target.value)}
+                  placeholder="Enter scheme"
+                />
+              </Grid>
+
+              {/* Held On */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Held On"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.heldOn}
+                  onChange={(e) => handleFormChange('heldOn', e.target.value)}
+                />
+              </Grid>
+
+              {/* Duration */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Duration in Hours"
+                  type="number"
+                  inputProps={{ min: 0, step: 0.5 }}
+                  value={formData.duration}
+                  onChange={(e) => handleFormChange('duration', e.target.value)}
+                  placeholder="Enter duration in hours"
+                />
+              </Grid>
+
+              {/* Held in */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Held in"
+                  value={formData.heldIn}
+                  onChange={(e) => handleFormChange('heldIn', e.target.value)}
+                  placeholder="Enter location"
+                />
+              </Grid>
+
+              {/* Issued by */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Issued by"
+                  value={formData.issuedBy}
+                  onChange={(e) => handleFormChange('issuedBy', e.target.value)}
+                  placeholder="GreenDye Academy"
+                />
+              </Grid>
+
+              {/* Issue Date */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Issue Date"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.issueDate}
+                  onChange={(e) => handleFormChange('issueDate', e.target.value)}
+                />
+              </Grid>
+
+              {/* Expiry Date */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Expiry Date"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.expiryDate}
+                  onChange={(e) => handleFormChange('expiryDate', e.target.value)}
+                />
+              </Grid>
+            </Grid>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseEditDialog}>Cancel</Button>
+          <Button onClick={handleUpdateCertificate} variant="contained" color="primary">
+            Update
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* QR Code Display Dialog */}
+      <Dialog open={openQrDialog} onClose={() => setOpenQrDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>Certificate QR Code</DialogTitle>
+        <DialogContent>
+          {selectedCertificate && selectedCertificate.qrCode ? (
+            <Box sx={{ textAlign: 'center', py: 2 }}>
+              <Typography variant="subtitle1" gutterBottom>
+                Certificate ID: {selectedCertificate.certificateId}
+              </Typography>
+              <Box sx={{ mt: 2, mb: 2 }}>
+                <img
+                  src={selectedCertificate.qrCode}
+                  alt={`QR Code for ${selectedCertificate.certificateId}`}
+                  style={{ maxWidth: '300px', width: '100%', height: 'auto' }}
+                />
+              </Box>
+              {selectedCertificate.verificationUrl && (
+                <Typography variant="body2" color="text.secondary" sx={{ wordBreak: 'break-all' }}>
+                  Verification URL: {selectedCertificate.verificationUrl}
+                </Typography>
+              )}
+            </Box>
+          ) : (
+            <Alert severity="warning">QR Code not available for this certificate</Alert>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setOpenQrDialog(false)}>Close</Button>
         </DialogActions>
       </Dialog>
     </Container>

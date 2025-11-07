@@ -35,17 +35,17 @@ import {
 } from '@mui/material';
 import {
   Add as AddIcon,
-  Delete as DeleteIcon,
-  Refresh as RefreshIcon,
+  AttachMoney as PayoutIcon,
   Check as ApproveIcon,
   Close as RejectIcon,
-  Visibility as ViewIcon,
-  AttachMoney as PayoutIcon,
+  Delete as DeleteIcon,
+  Edit as EditIcon,
+  HourglassEmpty as PendingIcon,
+  QrCode as QrCodeIcon,
+  Refresh as RefreshIcon,
   TrendingUp as MetricsIcon,
   VerifiedUser as VerifiedIcon,
-  HourglassEmpty as PendingIcon,
-  Edit as EditIcon,
-  QrCode as QrCodeIcon
+  Visibility as ViewIcon
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import adminService from '../services/adminService';
@@ -414,15 +414,13 @@ const AdminTrainers = () => {
   const handleOpenEditDialog = (trainer) => {
     setSelectedTrainer(trainer);
     
-    // Extract bio by language
-    const bio = trainer.bio || {};
-    const bioEn = typeof bio === 'object' && bio.en ? bio.en : '';
-    const bioAr = typeof bio === 'object' && bio.ar ? bio.ar : '';
-    const bioFr = typeof bio === 'object' && bio.fr ? bio.fr : '';
+    // Extract bio by language with optional chaining
+    const bioEn = trainer.bio?.en || '';
+    const bioAr = trainer.bio?.ar || '';
+    const bioFr = trainer.bio?.fr || '';
     
-    // Extract title
-    const title = trainer.title || {};
-    const titleEn = typeof title === 'object' && title.en ? title.en : '';
+    // Extract title with optional chaining
+    const titleEn = trainer.title?.en || '';
     
     // Extract expertise as comma-separated string
     const expertise = Array.isArray(trainer.expertise) ? trainer.expertise.join(', ') : '';

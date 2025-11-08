@@ -133,6 +133,75 @@ describe('Auth API Endpoints', () => {
 
       expect(response.body.success).toBe(false);
     });
+
+    it('should fail with inactive status', async () => {
+      await User.create({
+        name: 'Inactive User',
+        email: 'inactive@example.com',
+        password: 'password123',
+        status: 'inactive',
+        isActive: true
+      });
+
+      const credentials = {
+        email: 'inactive@example.com',
+        password: 'password123'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send(credentials)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('disabled');
+    });
+
+    it('should fail with suspended status', async () => {
+      await User.create({
+        name: 'Suspended User',
+        email: 'suspended@example.com',
+        password: 'password123',
+        status: 'suspended',
+        isActive: false
+      });
+
+      const credentials = {
+        email: 'suspended@example.com',
+        password: 'password123'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send(credentials)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('disabled');
+    });
+
+    it('should fail when isActive is false', async () => {
+      await User.create({
+        name: 'Deactivated User',
+        email: 'deactivated@example.com',
+        password: 'password123',
+        isActive: false,
+        status: 'active'
+      });
+
+      const credentials = {
+        email: 'deactivated@example.com',
+        password: 'password123'
+      };
+
+      const response = await request(app)
+        .post('/api/auth/login')
+        .send(credentials)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('disabled');
+    });
   });
 
   describe('GET /api/auth/me', () => {
@@ -169,6 +238,46 @@ describe('Auth API Endpoints', () => {
         .expect(401);
 
       expect(response.body.success).toBe(false);
+    });
+
+    it('should fail for user with inactive status', async () => {
+      const user = await User.create({
+        name: 'Inactive User',
+        email: 'inactive-me@example.com',
+        password: 'password123',
+        status: 'inactive',
+        isActive: true
+      });
+
+      const token = user.generateAuthToken();
+
+      const response = await request(app)
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('deactivated');
+    });
+
+    it('should fail for user with isActive false', async () => {
+      const user = await User.create({
+        name: 'Deactivated User',
+        email: 'deactivated-me@example.com',
+        password: 'password123',
+        isActive: false,
+        status: 'active'
+      });
+
+      const token = user.generateAuthToken();
+
+      const response = await request(app)
+        .get('/api/auth/me')
+        .set('Authorization', `Bearer ${token}`)
+        .expect(401);
+
+      expect(response.body.success).toBe(false);
+      expect(response.body.message).toContain('deactivated');
     });
   });
 

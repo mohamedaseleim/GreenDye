@@ -104,7 +104,7 @@ exports.login = async (req, res, next) => {
     }
 
     // Check if account is disabled
-    if (!user.isActive || user.status === 'suspended') {
+    if (!user.isActive || user.status !== 'active') {
       // Log failed login attempt - account disabled
       await logFailedLogin(email, ipAddress, userAgent, user.status === 'suspended' ? 'account_suspended' : 'account_disabled');
       return res.status(401).json({

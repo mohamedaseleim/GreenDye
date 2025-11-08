@@ -32,7 +32,7 @@ exports.protect = async (req, res, next) => {
       });
     }
 
-    if (!req.user.isActive) {
+    if (!req.user.isActive || req.user.status !== 'active') {
       return res.status(401).json({
         success: false,
         message: 'User account is deactivated'

@@ -392,7 +392,11 @@ const AdminPages = () => {
                 <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
                   Content (EN)
                 </Typography>
-                <Box sx={{ '& .quill': { height: '300px', mb: '50px' } }}>
+                <Box sx={{ 
+                  '& .ql-container': { height: '300px' },
+                  '& .ql-editor': { minHeight: '300px' },
+                  mb: 2
+                }}>
                   <ReactQuill
                     theme="snow"
                     value={formData.content.en}
@@ -432,7 +436,12 @@ const AdminPages = () => {
                 <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
                   Content (AR)
                 </Typography>
-                <Box sx={{ '& .quill': { height: '300px', mb: '50px' }, direction: 'rtl' }}>
+                <Box sx={{ 
+                  '& .ql-container': { height: '300px' },
+                  '& .ql-editor': { minHeight: '300px' },
+                  direction: 'rtl',
+                  mb: 2
+                }}>
                   <ReactQuill
                     theme="snow"
                     value={formData.content.ar}
@@ -442,6 +451,15 @@ const AdminPages = () => {
                   />
                 </Box>
               </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Meta Description (AR)"
+                value={formData.metaDescription.ar}
+                onChange={(e) => handleInputChange('metaDescription', e.target.value, 'ar')}
+                inputProps={{ dir: 'rtl' }}
+              />
             </Grid>
 
             {/* French Content */}
@@ -463,7 +481,11 @@ const AdminPages = () => {
                 <Typography variant="body2" sx={{ mb: 1, color: 'text.secondary' }}>
                   Content (FR)
                 </Typography>
-                <Box sx={{ '& .quill': { height: '300px', mb: '50px' } }}>
+                <Box sx={{ 
+                  '& .ql-container': { height: '300px' },
+                  '& .ql-editor': { minHeight: '300px' },
+                  mb: 2
+                }}>
                   <ReactQuill
                     theme="snow"
                     value={formData.content.fr}
@@ -473,6 +495,14 @@ const AdminPages = () => {
                   />
                 </Box>
               </Box>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Meta Description (FR)"
+                value={formData.metaDescription.fr}
+                onChange={(e) => handleInputChange('metaDescription', e.target.value, 'fr')}
+              />
             </Grid>
           </Grid>
         </DialogContent>

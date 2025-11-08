@@ -866,6 +866,90 @@ const adminService = {
     const response = await axios.put(`${API_URL}/content-settings/contact`, data, getAuthHeader());
     return response.data;
   },
+
+  // ========== PAYMENT MANAGEMENT ==========
+  getAllTransactions: async (params = {}) => {
+    const response = await axios.get(`${API_URL}/payments`, {
+      ...getAuthHeader(),
+      params,
+    });
+    return response.data;
+  },
+
+  getPaymentStats: async () => {
+    const response = await axios.get(`${API_URL}/payments/stats`, getAuthHeader());
+    return response.data;
+  },
+
+  getRevenueAnalytics: async () => {
+    const response = await axios.get(`${API_URL}/payments/analytics/revenue`, getAuthHeader());
+    return response.data;
+  },
+
+  exportTransactions: async (params = {}) => {
+    const response = await axios.get(`${API_URL}/payments/export`, {
+      ...getAuthHeader(),
+      params,
+    });
+    return response.data;
+  },
+
+  getGatewayConfig: async () => {
+    const response = await axios.get(`${API_URL}/payments/gateway-config`, getAuthHeader());
+    return response.data;
+  },
+
+  updateGatewayConfig: async (data) => {
+    const response = await axios.put(`${API_URL}/payments/gateway-config`, data, getAuthHeader());
+    return response.data;
+  },
+
+  // ========== BACKUP & EXPORT ==========
+  createDatabaseBackup: async () => {
+    const response = await axios.post(`${API_URL}/backup/database`, {}, getAuthHeader());
+    return response.data;
+  },
+
+  exportAllData: async () => {
+    const response = await axios.post(`${API_URL}/backup/export`, {}, getAuthHeader());
+    return response.data;
+  },
+
+  restoreDatabase: async (filename, mode = 'merge') => {
+    const response = await axios.post(`${API_URL}/backup/restore`, { filename, mode }, getAuthHeader());
+    return response.data;
+  },
+
+  importData: async (filename, mode = 'merge') => {
+    const response = await axios.post(`${API_URL}/backup/import`, { filename, mode }, getAuthHeader());
+    return response.data;
+  },
+
+  listBackups: async () => {
+    const response = await axios.get(`${API_URL}/backup/list`, getAuthHeader());
+    return response.data;
+  },
+
+  downloadBackup: async (filename) => {
+    const response = await axios.get(`${API_URL}/backup/download/${filename}`, {
+      ...getAuthHeader(),
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  downloadExport: async (filename) => {
+    const response = await axios.get(`${API_URL}/backup/download-export/${filename}`, {
+      ...getAuthHeader(),
+      responseType: 'blob',
+    });
+    return response.data;
+  },
+
+  deleteBackupFile: async (type, filename) => {
+    const response = await axios.delete(`${API_URL}/backup/${type}/${filename}`, getAuthHeader());
+    return response.data;
+  },
 };
 
 export default adminService;

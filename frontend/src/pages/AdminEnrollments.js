@@ -50,6 +50,17 @@ import { format } from 'date-fns';
 import adminService from '../services/adminService';
 import { LineChart, Line, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, Legend, ResponsiveContainer } from 'recharts';
 
+// Helper function to extract course title from Map or string
+const getCourseTitle = (title) => {
+  if (!title) return 'Untitled Course';
+  if (typeof title === 'string') return title;
+  if (typeof title === 'object') {
+    // Handle Map or plain object with language keys
+    return title.en || title.ar || title.fr || title.default || Object.values(title)[0] || 'Untitled Course';
+  }
+  return 'Untitled Course';
+};
+
 const AdminEnrollments = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -426,7 +437,7 @@ const AdminEnrollments = () => {
                       </Box>
                     </TableCell>
                     <TableCell>
-                      <Typography variant="body2">{enrollment.course?.title}</Typography>
+                      <Typography variant="body2">{getCourseTitle(enrollment.course?.title)}</Typography>
                     </TableCell>
                     <TableCell>
                       <Chip
@@ -502,7 +513,7 @@ const AdminEnrollments = () => {
             <Grid item xs={12} md={6}>
               <Autocomplete
                 options={courses}
-                getOptionLabel={(option) => option.title}
+                getOptionLabel={(option) => getCourseTitle(option.title)}
                 value={selectedCourse}
                 onChange={(event, newValue) => setSelectedCourse(newValue)}
                 renderInput={(params) => (
@@ -565,7 +576,7 @@ const AdminEnrollments = () => {
                       </Typography>
                     </TableCell>
                     <TableCell>
-                      {refund.payment?.course?.title || 'N/A'}
+                      {getCourseTitle(refund.payment?.course?.title) || 'N/A'}
                     </TableCell>
                     <TableCell>
                       ${refund.refundAmount || refund.payment?.amount || 0}
@@ -758,7 +769,7 @@ const AdminEnrollments = () => {
               </Grid>
               <Grid item xs={12} md={6}>
                 <Typography variant="subtitle2" color="text.secondary">Course</Typography>
-                <Typography variant="body1">{selectedEnrollment.enrollment?.course?.title}</Typography>
+                <Typography variant="body1">{getCourseTitle(selectedEnrollment.enrollment?.course?.title)}</Typography>
               </Grid>
               <Grid item xs={12} md={6}>
                 <Typography variant="subtitle2" color="text.secondary">Status</Typography>

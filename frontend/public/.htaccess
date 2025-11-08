@@ -1,0 +1,18 @@
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  
+  # Don't rewrite files or directories
+  RewriteCond %{REQUEST_FILENAME} !-f
+  RewriteCond %{REQUEST_FILENAME} !-d
+  
+  # Don't rewrite API requests
+  RewriteCond %{REQUEST_URI} !^/api/
+  
+  # Don't rewrite static files
+  RewriteCond %{REQUEST_URI} !^/uploads/
+  RewriteCond %{REQUEST_URI} !^/invoices/
+  
+  # Rewrite everything else to index.html to allow client-side routing
+  RewriteRule . /index.html [L]
+</IfModule>

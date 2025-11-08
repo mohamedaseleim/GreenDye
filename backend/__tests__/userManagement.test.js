@@ -7,14 +7,14 @@ const { createAuthenticatedUser } = require('./utils/testHelpers');
 
 describe('User Management API Tests', () => {
   let adminToken;
-  let adminUser;
+  let _adminUser;
   let testUser;
   let testUserToken;
 
   beforeEach(async () => {
     // Create admin user with token
     const adminAuth = await createAuthenticatedUser('admin');
-    adminUser = adminAuth.user;
+    _adminUser = adminAuth.user;
     adminToken = adminAuth.token;
 
     // Create test user with token

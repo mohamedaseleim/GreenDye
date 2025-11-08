@@ -22,7 +22,7 @@ describe('Admin Certificate API Endpoints', () => {
     trainerId = trainer._id;
 
     // Create an admin user
-    const admin = await User.create({
+    const _admin = await User.create({
       name: 'Admin User',
       email: 'admin@example.com',
       password: 'password123',
@@ -300,7 +300,7 @@ describe('Admin Certificate API Endpoints', () => {
   describe('POST /api/admin/certificates/bulk', () => {
     it('should bulk upload certificates', async () => {
       // Create another student
-      const student2 = await User.create({
+      const _student2 = await User.create({
         name: 'Student Two',
         email: 'student2@example.com',
         password: 'password123',

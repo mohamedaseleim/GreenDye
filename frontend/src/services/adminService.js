@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_URL = '/api/admin';
+const API_URL = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin`;
 
 const getAuthHeader = () => {
   const token = localStorage.getItem('token');
@@ -353,12 +353,12 @@ const updatePayoutStatus = async (payoutId, data) => {
 
 // ========== COURSE MANAGEMENT (for enrollment) ==========
 const getAllCoursesForEnrollment = async () => {
-  const response = await axios.get('/api/courses', getAuthHeader());
+  const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/courses`, getAuthHeader());
   return response.data;
 };
 
 // ========== USER MANAGEMENT ==========
-const USER_API_URL = '/api/users';
+const USER_API_URL = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/users`;
 
 const getAllUsersForEnrollment = async () => {
   const response = await axios.get(USER_API_URL, getAuthHeader());

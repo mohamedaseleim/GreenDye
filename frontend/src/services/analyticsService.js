@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = '/api/analytics';
+const API_BASE_URL = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/analytics`;
 
 export const trackEvent = async (eventType, data = {}) => {
   // Only track events if user is authenticated

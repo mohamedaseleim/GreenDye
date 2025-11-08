@@ -23,7 +23,7 @@ describe('analyticsService', () => {
 
       await trackEvent('test_event', { some: 'data' });
 
-      expect(axios.post).toHaveBeenCalledWith('/api/analytics/track', {
+      expect(axios.post).toHaveBeenCalledWith('http://localhost:5000/api/analytics/track', {
         eventType: 'test_event',
         some: 'data'
       });
@@ -54,7 +54,7 @@ describe('analyticsService', () => {
 
       await trackPageView('/test-page', 'user123', 'course123');
 
-      expect(axios.post).toHaveBeenCalledWith('/api/analytics/track', {
+      expect(axios.post).toHaveBeenCalledWith('http://localhost:5000/api/analytics/track', {
         eventType: 'page_view',
         page: '/test-page',
         userId: 'user123',
@@ -76,7 +76,7 @@ describe('analyticsService', () => {
 
       await trackVideoProgress('course123', 'lesson123', 'user123', 75);
 
-      expect(axios.post).toHaveBeenCalledWith('/api/analytics/track', {
+      expect(axios.post).toHaveBeenCalledWith('http://localhost:5000/api/analytics/track', {
         eventType: 'video_progress',
         courseId: 'course123',
         lessonId: 'lesson123',
@@ -99,7 +99,7 @@ describe('analyticsService', () => {
 
       await trackQuizEvent('quiz_complete', 'course123', 'lesson123', 'user123', { score: 85 });
 
-      expect(axios.post).toHaveBeenCalledWith('/api/analytics/track', {
+      expect(axios.post).toHaveBeenCalledWith('http://localhost:5000/api/analytics/track', {
         eventType: 'quiz_complete',
         courseId: 'course123',
         lessonId: 'lesson123',

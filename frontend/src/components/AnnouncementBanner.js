@@ -21,7 +21,7 @@ const AnnouncementBanner = ({ userRole = 'all' }) => {
 
   const fetchActiveAnnouncements = async () => {
     try {
-      const response = await axios.get('/api/announcements/active');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/announcements/active`);
       setAnnouncements(response.data.data || []);
     } catch (error) {
       console.error('Error fetching announcements:', error);

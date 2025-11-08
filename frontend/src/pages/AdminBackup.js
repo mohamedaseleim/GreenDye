@@ -16,13 +16,11 @@ import {
   TableHead,
   TableRow,
   IconButton,
-  Chip,
   CircularProgress,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
-  TextField,
   FormControl,
   InputLabel,
   Select,
@@ -42,7 +40,7 @@ import {
   Description as FileIcon,
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
-import axios from 'axios';
+import adminService from '../services/adminService';
 
 const AdminBackup = () => {
   const [loading, setLoading] = useState(true);
@@ -62,15 +60,9 @@ const AdminBackup = () => {
   const fetchBackupList = async () => {
     try {
       setLoading(true);
-      const token = localStorage.getItem('token');
-      const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/backup/list`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
-      setBackups(response.data.data.backups || []);
-      setExports(response.data.data.exports || []);
+      const response = await adminService.listBackups();
+      setBackups(response.data.backups || []);
+      setExports(response.data.exports || []);
     } catch (error) {
       console.error('Error fetching backup list:', error);
       toast.error('Failed to load backup list');
@@ -86,14 +78,7 @@ const AdminBackup = () => {
       setProcessing(true);
       toast.info('Creating database backup... This may take a few minutes.');
       
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/backup/database`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      await adminService.createDatabaseBackup();
       
       toast.success('Database backup created successfully!');
       fetchBackupList();
@@ -112,14 +97,7 @@ const AdminBackup = () => {
       setProcessing(true);
       toast.info('Exporting all data... This may take a few minutes.');
       
-      const token = localStorage.getItem('token');
-      const response = await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/backup/export`,
-        {},
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      await adminService.exportAllData();
       
       toast.success('Data export completed successfully!');
       fetchBackupList();
@@ -133,23 +111,10 @@ const AdminBackup = () => {
 
   const handleDownload = async (item, type) => {
     try {
-      const token = localStorage.getItem('token');
-      const baseUrl = process.env.REACT_APP_API_URL || 'http://localhost:5000';
-      const url = `${baseUrl}${item.path}`;
-      
-      // Fetch with authentication
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Download failed');
-      }
-      
-      // Get blob from response
-      const blob = await response.blob();
+      // Determine which service function to use based on type
+      const blob = type === 'backup' 
+        ? await adminService.downloadBackup(item.filename)
+        : await adminService.downloadExport(item.filename);
       
       // Create download link
       const downloadUrl = window.URL.createObjectURL(blob);
@@ -174,13 +139,7 @@ const AdminBackup = () => {
     }
     
     try {
-      const token = localStorage.getItem('token');
-      await axios.delete(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/backup/${type}/${item.filename}`,
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      await adminService.deleteBackupFile(type, item.filename);
       
       toast.success(`${type} deleted successfully!`);
       fetchBackupList();
@@ -197,14 +156,7 @@ const AdminBackup = () => {
       setProcessing(true);
       toast.info('Restoring database... This may take a few minutes.');
       
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/backup/restore`,
-        { filename: selectedBackup.filename },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      await adminService.restoreDatabase(selectedBackup.filename);
       
       toast.success('Database restored successfully!');
       setOpenRestoreDialog(false);
@@ -224,17 +176,7 @@ const AdminBackup = () => {
       setProcessing(true);
       toast.info('Importing data... This may take a few minutes.');
       
-      const token = localStorage.getItem('token');
-      await axios.post(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/backup/import`,
-        { 
-          filename: selectedExport.filename,
-          mode: importMode
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` }
-        }
-      );
+      await adminService.importData(selectedExport.filename, importMode);
       
       toast.success('Data imported successfully!');
       setOpenImportDialog(false);

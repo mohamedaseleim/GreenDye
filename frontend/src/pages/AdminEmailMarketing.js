@@ -29,8 +29,6 @@ import {
   FormControl,
   InputLabel,
   Select,
-  Checkbox,
-  FormControlLabel,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -96,6 +94,7 @@ const AdminEmailMarketing = () => {
     }
 
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, campaignsPage, newslettersPage, activeTab]);
 
   const fetchData = async () => {

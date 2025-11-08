@@ -38,7 +38,7 @@ import {
 } from '@mui/icons-material';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import adminService from '../services/adminService';
 import { format } from 'date-fns';
 
 const AdminPayments = () => {
@@ -75,12 +75,6 @@ const AdminPayments = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, page, rowsPerPage, filters]);
 
-  const getAuthHeaders = () => ({
-    headers: {
-      Authorization: `Bearer ${localStorage.getItem('token')}`
-    }
-  });
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -106,12 +100,9 @@ const AdminPayments = () => {
         limit: rowsPerPage,
         ...filters
       };
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/payments`, {
-        ...getAuthHeaders(),
-        params
-      });
-      setTransactions(response.data.data);
-      setTotalCount(response.data.total);
+      const response = await adminService.getAllTransactions(params);
+      setTransactions(response.data);
+      setTotalCount(response.total);
     } catch (error) {
       console.error('Error fetching transactions:', error);
     }
@@ -119,8 +110,8 @@ const AdminPayments = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/payments/stats`, getAuthHeaders());
-      setStats(response.data.data);
+      const response = await adminService.getPaymentStats();
+      setStats(response.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
     }
@@ -128,8 +119,8 @@ const AdminPayments = () => {
 
   const fetchRevenueAnalytics = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/payments/analytics/revenue`, getAuthHeaders());
-      setRevenueData(response.data.data);
+      const response = await adminService.getRevenueAnalytics();
+      setRevenueData(response.data);
     } catch (error) {
       console.error('Error fetching revenue analytics:', error);
     }
@@ -137,8 +128,8 @@ const AdminPayments = () => {
 
   const fetchRefundRequests = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/refunds`, getAuthHeaders());
-      setRefundRequests(response.data.data);
+      const response = await adminService.getRefundRequests();
+      setRefundRequests(response.data);
     } catch (error) {
       console.error('Error fetching refund requests:', error);
     }
@@ -146,8 +137,8 @@ const AdminPayments = () => {
 
   const fetchGatewayConfig = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/payments/gateway-config`, getAuthHeaders());
-      setGatewayConfig(response.data.data);
+      const response = await adminService.getGatewayConfig();
+      setGatewayConfig(response.data);
     } catch (error) {
       console.error('Error fetching gateway config:', error);
     }
@@ -163,7 +154,7 @@ const AdminPayments = () => {
 
   const handleApproveRefund = async (refundId) => {
     try {
-      await axios.put(`/api/refunds/${refundId}/approve`, {}, getAuthHeaders());
+      await adminService.approveRefund(refundId);
       showSnackbar('Refund approved successfully', 'success');
       fetchRefundRequests();
       fetchStats();
@@ -181,9 +172,7 @@ const AdminPayments = () => {
 
   const handleRejectRefundConfirm = async () => {
     try {
-      await axios.put(`/api/refunds/${selectedRefund._id}/reject`, {
-        responseMessage: rejectReason
-      }, getAuthHeaders());
+      await adminService.rejectRefund(selectedRefund._id, rejectReason);
       showSnackbar('Refund rejected', 'success');
       setRejectDialogOpen(false);
       setSelectedRefund(null);
@@ -198,12 +187,8 @@ const AdminPayments = () => {
 
   const handleExportTransactions = async () => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/payments/export`, {
-        ...getAuthHeaders(),
-        params: { format: 'csv' },
-        responseType: 'blob'
-      });
-      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const response = await adminService.exportTransactions({ format: 'csv' });
+      const url = window.URL.createObjectURL(new Blob([response]));
       const link = document.createElement('a');
       link.href = url;
       link.setAttribute('download', `transactions-${new Date().toISOString().split('T')[0]}.csv`);

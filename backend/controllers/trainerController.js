@@ -8,13 +8,25 @@ exports.getTrainers = async (req, res, next) => {
   try {
     const { page = 1, limit = 10 } = req.query;
 
-    const trainers = await Trainer.find({ isActive: true, isVerified: true })
+    const trainers = await Trainer.find({ 
+      isActive: true, 
+      $or: [
+        { isVerified: true },
+        { applicationStatus: 'approved' }
+      ]
+    })
       .populate('user', 'name email avatar')
       .limit(limit * 1)
       .skip((page - 1) * limit)
       .sort({ rating: -1 });
 
-    const count = await Trainer.countDocuments({ isActive: true, isVerified: true });
+    const count = await Trainer.countDocuments({ 
+      isActive: true, 
+      $or: [
+        { isVerified: true },
+        { applicationStatus: 'approved' }
+      ]
+    });
 
     res.status(200).json({
       success: true,

@@ -11,7 +11,7 @@ describe('Certificate API Endpoints', () => {
   let trainerId;
   let studentId;
   let courseId;
-  let enrollmentId;
+  let _enrollmentId;
 
   beforeEach(async () => {
     // Create a trainer/instructor user
@@ -25,7 +25,7 @@ describe('Certificate API Endpoints', () => {
     trainerId = trainer._id;
 
     // Create an admin user
-    const admin = await User.create({
+    const _admin = await User.create({
       name: 'Admin User',
       email: 'admin@example.com',
       password: 'password123',
@@ -83,7 +83,7 @@ describe('Certificate API Endpoints', () => {
       status: 'completed',
       progress: 100
     });
-    enrollmentId = enrollment._id;
+    _enrollmentId = enrollment._id;
   });
 
   describe('POST /api/certificates/generate', () => {

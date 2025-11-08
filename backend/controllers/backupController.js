@@ -1,6 +1,5 @@
 const asyncHandler = require('express-async-handler');
 const { spawn } = require('child_process');
-const { promisify } = require('util');
 const fs = require('fs').promises;
 const path = require('path');
 const archiver = require('archiver');

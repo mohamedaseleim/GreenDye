@@ -1,13 +1,12 @@
 const request = require('supertest');
-const mongoose = require('mongoose');
 const { app } = require('../../server');
 const Page = require('../../models/Page');
 const User = require('../../models/User');
 
 describe('Public Page API', () => {
   let testUser;
-  let publishedPage;
-  let draftPage;
+  let _publishedPage;
+  let _draftPage;
 
   beforeAll(async () => {
     // Create a test user
@@ -19,7 +18,7 @@ describe('Public Page API', () => {
     });
 
     // Create a published page
-    publishedPage = await Page.create({
+    _publishedPage = await Page.create({
       slug: 'test-published-page',
       title: {
         en: 'Test Published Page',
@@ -43,7 +42,7 @@ describe('Public Page API', () => {
     });
 
     // Create a draft page (should not be accessible)
-    draftPage = await Page.create({
+    _draftPage = await Page.create({
       slug: 'test-draft-page',
       title: {
         en: 'Test Draft Page'

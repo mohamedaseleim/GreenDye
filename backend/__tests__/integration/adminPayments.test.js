@@ -11,8 +11,8 @@ describe('Admin Payment Management', () => {
   let adminUser;
   let studentUser;
   let course;
-  let payment1;
-  let payment2;
+  let _payment1;
+  let _payment2;
 
   beforeAll(async () => {
     // Create admin user
@@ -48,7 +48,7 @@ describe('Admin Payment Management', () => {
     });
 
     // Create completed payment
-    payment1 = await Payment.create({
+    _payment1 = await Payment.create({
       user: studentUser._id,
       course: course._id,
       amount: 100,
@@ -60,7 +60,7 @@ describe('Admin Payment Management', () => {
     });
 
     // Create pending payment
-    payment2 = await Payment.create({
+    _payment2 = await Payment.create({
       user: studentUser._id,
       course: course._id,
       amount: 90,

@@ -106,7 +106,7 @@ const AdminPayments = () => {
         limit: rowsPerPage,
         ...filters
       };
-      const response = await axios.get('/api/admin/payments', {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/payments`, {
         ...getAuthHeaders(),
         params
       });
@@ -119,7 +119,7 @@ const AdminPayments = () => {
 
   const fetchStats = async () => {
     try {
-      const response = await axios.get('/api/admin/payments/stats', getAuthHeaders());
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/payments/stats`, getAuthHeaders());
       setStats(response.data.data);
     } catch (error) {
       console.error('Error fetching stats:', error);
@@ -128,7 +128,7 @@ const AdminPayments = () => {
 
   const fetchRevenueAnalytics = async () => {
     try {
-      const response = await axios.get('/api/admin/payments/analytics/revenue', getAuthHeaders());
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/payments/analytics/revenue`, getAuthHeaders());
       setRevenueData(response.data.data);
     } catch (error) {
       console.error('Error fetching revenue analytics:', error);
@@ -137,7 +137,7 @@ const AdminPayments = () => {
 
   const fetchRefundRequests = async () => {
     try {
-      const response = await axios.get('/api/refunds', getAuthHeaders());
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/refunds`, getAuthHeaders());
       setRefundRequests(response.data.data);
     } catch (error) {
       console.error('Error fetching refund requests:', error);
@@ -146,7 +146,7 @@ const AdminPayments = () => {
 
   const fetchGatewayConfig = async () => {
     try {
-      const response = await axios.get('/api/admin/payments/gateway-config', getAuthHeaders());
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/payments/gateway-config`, getAuthHeaders());
       setGatewayConfig(response.data.data);
     } catch (error) {
       console.error('Error fetching gateway config:', error);
@@ -198,7 +198,7 @@ const AdminPayments = () => {
 
   const handleExportTransactions = async () => {
     try {
-      const response = await axios.get('/api/admin/payments/export', {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/payments/export`, {
         ...getAuthHeaders(),
         params: { format: 'csv' },
         responseType: 'blob'

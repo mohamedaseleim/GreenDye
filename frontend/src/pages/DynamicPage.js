@@ -66,7 +66,7 @@ const DynamicPage = () => {
     try {
       setLoading(true);
       setError(false);
-      const response = await axios.get(`/api/pages/${slug}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/pages/${slug}`);
       
       if (response.data.success) {
         setPage(response.data.data);

@@ -102,7 +102,7 @@ describe('Dynamic Navigation - Header and Footer', () => {
 
       // Wait for API call
       await waitFor(() => {
-        expect(axios.get).toHaveBeenCalledWith('/api/pages', {
+        expect(axios.get).toHaveBeenCalledWith('http://localhost:5000/api/pages', {
           params: { location: 'header' }
         });
       });
@@ -178,7 +178,7 @@ describe('Dynamic Navigation - Header and Footer', () => {
 
       // Wait for API call
       await waitFor(() => {
-        expect(axios.get).toHaveBeenCalledWith('/api/pages', {
+        expect(axios.get).toHaveBeenCalledWith('http://localhost:5000/api/pages', {
           params: { location: 'footer' }
         });
       });

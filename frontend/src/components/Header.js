@@ -61,7 +61,7 @@ const Header = () => {
 
   const fetchPublishedPages = async () => {
     try {
-      const response = await axios.get('/api/pages', {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/pages`, {
         params: { location: 'header' }
       });
       setDynamicPages(response.data.data || []);

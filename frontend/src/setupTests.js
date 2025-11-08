@@ -5,7 +5,7 @@
 import '@testing-library/jest-dom';
 
 // Mock environment variables
-process.env.REACT_APP_API_URL = 'http://localhost:5000/api';
+process.env.REACT_APP_API_URL = 'http://localhost:5000';
 
 // Mock axios to prevent import errors in tests
 jest.mock('axios', () => ({

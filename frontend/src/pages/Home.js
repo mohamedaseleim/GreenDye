@@ -27,7 +27,7 @@ const Home = () => {
   const fetchContent = async () => {
     try {
       setLoading(true);
-      const response = await axios.get('/api/admin/content-settings/public');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/content-settings/public`);
       setContent(response.data.data);
     } catch (error) {
       console.error('Error fetching content:', error);

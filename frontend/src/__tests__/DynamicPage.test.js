@@ -126,7 +126,7 @@ describe('DynamicPage Component', () => {
     );
 
     await waitFor(() => {
-      expect(axios.get).toHaveBeenCalledWith('/api/pages/about-us');
+      expect(axios.get).toHaveBeenCalledWith('http://localhost:5000/api/pages/about-us');
     });
   });
 

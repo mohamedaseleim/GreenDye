@@ -119,7 +119,7 @@ describe('VerifyTrainer Component', () => {
 
     await waitFor(() => {
       expect(axios.get).toHaveBeenCalledWith(
-        expect.stringContaining('/api/verify/trainer/TR-TEST123')
+        expect.stringContaining('http://localhost:5000/api/verify/trainer/TR-TEST123')
       );
       expect(screen.getByText('TR-TEST123')).toBeInTheDocument();
     });

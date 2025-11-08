@@ -179,13 +179,28 @@ exports.verifyTrainer = async (req, res, next) => {
       });
     }
 
-    if (!trainer.isVerified || !trainer.isActive) {
+    // Check if trainer is active first
+    if (!trainer.isActive) {
       return res.status(200).json({
         success: true,
         verified: false,
-        message: !trainer.isActive
-          ? 'Trainer account is not active'
-          : 'Trainer is not verified',
+        message: 'Trainer account is not active',
+        data: {
+          trainerId: trainer.trainerId,
+          fullName: trainer.fullName,
+          verificationStatus: getVerificationStatus(trainer.applicationStatus),
+          isVerified: trainer.isVerified,
+          isActive: trainer.isActive
+        }
+      });
+    }
+
+    // Check if trainer is approved (primary verification condition)
+    if (trainer.applicationStatus !== 'approved') {
+      return res.status(200).json({
+        success: true,
+        verified: false,
+        message: 'Trainer is not verified',
         data: {
           trainerId: trainer.trainerId,
           fullName: trainer.fullName,

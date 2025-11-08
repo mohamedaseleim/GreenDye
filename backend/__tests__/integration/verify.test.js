@@ -143,8 +143,9 @@ describe('Verify Controller', () => {
     });
 
     it('should return unverified status for unverified trainer', async () => {
-      // Temporarily unverify the trainer
-      testTrainer.isVerified = false;
+      // Temporarily unverify the trainer by changing applicationStatus
+      const originalStatus = testTrainer.applicationStatus;
+      testTrainer.applicationStatus = 'pending';
       await testTrainer.save();
 
       const response = await request(app)
@@ -162,7 +163,40 @@ describe('Verify Controller', () => {
       expect(response.body.data.accreditations).toBeUndefined();
       expect(response.body.data.commissionRate).toBeUndefined();
 
-      // Re-verify for other tests
+      // Restore original status for other tests
+      testTrainer.applicationStatus = originalStatus;
+      await testTrainer.save();
+    });
+
+    it('should return verified status for approved trainer even if isVerified is false', async () => {
+      // Set isVerified to false but keep applicationStatus as approved
+      testTrainer.isVerified = false;
+      testTrainer.applicationStatus = 'approved';
+      await testTrainer.save();
+
+      const response = await request(app)
+        .get(`/api/verify/trainer/${testTrainer.trainerId}`)
+        .expect(200);
+
+      expect(response.body.success).toBe(true);
+      expect(response.body.verified).toBe(true);
+      expect(response.body.message).toBe('Trainer is verified and active');
+
+      const trainerData = response.body.data;
+
+      // Check that public fields are present
+      expect(trainerData.trainerId).toBe(testTrainer.trainerId);
+      expect(trainerData.fullName).toBe('Test Trainer');
+      expect(trainerData.verificationStatus).toBe('Approved');
+
+      // Ensure admin-only fields are NOT present
+      expect(trainerData.rating).toBeUndefined();
+      expect(trainerData.coursesCount).toBeUndefined();
+      expect(trainerData.studentsCount).toBeUndefined();
+      expect(trainerData.accreditations).toBeUndefined();
+      expect(trainerData.commissionRate).toBeUndefined();
+
+      // Restore isVerified for other tests
       testTrainer.isVerified = true;
       await testTrainer.save();
     });

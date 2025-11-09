@@ -82,6 +82,7 @@ app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/courses', require('./routes/courseRoutes'));
 app.use('/api/certificates', require('./routes/certificateRoutes'));
 app.use('/api/trainers', require('./routes/trainerRoutes'));
+app.use('/api/trainer/dashboard', require('./routes/trainerDashboardRoutes'));
 app.use('/api/verify', require('./routes/verifyRoutes')); // public verification (supports ?t=token)
 app.use('/api/enrollments', require('./routes/enrollmentRoutes'));
 app.use('/api/lessons', require('./routes/lessonRoutes'));

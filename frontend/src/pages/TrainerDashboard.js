@@ -23,7 +23,6 @@ import {
   TableContainer,
   TableHead,
   TableRow,
-  LinearProgress,
 } from '@mui/material';
 import {
   School,

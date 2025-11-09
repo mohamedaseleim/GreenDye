@@ -39,6 +39,7 @@ import PrivateRoute from './components/PrivateRoute';
 
 // NEW: Admin-only content management
 import AdminRoute from './components/AdminRoute';
+import TrainerRoute from './components/TrainerRoute';
 import AdminLessons from './pages/AdminLessons';
 import AdminDashboard from './pages/AdminDashboard';
 import AdminCertificates from './pages/AdminCertificates';
@@ -56,6 +57,7 @@ import AdminSettings from './pages/AdminSettings';
 import AdminEmailMarketing from './pages/AdminEmailMarketing';
 import AdminBackup from './pages/AdminBackup';
 import AdminContentSettings from './pages/AdminContentSettings';
+import TrainerDashboard from './pages/TrainerDashboard';
 
 // NEW: analytics import
 import { trackPageView } from './services/analyticsService';
@@ -160,6 +162,18 @@ function App() {
                     element={
                       <PrivateRoute>
                         <Analytics />
+                      </PrivateRoute>
+                    }
+                  />
+
+                  {/* Trainer Dashboard */}
+                  <Route
+                    path="/trainer/dashboard"
+                    element={
+                      <PrivateRoute>
+                        <TrainerRoute>
+                          <TrainerDashboard />
+                        </TrainerRoute>
                       </PrivateRoute>
                     }
                   />

@@ -122,6 +122,11 @@ const Header = () => {
                 {t('analytics')}
               </Button>
             )}
+            {isAuthenticated && user?.role === 'trainer' && (
+              <Button color="inherit" component={RouterLink} to="/trainer/dashboard">
+                Trainer Dashboard
+              </Button>
+            )}
             {isAuthenticated && user?.role === 'admin' && (
               <Button color="inherit" component={RouterLink} to="/admin/dashboard">
                 Admin Dashboard
@@ -198,6 +203,16 @@ const Header = () => {
                     >
                       {t('analytics')}
                     </MenuItem>
+                    {user?.role === 'trainer' && (
+                      <MenuItem
+                        onClick={() => {
+                          navigate('/trainer/dashboard');
+                          handleClose();
+                        }}
+                      >
+                        Trainer Dashboard
+                      </MenuItem>
+                    )}
                     {user?.role === 'admin' && (
                       <>
                         <MenuItem

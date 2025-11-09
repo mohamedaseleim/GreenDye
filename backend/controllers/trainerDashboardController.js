@@ -262,6 +262,14 @@ exports.getTrainerStudents = async (req, res, next) => {
     let enrollmentQuery = {};
     
     if (courseId) {
+      // Validate courseId format
+      if (!courseId.match(/^[0-9a-fA-F]{24}$/)) {
+        return res.status(400).json({
+          success: false,
+          message: 'Invalid course ID format'
+        });
+      }
+      
       // Verify the course belongs to this trainer
       const course = await Course.findOne({ 
         _id: courseId, 

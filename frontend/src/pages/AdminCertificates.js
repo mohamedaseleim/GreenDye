@@ -452,9 +452,6 @@ const AdminCertificates = () => {
       await adminService.createCertificate(data);
       toast.success('Certificate created successfully');
       
-      // Close the dialog
-      handleCloseCreateDialog();
-      
       // Reset to page 1 to show the newly created certificate (newest appears first)
       if (page !== 0) {
         setPage(0);
@@ -462,6 +459,9 @@ const AdminCertificates = () => {
         // If already on page 0, manually refresh the list
         fetchCertificates();
       }
+      
+      // Close the dialog
+      handleCloseCreateDialog();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create certificate');
       console.error('Error:', error);

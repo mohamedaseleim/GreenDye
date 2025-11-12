@@ -505,6 +505,7 @@ const AdminEnrollments = () => {
                 getOptionLabel={(option) => `${option.name} (${option.email})`}
                 value={selectedUser}
                 onChange={(event, newValue) => setSelectedUser(newValue)}
+                isOptionEqualToValue={(option, value) => option._id === value._id}
                 renderInput={(params) => (
                   <TextField {...params} label="Select User" fullWidth />
                 )}
@@ -516,6 +517,7 @@ const AdminEnrollments = () => {
                 getOptionLabel={(option) => getCourseTitle(option.title)}
                 value={selectedCourse}
                 onChange={(event, newValue) => setSelectedCourse(newValue)}
+                isOptionEqualToValue={(option, value) => option._id === value._id}
                 renderInput={(params) => (
                   <TextField {...params} label="Select Course" fullWidth />
                 )}

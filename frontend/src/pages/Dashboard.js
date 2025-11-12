@@ -28,6 +28,7 @@ import {
   Person,
   CardMembership,
   Quiz as QuizIcon,
+  Dashboard as DashboardIcon,
 } from '@mui/icons-material';
 import axios from 'axios';
 import { useAuth } from '../contexts/AuthContext';
@@ -148,6 +149,32 @@ const Dashboard = () => {
       {error && (
         <Alert severity="error" sx={{ mb: 3 }}>
           {error}
+        </Alert>
+      )}
+
+      {/* Trainer Dashboard Link - Show for users with trainer role */}
+      {user?.role === 'trainer' && (
+        <Alert 
+          severity="info" 
+          sx={{ mb: 3 }}
+          action={
+            <Button 
+              color="inherit" 
+              size="small" 
+              variant="outlined"
+              startIcon={<DashboardIcon />}
+              onClick={() => navigate('/trainer/dashboard')}
+            >
+              Go to Trainer Dashboard
+            </Button>
+          }
+        >
+          <Typography variant="body1" fontWeight="medium">
+            You have access to the Trainer Dashboard
+          </Typography>
+          <Typography variant="body2">
+            Manage your courses, view student progress, and track your earnings.
+          </Typography>
         </Alert>
       )}
 

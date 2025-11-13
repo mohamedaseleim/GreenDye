@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import { useParams, useSearchParams } from 'react-router-dom';
 import axios from 'axios';
+import { getApiUrl } from '../utils/apiConfig';
 
 const VerifyCertificate = () => {
   const { certificateId: urlCertificateId } = useParams();
@@ -52,7 +53,7 @@ const VerifyCertificate = () => {
       const token = searchParams.get('t');
       
       // Build the verification URL with token if present
-      let verificationUrl = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/verify/certificate/${certificateId}`;
+      let verificationUrl = getApiUrl(`/api/verify/certificate/${certificateId}`);
       if (token) {
         verificationUrl += `?t=${token}`;
       }

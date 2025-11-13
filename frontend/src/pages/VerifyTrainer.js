@@ -20,6 +20,7 @@ import {
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Search, Person, Verified, School } from '@mui/icons-material';
 import axios from 'axios';
+import { getApiUrl } from '../utils/apiConfig';
 
 const VerifyTrainer = () => {
   const { trainerId: urlTrainerId } = useParams();
@@ -55,7 +56,7 @@ const VerifyTrainer = () => {
 
     try {
       const response = await axios.get(
-        `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/verify/trainer/${trainerId}`
+        getApiUrl(`/api/verify/trainer/${trainerId}`)
       );
       
       setTrainer(response.data.data);

@@ -42,7 +42,8 @@ import {
   AttachMoney as PriceIcon,
   Category as CategoryIcon,
   LocalOffer as TagIcon,
-  PlayLesson as LessonIcon
+  PlayLesson as LessonIcon,
+  ViewModule as SectionIcon
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import adminService from '../services/adminService';
@@ -50,6 +51,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { COURSE_CATEGORIES, getCourseTitle, getApprovalStatusColor } from '../utils/courseUtils';
 import LessonManagement from '../components/LessonManagement';
+import SectionManagement from '../components/SectionManagement';
 
 const AdminCourses = () => {
   const { user } = useAuth();
@@ -75,6 +77,7 @@ const AdminCourses = () => {
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
   const [openLessonDialog, setOpenLessonDialog] = useState(false);
+  const [openSectionDialog, setOpenSectionDialog] = useState(false);
   
   // Selected data
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -409,6 +412,16 @@ const AdminCourses = () => {
     setSelectedCourse(null);
   };
 
+  const handleOpenSectionDialog = (course) => {
+    setSelectedCourse(course);
+    setOpenSectionDialog(true);
+  };
+
+  const handleCloseSectionDialog = () => {
+    setOpenSectionDialog(false);
+    setSelectedCourse(null);
+  };
+
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4, mb: 4 }}>
@@ -651,6 +664,14 @@ const AdminCourses = () => {
                           color="primary"
                         >
                           <LessonIcon />
+                        </IconButton>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleOpenSectionDialog(course)}
+                          title="Manage Sections"
+                          color="secondary"
+                        >
+                          <SectionIcon />
                         </IconButton>
                         <IconButton 
                           size="small" 
@@ -1361,6 +1382,15 @@ const AdminCourses = () => {
           courseId={selectedCourse._id}
           open={openLessonDialog}
           onClose={handleCloseLessonDialog}
+        />
+      )}
+
+      {/* Section Management Dialog */}
+      {selectedCourse && (
+        <SectionManagement
+          courseId={selectedCourse._id}
+          open={openSectionDialog}
+          onClose={handleCloseSectionDialog}
         />
       )}
     </Container>

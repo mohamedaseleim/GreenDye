@@ -86,6 +86,7 @@ app.use('/api/trainer/dashboard', require('./routes/trainerDashboardRoutes'));
 app.use('/api/verify', require('./routes/verifyRoutes')); // public verification (supports ?t=token)
 app.use('/api/enrollments', require('./routes/enrollmentRoutes'));
 app.use('/api/lessons', require('./routes/lessonRoutes'));
+app.use('/api/sections', require('./routes/sectionRoutes'));
 app.use('/api/quizzes', require('./routes/quizRoutes')); // includes attempts/analytics/grade
 app.use('/api/assignments', require('./routes/assignmentRoutes')); // assignment management
 app.use('/api/forums', require('./routes/forumRoutes'));

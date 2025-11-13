@@ -59,20 +59,78 @@ const AdminPages = () => {
     menuOrder: 0
   });
 
+  // Quill editor refs for custom handlers
+  const quillRefEn = React.useRef(null);
+  const quillRefAr = React.useRef(null);
+  const quillRefFr = React.useRef(null);
+
+  // Image upload handler
+  const imageHandler = React.useCallback((quillRef) => {
+    return function() {
+      const input = document.createElement('input');
+      input.setAttribute('type', 'file');
+      input.setAttribute('accept', 'image/*');
+      input.click();
+
+      input.onchange = async () => {
+        const file = input.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append('files', file);
+        formData.append('category', 'pages');
+
+        try {
+          const token = localStorage.getItem('token');
+          const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/admin/cms/media/upload`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${token}`
+            },
+            body: formData
+          });
+
+          const data = await response.json();
+          
+          if (data.success && data.data && data.data.length > 0) {
+            const imageUrl = data.data[0].url;
+            const quill = quillRef.current?.getEditor();
+            if (quill) {
+              const range = quill.getSelection(true);
+              quill.insertEmbed(range.index, 'image', imageUrl);
+              quill.setSelection(range.index + 1);
+            }
+            toast.success('Image uploaded successfully');
+          } else {
+            toast.error('Failed to upload image');
+          }
+        } catch (error) {
+          console.error('Error uploading image:', error);
+          toast.error('Failed to upload image');
+        }
+      };
+    };
+  }, []);
+
   // Quill editor configuration
-  const quillModules = {
-    toolbar: [
-      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-      ['bold', 'italic', 'underline', 'strike'],
-      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-      [{ 'indent': '-1'}, { 'indent': '+1' }],
-      [{ 'align': [] }],
-      ['link', 'image', 'video'],
-      [{ 'color': [] }, { 'background': [] }],
-      ['blockquote', 'code-block'],
-      ['clean']
-    ]
-  };
+  const getQuillModules = (quillRef) => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'align': [] }],
+        ['link', 'image', 'video'],
+        [{ 'color': [] }, { 'background': [] }],
+        ['blockquote', 'code-block'],
+        ['clean']
+      ],
+      handlers: {
+        image: imageHandler(quillRef)
+      }
+    }
+  });
 
   const quillFormats = [
     'header',
@@ -398,10 +456,11 @@ const AdminPages = () => {
                   mb: 2
                 }}>
                   <ReactQuill
+                    ref={quillRefEn}
                     theme="snow"
                     value={formData.content.en}
                     onChange={(value) => handleInputChange('content', value, 'en')}
-                    modules={quillModules}
+                    modules={getQuillModules(quillRefEn)}
                     formats={quillFormats}
                   />
                 </Box>
@@ -443,10 +502,11 @@ const AdminPages = () => {
                   mb: 2
                 }}>
                   <ReactQuill
+                    ref={quillRefAr}
                     theme="snow"
                     value={formData.content.ar}
                     onChange={(value) => handleInputChange('content', value, 'ar')}
-                    modules={quillModules}
+                    modules={getQuillModules(quillRefAr)}
                     formats={quillFormats}
                   />
                 </Box>
@@ -487,10 +547,11 @@ const AdminPages = () => {
                   mb: 2
                 }}>
                   <ReactQuill
+                    ref={quillRefFr}
                     theme="snow"
                     value={formData.content.fr}
                     onChange={(value) => handleInputChange('content', value, 'fr')}
-                    modules={quillModules}
+                    modules={getQuillModules(quillRefFr)}
                     formats={quillFormats}
                   />
                 </Box>

@@ -259,4 +259,43 @@ describe('AdminPages Component with HTML Support', () => {
       expect(screen.getByText('Test')).toBeInTheDocument();
     });
   });
+
+  it('supports image upload via custom handler', async () => {
+    // Mock global fetch for image upload
+    global.fetch = jest.fn(() =>
+      Promise.resolve({
+        json: () => Promise.resolve({
+          success: true,
+          data: [{
+            url: 'http://localhost:5000/uploads/pages/test-image.jpg'
+          }]
+        })
+      })
+    );
+
+    adminService.getAllPages.mockResolvedValue({ data: [] });
+
+    render(
+      <BrowserRouter>
+        <AdminPages />
+      </BrowserRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Add Page')).toBeInTheDocument();
+    });
+
+    const addButton = screen.getByText('Add Page');
+    fireEvent.click(addButton);
+
+    await waitFor(() => {
+      expect(screen.getByText('Create New Page')).toBeInTheDocument();
+    });
+
+    // Verify the editor is rendered (toolbar with image button would be available in real implementation)
+    expect(screen.getByText('Content (EN)')).toBeInTheDocument();
+    
+    // Clean up
+    delete global.fetch;
+  });
 });

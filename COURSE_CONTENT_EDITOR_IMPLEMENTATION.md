@@ -3,7 +3,7 @@
 ## Overview
 This implementation adds comprehensive course content management capabilities to the GreenDye Academy LMS, addressing the missing admin interface for managing lessons, sections, and rich content.
 
-## Features Implemented
+## 🎯 Features Implemented
 
 ### 1. Rich Text Editor for Lesson Content ✅
 **Location**: `frontend/src/components/LessonEditor.js`

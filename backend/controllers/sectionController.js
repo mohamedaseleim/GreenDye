@@ -1,9 +1,11 @@
 const Section = require('../models/Section');
 const Course = require('../models/Course');
+const mongoSanitize = require('mongo-sanitize');
 
 // @desc    Get all sections for a course
 // @route   GET /api/sections?courseId=xxx
 // @access  Public
+// @note    Returns sections sorted by order for proper display
 exports.getSections = async (req, res, next) => {
   try {
     const { courseId } = req.query;
@@ -15,7 +17,10 @@ exports.getSections = async (req, res, next) => {
       });
     }
 
-    const sections = await Section.find({ course: courseId })
+    // Sanitize courseId to prevent NoSQL injection
+    const sanitizedCourseId = mongoSanitize(courseId);
+
+    const sections = await Section.find({ course: sanitizedCourseId })
       .populate('lessons')
       .sort({ order: 1 });
 
@@ -57,10 +62,12 @@ exports.getSection = async (req, res, next) => {
 // @access  Private/Trainer/Admin
 exports.createSection = async (req, res, next) => {
   try {
-    const section = await Section.create(req.body);
+    // Sanitize request body to prevent NoSQL injection
+    const sanitizedData = mongoSanitize(req.body);
+    const section = await Section.create(sanitizedData);
 
     // Add section to course
-    const course = await Course.findById(req.body.course);
+    const course = await Course.findById(sanitizedData.course);
     if (!course) {
       return res.status(404).json({
         success: false,
@@ -85,7 +92,9 @@ exports.createSection = async (req, res, next) => {
 // @access  Private/Trainer/Admin
 exports.updateSection = async (req, res, next) => {
   try {
-    const section = await Section.findByIdAndUpdate(req.params.id, req.body, {
+    // Sanitize request body to prevent NoSQL injection
+    const sanitizedData = mongoSanitize(req.body);
+    const section = await Section.findByIdAndUpdate(req.params.id, sanitizedData, {
       new: true,
       runValidators: true
     });

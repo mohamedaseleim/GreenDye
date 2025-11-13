@@ -89,11 +89,12 @@ const AdminCertificates = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, page, rowsPerPage, search, filterValid, filterRevoked]);
 
-  const fetchCertificates = async () => {
+  const fetchCertificates = async (pageOverride) => {
     try {
       setLoading(true);
+      const currentPage = pageOverride !== undefined ? pageOverride : page;
       const params = {
-        page: page + 1,
+        page: currentPage + 1,
         limit: rowsPerPage,
         search,
         isValid: filterValid,
@@ -455,12 +456,14 @@ const AdminCertificates = () => {
       // Close the dialog first
       handleCloseCreateDialog();
       
-      // Reset to page 0 and refresh to show the newly created certificate (newest appears first)
+      // Fetch page 0 (which shows as page 1 in the backend due to 0-based vs 1-based indexing)
+      // This ensures we fetch the first page where the newly created certificate should appear
+      // (certificates are sorted by issueDate desc, so newest appear first)
+      await fetchCertificates(0);
+      
+      // Then set the page state to 0 to keep the UI in sync
       if (page !== 0) {
         setPage(0);
-      } else {
-        // If already on page 0, manually refresh the list
-        await fetchCertificates();
       }
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to create certificate');

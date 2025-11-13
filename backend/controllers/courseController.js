@@ -80,7 +80,11 @@ exports.getCourse = async (req, res, next) => {
     const { currency } = req.query;
     const course = await Course.findById(req.params.id)
       .populate('instructor', 'name avatar bio')
-      .populate('lessons');
+      .populate('lessons')
+      .populate({
+        path: 'sections',
+        populate: { path: 'lessons' }
+      });
 
     if (!course) {
       return res.status(404).json({

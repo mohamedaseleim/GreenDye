@@ -51,6 +51,7 @@ import AdminAnalytics from './pages/AdminAnalytics';
 import AdminTrainers from './pages/AdminTrainers';
 import AdminUsers from './pages/AdminUsers';
 import AdminCourses from './pages/AdminCourses';
+import CourseContentManager from './pages/CourseContentManager';
 import AdminPayments from './pages/AdminPayments';
 import AdminEnrollments from './pages/AdminEnrollments';
 import AdminSettings from './pages/AdminSettings';
@@ -315,6 +316,16 @@ function App() {
                       <PrivateRoute>
                         <AdminRoute>
                           <AdminCourses />
+                        </AdminRoute>
+                      </PrivateRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/courses/:courseId/content"
+                    element={
+                      <PrivateRoute>
+                        <AdminRoute>
+                          <CourseContentManager />
                         </AdminRoute>
                       </PrivateRoute>
                     }

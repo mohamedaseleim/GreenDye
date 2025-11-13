@@ -41,7 +41,8 @@ import {
   BarChart as AnalyticsIcon,
   AttachMoney as PriceIcon,
   Category as CategoryIcon,
-  LocalOffer as TagIcon
+  LocalOffer as TagIcon,
+  ViewModule as ModuleIcon
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import adminService from '../services/adminService';
@@ -627,6 +628,14 @@ const AdminCourses = () => {
                         )}
                       </TableCell>
                       <TableCell>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => navigate(`/admin/courses/${course._id}/content`)}
+                          title="Manage Sections/Modules"
+                          color="primary"
+                        >
+                          <ModuleIcon />
+                        </IconButton>
                         <IconButton 
                           size="small" 
                           onClick={() => handleOpenAnalytics(course)}

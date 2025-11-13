@@ -716,6 +716,42 @@ const adminService = {
     return response.data;
   },
 
+  // ========== ASSIGNMENT MANAGEMENT ==========
+  getAssignments: async (courseId, lessonId = null) => {
+    const params = { courseId };
+    if (lessonId) params.lessonId = lessonId;
+    const response = await axios.get('/api/assignments', {
+      ...getAuthHeader(),
+      params,
+    });
+    return response.data;
+  },
+
+  getAssignment: async (id) => {
+    const response = await axios.get(`/api/assignments/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  createAssignment: async (data) => {
+    const response = await axios.post('/api/assignments', data, getAuthHeader());
+    return response.data;
+  },
+
+  updateAssignment: async (id, data) => {
+    const response = await axios.put(`/api/assignments/${id}`, data, getAuthHeader());
+    return response.data;
+  },
+
+  deleteAssignment: async (id) => {
+    const response = await axios.delete(`/api/assignments/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  getAssignmentAnalytics: async (id) => {
+    const response = await axios.get(`/api/assignments/${id}/analytics`, getAuthHeader());
+    return response.data;
+  },
+
   // ========== REVIEW MANAGEMENT ==========
   getAllReviews: async (params = {}) => {
     const response = await axios.get(`${API_URL}/reviews`, {

@@ -34,18 +34,23 @@ import {
 import adminService from '../services/adminService';
 import LessonEditor from '../components/LessonEditor';
 import QuizBuilder from '../components/QuizBuilder';
+import AssignmentEditor from '../components/AssignmentEditor';
 
 export default function AdminLessons() {
   const { courseId } = useParams();
   const [lessons, setLessons] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
+  const [assignments, setAssignments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
   const [quizBuilderOpen, setQuizBuilderOpen] = useState(false);
+  const [assignmentEditorOpen, setAssignmentEditorOpen] = useState(false);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [currentQuiz, setCurrentQuiz] = useState(null);
+  const [currentAssignment, setCurrentAssignment] = useState(null);
   const [selectedLessonForQuiz, setSelectedLessonForQuiz] = useState(null);
+  const [selectedLessonForAssignment, setSelectedLessonForAssignment] = useState(null);
   const [anchorEl, setAnchorEl] = useState(null);
   const [selectedItem, setSelectedItem] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -54,12 +59,14 @@ export default function AdminLessons() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [lessonsRes, quizzesRes] = await Promise.all([
+      const [lessonsRes, quizzesRes, assignmentsRes] = await Promise.all([
         adminService.getLessons(courseId),
         adminService.getQuizzes(courseId),
+        adminService.getAssignments(courseId),
       ]);
       setLessons(lessonsRes.data || []);
       setQuizzes(quizzesRes.data || []);
+      setAssignments(assignmentsRes.data || []);
       setLoading(false);
     } catch (error) {
       showSnackbar('Failed to load lessons', 'error');
@@ -139,6 +146,25 @@ export default function AdminLessons() {
     }
   }
 
+  async function handleSaveAssignment(assignmentData) {
+    try {
+      if (currentAssignment) {
+        await adminService.updateAssignment(currentAssignment._id, assignmentData);
+        showSnackbar('Assignment updated successfully');
+      } else {
+        await adminService.createAssignment(assignmentData);
+        showSnackbar('Assignment created successfully');
+      }
+      await loadData();
+      setAssignmentEditorOpen(false);
+      setCurrentAssignment(null);
+      setSelectedLessonForAssignment(null);
+    } catch (error) {
+      showSnackbar('Failed to save assignment', 'error');
+      throw error;
+    }
+  }
+
   function handleMenuClick(event, item, type) {
     setAnchorEl(event.currentTarget);
     setSelectedItem({ ...item, type });
@@ -156,6 +182,9 @@ export default function AdminLessons() {
     } else if (selectedItem.type === 'quiz') {
       setCurrentQuiz(selectedItem);
       setQuizBuilderOpen(true);
+    } else if (selectedItem.type === 'assignment') {
+      setCurrentAssignment(selectedItem);
+      setAssignmentEditorOpen(true);
     }
     handleMenuClose();
   }
@@ -173,6 +202,9 @@ export default function AdminLessons() {
       } else if (selectedItem.type === 'quiz') {
         await adminService.deleteQuiz(selectedItem._id);
         showSnackbar('Quiz deleted successfully');
+      } else if (selectedItem.type === 'assignment') {
+        await adminService.deleteAssignment(selectedItem._id);
+        showSnackbar('Assignment deleted successfully');
       }
       await loadData();
       setDeleteDialogOpen(false);
@@ -227,8 +259,20 @@ export default function AdminLessons() {
               setQuizBuilderOpen(true);
             }}
             variant="outlined"
+            sx={{ mr: 1 }}
           >
             Add Quiz
+          </Button>
+          <Button
+            startIcon={<AssignmentIcon />}
+            onClick={() => {
+              setCurrentAssignment(null);
+              setSelectedLessonForAssignment(null);
+              setAssignmentEditorOpen(true);
+            }}
+            variant="outlined"
+          >
+            Add Assignment
           </Button>
         </Box>
       </Box>
@@ -236,6 +280,7 @@ export default function AdminLessons() {
       <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} sx={{ mb: 3 }}>
         <Tab label={`Lessons (${lessons.length})`} />
         <Tab label={`Quizzes (${quizzes.length})`} />
+        <Tab label={`Assignments (${assignments.length})`} />
       </Tabs>
 
       {activeTab === 0 && (
@@ -357,6 +402,52 @@ export default function AdminLessons() {
         </Box>
       )}
 
+      {activeTab === 2 && (
+        <Box>
+          {assignments.map((assignment) => (
+            <Paper key={assignment._id} sx={{ p: 2, mb: 2 }}>
+              <Box display="flex" alignItems="center" gap={2}>
+                <AssignmentIcon sx={{ color: 'text.secondary' }} />
+
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    {assignment.title?.en || 'Untitled Assignment'}
+                  </Typography>
+                  <Box display="flex" gap={1} sx={{ mt: 0.5 }}>
+                    <Chip label={`${assignment.maxPoints} points`} size="small" />
+                    {assignment.dueDate && (
+                      <Chip 
+                        label={`Due: ${new Date(assignment.dueDate).toLocaleDateString()}`} 
+                        size="small" 
+                      />
+                    )}
+                    {assignment.isRequired && <Chip label="Required" size="small" color="error" />}
+                    {assignment.isPublished && (
+                      <Chip label="Published" size="small" color="success" />
+                    )}
+                    {!assignment.isPublished && <Chip label="Draft" size="small" color="default" />}
+                    {assignment.lesson && <Chip label="Linked to Lesson" size="small" />}
+                    {assignment.attachments?.length > 0 && (
+                      <Chip label={`${assignment.attachments.length} attachments`} size="small" />
+                    )}
+                  </Box>
+                </Box>
+
+                <IconButton onClick={(e) => handleMenuClick(e, assignment, 'assignment')} size="small">
+                  <MoreIcon />
+                </IconButton>
+              </Box>
+            </Paper>
+          ))}
+
+          {assignments.length === 0 && (
+            <Alert severity="info">
+              No assignments found. Click "Add Assignment" to create your first assignment.
+            </Alert>
+          )}
+        </Box>
+      )}
+
       {/* Context Menu */}
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
         <MenuItem onClick={handleEdit}>
@@ -405,6 +496,20 @@ export default function AdminLessons() {
         courseId={courseId}
         lessonId={selectedLessonForQuiz}
         onSave={handleSaveQuiz}
+      />
+
+      {/* Assignment Editor Dialog */}
+      <AssignmentEditor
+        open={assignmentEditorOpen}
+        onClose={() => {
+          setAssignmentEditorOpen(false);
+          setCurrentAssignment(null);
+          setSelectedLessonForAssignment(null);
+        }}
+        assignment={currentAssignment}
+        courseId={courseId}
+        lessonId={selectedLessonForAssignment}
+        onSave={handleSaveAssignment}
       />
 
       {/* Snackbar for notifications */}

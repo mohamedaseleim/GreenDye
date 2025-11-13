@@ -219,6 +219,48 @@ describe('Admin Certificate API Endpoints', () => {
       expect(response.body.data[0]).toHaveProperty('certificateId');
     });
 
+    it('should show newly created certificate in list immediately', async () => {
+      // Get count of certificates before creation
+      const beforeResponse = await request(app)
+        .get('/api/admin/certificates?page=1&limit=20')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      const beforeCount = beforeResponse.body.total;
+
+      // Create a new certificate
+      const createResponse = await request(app)
+        .post('/api/admin/certificates')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .send({
+          userId: studentId,
+          courseId: courseId,
+          traineeName: 'New Test Trainee',
+          courseTitle: 'New Test Course',
+          grade: 'A',
+          score: 95
+        })
+        .expect(201);
+
+      const newCertificateId = createResponse.body.data.certificateId;
+
+      // Immediately fetch the first page (where new certificates should appear)
+      const afterResponse = await request(app)
+        .get('/api/admin/certificates?page=1&limit=20')
+        .set('Authorization', `Bearer ${adminToken}`)
+        .expect(200);
+
+      expect(afterResponse.body.success).toBe(true);
+      expect(afterResponse.body.total).toBe(beforeCount + 1);
+      
+      // Verify the new certificate appears in the first page
+      // (certificates are sorted by issueDate desc, so newest should be first)
+      const firstCertificate = afterResponse.body.data[0];
+      expect(firstCertificate.certificateId).toBe(newCertificateId);
+      expect(firstCertificate.traineeName).toBe('New Test Trainee');
+      expect(firstCertificate.courseTitle).toBe('New Test Course');
+    });
+
     it('should filter certificates by validity', async () => {
       // Create and revoke a certificate
       const createResponse = await request(app)

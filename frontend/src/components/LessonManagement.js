@@ -8,12 +8,10 @@ import {
   DialogActions,
   TextField,
   Grid,
-  Paper,
   Typography,
   IconButton,
   Card,
   CardContent,
-  CardActions,
   Chip,
   FormControl,
   InputLabel,
@@ -95,12 +93,13 @@ const LessonManagement = ({ courseId, open, onClose }) => {
     if (open && courseId) {
       fetchLessons();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, courseId]);
 
   const fetchLessons = async () => {
     try {
       setLoading(true);
-      const response = await adminService.getLessonsByCourse(courseId);
+      const response = await adminService.getLessons(courseId);
       setLessons(response.data || []);
     } catch (error) {
       console.error('Error fetching lessons:', error);

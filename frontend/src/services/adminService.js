@@ -950,43 +950,6 @@ const adminService = {
     const response = await axios.delete(`${API_URL}/backup/${type}/${filename}`, getAuthHeader());
     return response.data;
   },
-
-  // ========== LESSON MANAGEMENT ==========
-  getLessonsByCourse: async (courseId) => {
-    const LESSONS_API = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/lessons`;
-    const response = await axios.get(`${LESSONS_API}?courseId=${courseId}`, getAuthHeader());
-    return response.data;
-  },
-
-  getLesson: async (id) => {
-    const LESSONS_API = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/lessons`;
-    const response = await axios.get(`${LESSONS_API}/${id}`, getAuthHeader());
-    return response.data;
-  },
-
-  createLesson: async (data) => {
-    const LESSONS_API = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/lessons`;
-    const response = await axios.post(LESSONS_API, data, getAuthHeader());
-    return response.data;
-  },
-
-  updateLesson: async (id, data) => {
-    const LESSONS_API = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/lessons`;
-    const response = await axios.put(`${LESSONS_API}/${id}`, data, getAuthHeader());
-    return response.data;
-  },
-
-  deleteLesson: async (id) => {
-    const LESSONS_API = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/lessons`;
-    const response = await axios.delete(`${LESSONS_API}/${id}`, getAuthHeader());
-    return response.data;
-  },
-
-  reorderLessons: async (courseId, lessonsOrder) => {
-    const LESSONS_API = `${process.env.REACT_APP_API_URL || 'http://localhost:5000'}/api/lessons`;
-    const response = await axios.put(`${LESSONS_API}/reorder`, { orderedIds: lessonsOrder }, getAuthHeader());
-    return response.data;
-  },
 };
 
 export default adminService;

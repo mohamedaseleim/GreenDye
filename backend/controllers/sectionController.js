@@ -10,6 +10,14 @@ exports.getCourseSections = async (req, res, next) => {
   try {
     const { courseId } = req.params;
 
+    // Validate course ID format
+    if (!courseId || !courseId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
     const sections = await Section.find({ course: courseId })
       .populate('lessons')
       .sort({ order: 1 });
@@ -58,6 +66,14 @@ exports.createSection = async (req, res, next) => {
   try {
     const { course, title, description, order } = req.body;
 
+    // Validate course ID format
+    if (!course || !course.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
     // Verify course exists
     const courseDoc = await Course.findById(course);
     if (!courseDoc) {
@@ -78,12 +94,12 @@ exports.createSection = async (req, res, next) => {
     // If no order provided, set it to the next available order
     let sectionOrder = order;
     if (!sectionOrder && sectionOrder !== 0) {
-      const sections = await Section.find({ course }).sort({ order: -1 }).limit(1);
+      const sections = await Section.find({ course: courseDoc._id }).sort({ order: -1 }).limit(1);
       sectionOrder = sections.length > 0 ? sections[0].order + 1 : 0;
     }
 
     const section = await Section.create({
-      course,
+      course: courseDoc._id,
       title,
       description,
       order: sectionOrder,
@@ -199,6 +215,22 @@ exports.reorderSections = async (req, res, next) => {
     const { courseId } = req.params;
     const { sectionOrders } = req.body; // Array of { sectionId, order }
 
+    // Validate course ID format
+    if (!courseId || !courseId.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
+    // Validate sectionOrders input
+    if (!Array.isArray(sectionOrders)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid section orders format'
+      });
+    }
+
     const course = await Course.findById(courseId);
     if (!course) {
       return res.status(404).json({
@@ -215,14 +247,16 @@ exports.reorderSections = async (req, res, next) => {
       });
     }
 
-    // Update section orders
-    const updatePromises = sectionOrders.map(({ sectionId, order }) =>
-      Section.findByIdAndUpdate(sectionId, { order }, { new: true })
-    );
+    // Validate and update section orders
+    const updatePromises = sectionOrders
+      .filter(({ sectionId }) => sectionId && sectionId.match(/^[0-9a-fA-F]{24}$/))
+      .map(({ sectionId, order }) =>
+        Section.findByIdAndUpdate(sectionId, { order: parseInt(order, 10) }, { new: true })
+      );
 
     await Promise.all(updatePromises);
 
-    const sections = await Section.find({ course: courseId })
+    const sections = await Section.find({ course: course._id })
       .populate('lessons')
       .sort({ order: 1 });
 
@@ -341,6 +375,22 @@ exports.reorderLessons = async (req, res, next) => {
     const { id } = req.params;
     const { lessonOrders } = req.body; // Array of { lessonId, order }
 
+    // Validate section ID format
+    if (!id || !id.match(/^[0-9a-fA-F]{24}$/)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid section ID format'
+      });
+    }
+
+    // Validate lessonOrders input
+    if (!Array.isArray(lessonOrders)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid lesson orders format'
+      });
+    }
+
     const section = await Section.findById(id).populate('course');
     if (!section) {
       return res.status(404).json({
@@ -357,10 +407,12 @@ exports.reorderLessons = async (req, res, next) => {
       });
     }
 
-    // Update lesson orders
-    const updatePromises = lessonOrders.map(({ lessonId, order }) =>
-      Lesson.findByIdAndUpdate(lessonId, { order }, { new: true })
-    );
+    // Validate and update lesson orders
+    const updatePromises = lessonOrders
+      .filter(({ lessonId }) => lessonId && lessonId.match(/^[0-9a-fA-F]{24}$/))
+      .map(({ lessonId, order }) =>
+        Lesson.findByIdAndUpdate(lessonId, { order: parseInt(order, 10) }, { new: true })
+      );
 
     await Promise.all(updatePromises);
 

@@ -38,6 +38,7 @@ import adminService from '../services/adminService';
 
 const LessonManagement = ({ courseId, open, onClose }) => {
   const [lessons, setLessons] = useState([]);
+  const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
@@ -53,6 +54,7 @@ const LessonManagement = ({ courseId, open, onClose }) => {
     duration: 0,
     isFree: false,
     isPublished: true,
+    section: '',
   });
 
   // Quill editor configuration
@@ -92,6 +94,7 @@ const LessonManagement = ({ courseId, open, onClose }) => {
   useEffect(() => {
     if (open && courseId) {
       fetchLessons();
+      fetchSections();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, courseId]);
@@ -106,6 +109,16 @@ const LessonManagement = ({ courseId, open, onClose }) => {
       toast.error('Failed to fetch lessons');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchSections = async () => {
+    try {
+      const response = await adminService.get(`/api/sections/course/${courseId}`);
+      setSections(response.data.data || []);
+    } catch (error) {
+      console.error('Error fetching sections:', error);
+      // Don't show error toast, sections are optional
     }
   };
 
@@ -124,6 +137,7 @@ const LessonManagement = ({ courseId, open, onClose }) => {
         duration: lesson.duration || 0,
         isFree: lesson.isFree || false,
         isPublished: lesson.isPublished || true,
+        section: lesson.section || '',
       });
     } else {
       setSelectedLesson(null);
@@ -139,6 +153,7 @@ const LessonManagement = ({ courseId, open, onClose }) => {
         duration: 0,
         isFree: false,
         isPublished: true,
+        section: '',
       });
     }
     setOpenDialog(true);
@@ -157,12 +172,27 @@ const LessonManagement = ({ courseId, open, onClose }) => {
         order: selectedLesson ? selectedLesson.order : lessons.length,
       };
 
+      let savedLesson;
       if (selectedLesson) {
         await adminService.updateLesson(selectedLesson._id, lessonData);
+        savedLesson = { ...selectedLesson, ...lessonData };
         toast.success('Lesson updated successfully');
       } else {
-        await adminService.createLesson(lessonData);
+        const response = await adminService.createLesson(lessonData);
+        savedLesson = response.data;
         toast.success('Lesson created successfully');
+      }
+
+      // If a section is selected, add the lesson to the section
+      if (formData.section && savedLesson) {
+        try {
+          await adminService.put(
+            `/api/sections/${formData.section}/lessons/${savedLesson._id || savedLesson.id}`
+          );
+        } catch (sectionError) {
+          console.error('Error adding lesson to section:', sectionError);
+          // Don't fail the whole operation if section assignment fails
+        }
       }
 
       handleCloseDialog();
@@ -418,6 +448,24 @@ const LessonManagement = ({ courseId, open, onClose }) => {
                     <MenuItem value="quiz">Quiz</MenuItem>
                     <MenuItem value="assignment">Assignment</MenuItem>
                     <MenuItem value="live">Live Session</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+
+              <Grid item xs={12} md={4}>
+                <FormControl fullWidth>
+                  <InputLabel>Section</InputLabel>
+                  <Select
+                    value={formData.section}
+                    onChange={(e) => setFormData({ ...formData, section: e.target.value })}
+                    label="Section"
+                  >
+                    <MenuItem value="">None (Unassigned)</MenuItem>
+                    {sections.map((section) => (
+                      <MenuItem key={section._id} value={section._id}>
+                        {section.title?.en || section.title?.ar || section.title?.fr || 'Untitled Section'}
+                      </MenuItem>
+                    ))}
                   </Select>
                 </FormControl>
               </Grid>

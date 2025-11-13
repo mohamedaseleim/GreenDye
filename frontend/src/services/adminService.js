@@ -122,13 +122,14 @@ const getMedia = async (id) => {
   return response.data;
 };
 
-const uploadMedia = async (formData) => {
+const uploadMedia = async (formData, config = {}) => {
   const token = localStorage.getItem('token');
   const response = await axios.post(`${API_URL}/cms/media/upload`, formData, {
     headers: {
       Authorization: `Bearer ${token}`,
       'Content-Type': 'multipart/form-data',
     },
+    ...config,
   });
   return response.data;
 };

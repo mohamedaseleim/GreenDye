@@ -29,6 +29,8 @@ import {
   VideoLibrary as VideoIcon,
   Article as ArticleIcon,
   Description as DocumentIcon,
+  CloudUpload as UploadIcon,
+  AttachFile as AttachFileIcon,
 } from '@mui/icons-material';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import ReactQuill from 'react-quill';
@@ -42,6 +44,8 @@ const LessonManagement = ({ courseId, open, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [openDialog, setOpenDialog] = useState(false);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [formData, setFormData] = useState({
     title: { en: '', ar: '', fr: '' },
     description: { en: '', ar: '', fr: '' },
@@ -55,6 +59,7 @@ const LessonManagement = ({ courseId, open, onClose }) => {
     isFree: false,
     isPublished: true,
     section: '',
+    resources: [],
   });
 
   // Quill editor configuration
@@ -138,6 +143,7 @@ const LessonManagement = ({ courseId, open, onClose }) => {
         isFree: lesson.isFree || false,
         isPublished: lesson.isPublished || true,
         section: lesson.section || '',
+        resources: lesson.resources || [],
       });
     } else {
       setSelectedLesson(null);
@@ -154,6 +160,7 @@ const LessonManagement = ({ courseId, open, onClose }) => {
         isFree: false,
         isPublished: true,
         section: '',
+        resources: [],
       });
     }
     setOpenDialog(true);
@@ -162,6 +169,122 @@ const LessonManagement = ({ courseId, open, onClose }) => {
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedLesson(null);
+    setUploading(false);
+    setUploadProgress(0);
+  };
+
+  const handleFileUpload = async (event, fileType) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('files', file);
+      formDataUpload.append('category', fileType === 'video' ? 'videos' : 'documents');
+
+      const response = await adminService.uploadMedia(formDataUpload, {
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        },
+      });
+
+      if (response.data && response.data.length > 0) {
+        const uploadedFile = response.data[0];
+        
+        if (fileType === 'video') {
+          setFormData({
+            ...formData,
+            content: {
+              ...formData.content,
+              video: { ...formData.content.video, url: uploadedFile.url },
+            },
+          });
+        } else if (fileType === 'document') {
+          setFormData({
+            ...formData,
+            content: {
+              ...formData.content,
+              document: {
+                url: uploadedFile.url,
+                type: uploadedFile.metadata?.format || 'pdf',
+                name: uploadedFile.originalName,
+              },
+            },
+          });
+        } else if (fileType === 'thumbnail') {
+          setFormData({
+            ...formData,
+            content: {
+              ...formData.content,
+              video: { ...formData.content.video, thumbnail: uploadedFile.url },
+            },
+          });
+        }
+
+        toast.success('File uploaded successfully');
+      }
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Failed to upload file');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handleAddResource = async (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    setUploading(true);
+    setUploadProgress(0);
+
+    try {
+      const formDataUpload = new FormData();
+      formDataUpload.append('files', file);
+      formDataUpload.append('category', 'resources');
+
+      const response = await adminService.uploadMedia(formDataUpload, {
+        onUploadProgress: (progressEvent) => {
+          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total);
+          setUploadProgress(percentCompleted);
+        },
+      });
+
+      if (response.data && response.data.length > 0) {
+        const uploadedFile = response.data[0];
+        const newResource = {
+          name: uploadedFile.originalName,
+          url: uploadedFile.url,
+          type: uploadedFile.type,
+          size: uploadedFile.size,
+          description: '',
+        };
+
+        setFormData({
+          ...formData,
+          resources: [...formData.resources, newResource],
+        });
+
+        toast.success('Resource added successfully');
+      }
+    } catch (error) {
+      console.error('Error uploading resource:', error);
+      toast.error('Failed to upload resource');
+    } finally {
+      setUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  const handleRemoveResource = (index) => {
+    const newResources = [...formData.resources];
+    newResources.splice(index, 1);
+    setFormData({ ...formData, resources: newResources });
   };
 
   const handleSaveLesson = async () => {
@@ -523,7 +646,42 @@ const LessonManagement = ({ courseId, open, onClose }) => {
                           },
                         })
                       }
+                      InputProps={{
+                        endAdornment: (
+                          <Button
+                            component="label"
+                            startIcon={<UploadIcon />}
+                            disabled={uploading}
+                          >
+                            Upload
+                            <input
+                              type="file"
+                              hidden
+                              accept="video/*"
+                              onChange={(e) => handleFileUpload(e, 'video')}
+                            />
+                          </Button>
+                        ),
+                      }}
                     />
+                    {uploading && (
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          Uploading: {uploadProgress}%
+                        </Typography>
+                        <Box sx={{ width: '100%', mt: 0.5 }}>
+                          <Box
+                            sx={{
+                              width: `${uploadProgress}%`,
+                              height: 4,
+                              bgcolor: 'primary.main',
+                              borderRadius: 2,
+                              transition: 'width 0.3s',
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    )}
                   </Grid>
                   <Grid item xs={12} md={6}>
                     <TextField
@@ -560,6 +718,23 @@ const LessonManagement = ({ courseId, open, onClose }) => {
                           },
                         })
                       }
+                      InputProps={{
+                        endAdornment: (
+                          <Button
+                            component="label"
+                            startIcon={<UploadIcon />}
+                            disabled={uploading}
+                          >
+                            Upload
+                            <input
+                              type="file"
+                              hidden
+                              accept="image/*"
+                              onChange={(e) => handleFileUpload(e, 'thumbnail')}
+                            />
+                          </Button>
+                        ),
+                      }}
                     />
                   </Grid>
                 </>
@@ -648,7 +823,42 @@ const LessonManagement = ({ courseId, open, onClose }) => {
                           },
                         })
                       }
+                      InputProps={{
+                        endAdornment: (
+                          <Button
+                            component="label"
+                            startIcon={<UploadIcon />}
+                            disabled={uploading}
+                          >
+                            Upload
+                            <input
+                              type="file"
+                              hidden
+                              accept=".pdf,.doc,.docx,.ppt,.pptx"
+                              onChange={(e) => handleFileUpload(e, 'document')}
+                            />
+                          </Button>
+                        ),
+                      }}
                     />
+                    {uploading && (
+                      <Box sx={{ mt: 1 }}>
+                        <Typography variant="caption" color="text.secondary">
+                          Uploading: {uploadProgress}%
+                        </Typography>
+                        <Box sx={{ width: '100%', mt: 0.5 }}>
+                          <Box
+                            sx={{
+                              width: `${uploadProgress}%`,
+                              height: 4,
+                              bgcolor: 'primary.main',
+                              borderRadius: 2,
+                              transition: 'width 0.3s',
+                            }}
+                          />
+                        </Box>
+                      </Box>
+                    )}
                   </Grid>
                   <Grid item xs={12} md={3}>
                     <FormControl fullWidth>
@@ -704,6 +914,64 @@ const LessonManagement = ({ courseId, open, onClose }) => {
                     <MenuItem value={false}>Draft</MenuItem>
                   </Select>
                 </FormControl>
+              </Grid>
+
+              {/* Additional Resources */}
+              <Grid item xs={12}>
+                <Typography variant="h6" gutterBottom color="primary" sx={{ mt: 2 }}>
+                  Additional Resources
+                </Typography>
+                <Divider sx={{ mb: 2 }} />
+              </Grid>
+
+              <Grid item xs={12}>
+                <Box sx={{ mb: 2 }}>
+                  <Button
+                    variant="outlined"
+                    component="label"
+                    startIcon={<AttachFileIcon />}
+                    disabled={uploading}
+                  >
+                    Add Resource File
+                    <input
+                      type="file"
+                      hidden
+                      onChange={handleAddResource}
+                    />
+                  </Button>
+                  {uploading && (
+                    <Typography variant="caption" color="text.secondary" sx={{ ml: 2 }}>
+                      Uploading: {uploadProgress}%
+                    </Typography>
+                  )}
+                </Box>
+                
+                {formData.resources && formData.resources.length > 0 && (
+                  <Box>
+                    {formData.resources.map((resource, index) => (
+                      <Card key={index} sx={{ mb: 1, p: 1 }}>
+                        <Box display="flex" alignItems="center" justifyContent="space-between">
+                          <Box display="flex" alignItems="center" gap={1}>
+                            <AttachFileIcon fontSize="small" />
+                            <Box>
+                              <Typography variant="body2">{resource.name}</Typography>
+                              <Typography variant="caption" color="text.secondary">
+                                {resource.type} • {Math.round(resource.size / 1024)} KB
+                              </Typography>
+                            </Box>
+                          </Box>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            onClick={() => handleRemoveResource(index)}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </Card>
+                    ))}
+                  </Box>
+                )}
               </Grid>
             </Grid>
           </Box>

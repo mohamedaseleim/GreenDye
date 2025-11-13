@@ -30,19 +30,23 @@ import {
   Quiz as QuizIcon,
   Assignment as AssignmentIcon,
   Article as ArticleIcon,
+  FolderOpen as SectionIcon,
 } from '@mui/icons-material';
 import adminService from '../services/adminService';
 import LessonEditor from '../components/LessonEditor';
 import QuizBuilder from '../components/QuizBuilder';
+import SectionManager from '../components/SectionManager';
 
 export default function AdminLessons() {
   const { courseId } = useParams();
   const [lessons, setLessons] = useState([]);
   const [quizzes, setQuizzes] = useState([]);
+  const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState(0);
   const [lessonEditorOpen, setLessonEditorOpen] = useState(false);
   const [quizBuilderOpen, setQuizBuilderOpen] = useState(false);
+  const [sectionManagerOpen, setSectionManagerOpen] = useState(false);
   const [currentLesson, setCurrentLesson] = useState(null);
   const [currentQuiz, setCurrentQuiz] = useState(null);
   const [selectedLessonForQuiz, setSelectedLessonForQuiz] = useState(null);
@@ -54,12 +58,14 @@ export default function AdminLessons() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const [lessonsRes, quizzesRes] = await Promise.all([
+      const [lessonsRes, quizzesRes, sectionsRes] = await Promise.all([
         adminService.getLessons(courseId),
         adminService.getQuizzes(courseId),
+        adminService.getSections(courseId),
       ]);
       setLessons(lessonsRes.data || []);
       setQuizzes(quizzesRes.data || []);
+      setSections(sectionsRes.data || []);
       setLoading(false);
     } catch (error) {
       showSnackbar('Failed to load lessons', 'error');
@@ -209,6 +215,15 @@ export default function AdminLessons() {
         <Typography variant="h4">Lesson & Content Management</Typography>
         <Box>
           <Button
+            startIcon={<SectionIcon />}
+            onClick={() => setSectionManagerOpen(true)}
+            variant="contained"
+            color="secondary"
+            sx={{ mr: 1 }}
+          >
+            Manage Sections
+          </Button>
+          <Button
             startIcon={<AddIcon />}
             onClick={() => {
               setCurrentLesson(null);
@@ -236,6 +251,7 @@ export default function AdminLessons() {
       <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} sx={{ mb: 3 }}>
         <Tab label={`Lessons (${lessons.length})`} />
         <Tab label={`Quizzes (${quizzes.length})`} />
+        <Tab label={`Sections (${sections.length})`} />
       </Tabs>
 
       {activeTab === 0 && (
@@ -357,6 +373,37 @@ export default function AdminLessons() {
         </Box>
       )}
 
+      {activeTab === 2 && (
+        <Box>
+          {sections.map((section) => (
+            <Paper key={section._id} sx={{ p: 2, mb: 2 }}>
+              <Box display="flex" alignItems="center" gap={2}>
+                <SectionIcon sx={{ color: 'text.secondary' }} />
+
+                <Box sx={{ flex: 1 }}>
+                  <Typography variant="subtitle1" fontWeight="bold">
+                    {section.title?.en || 'Untitled Section'}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    {section.description?.en || 'No description'}
+                  </Typography>
+                  <Box display="flex" gap={1} sx={{ mt: 0.5 }}>
+                    <Chip label={`${section.lessons?.length || 0} lessons`} size="small" />
+                    <Chip label={`Order: ${section.order}`} size="small" variant="outlined" />
+                  </Box>
+                </Box>
+              </Box>
+            </Paper>
+          ))}
+
+          {sections.length === 0 && (
+            <Alert severity="info">
+              No sections found. Click "Manage Sections" to create your first section.
+            </Alert>
+          )}
+        </Box>
+      )}
+
       {/* Context Menu */}
       <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleMenuClose}>
         <MenuItem onClick={handleEdit}>
@@ -405,6 +452,15 @@ export default function AdminLessons() {
         courseId={courseId}
         lessonId={selectedLessonForQuiz}
         onSave={handleSaveQuiz}
+      />
+
+      {/* Section Manager Dialog */}
+      <SectionManager
+        open={sectionManagerOpen}
+        onClose={() => setSectionManagerOpen(false)}
+        courseId={courseId}
+        sections={sections}
+        onUpdate={loadData}
       />
 
       {/* Snackbar for notifications */}

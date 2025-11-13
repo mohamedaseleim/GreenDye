@@ -21,6 +21,8 @@ import {
   FormControlLabel,
 } from '@mui/material';
 import { Close as CloseIcon, CloudUpload as UploadIcon } from '@mui/icons-material';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import adminService from '../services/adminService';
 
 export default function LessonEditor({ open, onClose, lesson, courseId, onSave }) {
@@ -44,6 +46,31 @@ export default function LessonEditor({ open, onClose, lesson, courseId, onSave }
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState('');
   const [uploadProgress, setUploadProgress] = useState(0);
+
+  // Quill editor configuration
+  const quillModules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+      [{ 'indent': '-1'}, { 'indent': '+1' }],
+      [{ 'align': [] }],
+      ['link', 'image', 'video'],
+      [{ 'color': [] }, { 'background': [] }],
+      ['blockquote', 'code-block'],
+      ['clean']
+    ]
+  };
+
+  const quillFormats = [
+    'header',
+    'bold', 'italic', 'underline', 'strike',
+    'list', 'bullet', 'indent',
+    'align',
+    'link', 'image', 'video',
+    'color', 'background',
+    'blockquote', 'code-block'
+  ];
 
   useEffect(() => {
     if (lesson) {
@@ -282,19 +309,23 @@ export default function LessonEditor({ open, onClose, lesson, courseId, onSave }
             {formData.type === 'text' && (
               <Box>
                 <Typography variant="subtitle2" gutterBottom>
-                  Text Content
+                  Text Content (Rich Text Editor)
                 </Typography>
 
-                <TextField
-                  fullWidth
-                  label="Content"
-                  value={formData.content.text?.en || ''}
-                  onChange={(e) => handleContentChange('text', 'en', e.target.value)}
-                  margin="normal"
-                  multiline
-                  rows={10}
-                  placeholder="Enter lesson content here..."
-                />
+                <Box sx={{ 
+                  '& .ql-container': { minHeight: '400px' },
+                  '& .ql-editor': { minHeight: '400px' },
+                  mb: 2
+                }}>
+                  <ReactQuill
+                    theme="snow"
+                    value={formData.content.text?.en || ''}
+                    onChange={(value) => handleContentChange('text', 'en', value)}
+                    modules={quillModules}
+                    formats={quillFormats}
+                    placeholder="Enter lesson content here using the rich text editor..."
+                  />
+                </Box>
               </Box>
             )}
 

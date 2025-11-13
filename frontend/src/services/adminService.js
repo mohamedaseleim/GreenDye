@@ -680,6 +680,45 @@ const adminService = {
     return response.data;
   },
 
+  // ========== SECTION MANAGEMENT ==========
+  getSections: async (courseId) => {
+    const response = await axios.get('/api/sections', {
+      ...getAuthHeader(),
+      params: { courseId },
+    });
+    return response.data;
+  },
+
+  getSection: async (id) => {
+    const response = await axios.get(`/api/sections/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  createSection: async (data) => {
+    const response = await axios.post('/api/sections', data, getAuthHeader());
+    return response.data;
+  },
+
+  updateSection: async (id, data) => {
+    const response = await axios.put(`/api/sections/${id}`, data, getAuthHeader());
+    return response.data;
+  },
+
+  deleteSection: async (id) => {
+    const response = await axios.delete(`/api/sections/${id}`, getAuthHeader());
+    return response.data;
+  },
+
+  addLessonToSection: async (sectionId, lessonId) => {
+    const response = await axios.put(`/api/sections/${sectionId}/lessons/${lessonId}`, {}, getAuthHeader());
+    return response.data;
+  },
+
+  removeLessonFromSection: async (sectionId, lessonId) => {
+    const response = await axios.delete(`/api/sections/${sectionId}/lessons/${lessonId}`, getAuthHeader());
+    return response.data;
+  },
+
   // ========== QUIZ MANAGEMENT ==========
   getQuizzes: async (courseId, lessonId = null) => {
     const params = { courseId };

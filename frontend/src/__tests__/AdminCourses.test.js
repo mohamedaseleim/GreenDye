@@ -244,4 +244,110 @@ describe('AdminCourses Component - Create Course Functionality', () => {
       expect(toast.error).toHaveBeenCalledWith('Failed to create course');
     });
   });
+
+  it('redirects trainer to trainer dashboard after successful course creation', async () => {
+    // Mock trainer user
+    useAuth.mockReturnValue({
+      user: { role: 'trainer', name: 'Trainer User' },
+      isAuthenticated: true
+    });
+
+    adminService.createAdminCourse.mockResolvedValue({
+      success: true,
+      data: { _id: '123', title: { en: 'Test Course' } }
+    });
+
+    adminService.getAllTrainers.mockResolvedValue({
+      data: []
+    });
+
+    render(
+      <BrowserRouter>
+        <AdminCourses />
+      </BrowserRouter>
+    );
+
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByText('Course Management')).toBeInTheDocument();
+    });
+
+    // Open dialog
+    const addButton = screen.getByRole('button', { name: /add course/i });
+    fireEvent.click(addButton);
+
+    // Wait for dialog to open
+    await waitFor(() => {
+      expect(screen.getByText('Create New Course')).toBeInTheDocument();
+    });
+
+    // Fill in form fields
+    const titleInput = screen.getByLabelText(/title \(english\)/i);
+    fireEvent.change(titleInput, { target: { value: 'Test Course' } });
+
+    const descInput = screen.getByLabelText(/description \(english\)/i);
+    fireEvent.change(descInput, { target: { value: 'Test Description' } });
+
+    // Submit form
+    const createButton = screen.getByRole('button', { name: /create course/i });
+    fireEvent.click(createButton);
+
+    // Check if navigate was called with trainer dashboard route
+    await waitFor(() => {
+      expect(mockNavigate).toHaveBeenCalledWith('/trainer/dashboard');
+    });
+
+    // Check if success toast was shown
+    expect(toast.success).toHaveBeenCalledWith('Course created successfully');
+  });
+
+  it('does not redirect admin after successful course creation', async () => {
+    // Keep admin user (from beforeEach)
+    adminService.createAdminCourse.mockResolvedValue({
+      success: true,
+      data: { _id: '123', title: { en: 'Test Course' } }
+    });
+
+    render(
+      <BrowserRouter>
+        <AdminCourses />
+      </BrowserRouter>
+    );
+
+    // Wait for component to load
+    await waitFor(() => {
+      expect(screen.getByText('Course Management')).toBeInTheDocument();
+    });
+
+    // Open dialog
+    const addButton = screen.getByRole('button', { name: /add course/i });
+    fireEvent.click(addButton);
+
+    // Wait for dialog to open
+    await waitFor(() => {
+      expect(screen.getByText('Create New Course')).toBeInTheDocument();
+    });
+
+    // Fill in form fields
+    const titleInput = screen.getByLabelText(/title \(english\)/i);
+    fireEvent.change(titleInput, { target: { value: 'Test Course' } });
+
+    const descInput = screen.getByLabelText(/description \(english\)/i);
+    fireEvent.change(descInput, { target: { value: 'Test Description' } });
+
+    // Submit form
+    const createButton = screen.getByRole('button', { name: /create course/i });
+    fireEvent.click(createButton);
+
+    // Wait for API call to complete
+    await waitFor(() => {
+      expect(adminService.createAdminCourse).toHaveBeenCalled();
+    });
+
+    // Check that navigate was NOT called for admin
+    expect(mockNavigate).not.toHaveBeenCalledWith('/trainer/dashboard');
+
+    // Check if success toast was shown
+    expect(toast.success).toHaveBeenCalledWith('Course created successfully');
+  });
 });

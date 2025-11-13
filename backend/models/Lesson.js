@@ -43,8 +43,18 @@ const LessonSchema = new mongoose.Schema({
   resources: [{
     name: String,
     url: String,
-    type: String
+    type: String,
+    size: Number,
+    description: String
   }],
+  quiz: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Quiz'
+  },
+  assignment: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Assignment'
+  },
   isFree: {
     type: Boolean,
     default: false

@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
-  Paper,
   Typography,
   Button,
   IconButton,
@@ -12,15 +11,7 @@ import {
   DialogActions,
   Card,
   CardContent,
-  CardActions,
   Chip,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
-  List,
-  ListItem,
-  ListItemText,
-  ListItemSecondaryAction,
   Divider,
   Alert
 } from '@mui/material';
@@ -28,7 +19,6 @@ import {
   Add as AddIcon,
   Edit as EditIcon,
   Delete as DeleteIcon,
-  ExpandMore as ExpandMoreIcon,
   DragIndicator as DragIcon,
   PlayLesson as LessonIcon
 } from '@mui/icons-material';
@@ -46,13 +36,7 @@ const SectionManager = ({ courseId, onUpdate }) => {
     description: { en: '', ar: '', fr: '' }
   });
 
-  useEffect(() => {
-    if (courseId) {
-      fetchSections();
-    }
-  }, [courseId]);
-
-  const fetchSections = async () => {
+  const fetchSections = useCallback(async () => {
     try {
       setLoading(true);
       const response = await sectionService.getCourseSections(courseId);
@@ -63,7 +47,13 @@ const SectionManager = ({ courseId, onUpdate }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId]);
+
+  useEffect(() => {
+    if (courseId) {
+      fetchSections();
+    }
+  }, [courseId, fetchSections]);
 
   const handleOpenDialog = (section = null) => {
     if (section) {

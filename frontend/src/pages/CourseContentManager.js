@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -29,15 +29,7 @@ const CourseContentManager = () => {
   const [loading, setLoading] = useState(true);
   const [currentTab, setCurrentTab] = useState(0);
 
-  useEffect(() => {
-    if (!user || (user.role !== 'admin' && user.role !== 'trainer')) {
-      navigate('/');
-      return;
-    }
-    fetchCourse();
-  }, [user, navigate, courseId]);
-
-  const fetchCourse = async () => {
+  const fetchCourse = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/courses/${courseId}`);
@@ -50,7 +42,15 @@ const CourseContentManager = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId, navigate]);
+
+  useEffect(() => {
+    if (!user || (user.role !== 'admin' && user.role !== 'trainer')) {
+      navigate('/');
+      return;
+    }
+    fetchCourse();
+  }, [user, navigate, fetchCourse]);
 
   const handleUpdate = () => {
     fetchCourse();

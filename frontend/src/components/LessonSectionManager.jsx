@@ -1,7 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   Box,
-  Paper,
   Typography,
   Button,
   IconButton,
@@ -41,14 +40,7 @@ const LessonSectionManager = ({ courseId, sections, onUpdate }) => {
   const [selectedSection, setSelectedSection] = useState('');
   const [selectedLesson, setSelectedLesson] = useState('');
 
-  useEffect(() => {
-    if (courseId && sections) {
-      fetchLessons();
-      organizeSectionLessons();
-    }
-  }, [courseId, sections]);
-
-  const fetchLessons = async () => {
+  const fetchLessons = useCallback(async () => {
     try {
       setLoading(true);
       const response = await axios.get(`/api/lessons?course=${courseId}`);
@@ -59,15 +51,22 @@ const LessonSectionManager = ({ courseId, sections, onUpdate }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [courseId]);
 
-  const organizeSectionLessons = () => {
+  const organizeSectionLessons = useCallback(() => {
     const organized = {};
     sections.forEach(section => {
       organized[section._id] = section.lessons || [];
     });
     setSectionLessons(organized);
-  };
+  }, [sections]);
+
+  useEffect(() => {
+    if (courseId && sections) {
+      fetchLessons();
+      organizeSectionLessons();
+    }
+  }, [courseId, sections, fetchLessons, organizeSectionLessons]);
 
   const handleAddLessonToSection = async () => {
     if (!selectedSection || !selectedLesson) {

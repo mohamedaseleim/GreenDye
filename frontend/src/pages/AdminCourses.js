@@ -117,7 +117,7 @@ const AdminCourses = () => {
   const [createFormData, setCreateFormData] = useState(initialCreateFormData);
 
   useEffect(() => {
-    if (!user || user.role !== 'admin') {
+    if (!user || (user.role !== 'admin' && user.role !== 'trainer')) {
       navigate('/');
       return;
     }

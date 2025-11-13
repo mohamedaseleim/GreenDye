@@ -19,8 +19,12 @@ import {
   Tab,
   Switch,
   FormControlLabel,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
 } from '@mui/material';
-import { Close as CloseIcon, CloudUpload as UploadIcon } from '@mui/icons-material';
+import { Close as CloseIcon, CloudUpload as UploadIcon, Delete as DeleteIcon, Add as AddIcon } from '@mui/icons-material';
 import adminService from '../services/adminService';
 
 export default function LessonEditor({ open, onClose, lesson, courseId, onSave }) {
@@ -131,6 +135,59 @@ export default function LessonEditor({ open, onClose, lesson, courseId, onSave }
     }
   };
 
+  const handleResourceUpload = async (file) => {
+    try {
+      setUploading(true);
+      setError('');
+      setUploadProgress(0);
+
+      const formDataUpload = new FormData();
+      formDataUpload.append('files', file);
+      formDataUpload.append('category', 'documents');
+
+      const response = await adminService.uploadMedia(formDataUpload);
+
+      if (response.success && response.data.length > 0) {
+        const uploadedFile = response.data[0];
+        setUploadProgress(100);
+
+        const newResource = {
+          name: uploadedFile.originalName,
+          url: uploadedFile.url,
+          type: uploadedFile.metadata?.format || file.type,
+          size: file.size,
+          description: ''
+        };
+
+        setFormData((prev) => ({
+          ...prev,
+          resources: [...prev.resources, newResource]
+        }));
+      }
+
+      setUploading(false);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Resource upload failed');
+      setUploading(false);
+    }
+  };
+
+  const handleResourceDelete = (index) => {
+    setFormData((prev) => ({
+      ...prev,
+      resources: prev.resources.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleResourceDescriptionChange = (index, description) => {
+    setFormData((prev) => ({
+      ...prev,
+      resources: prev.resources.map((resource, i) => 
+        i === index ? { ...resource, description } : resource
+      )
+    }));
+  };
+
   const handleSubmit = async () => {
     try {
       setError('');
@@ -164,6 +221,7 @@ export default function LessonEditor({ open, onClose, lesson, courseId, onSave }
         <Tabs value={activeTab} onChange={(e, v) => setActiveTab(v)} sx={{ mb: 2 }}>
           <Tab label="Basic Info" />
           <Tab label="Content" />
+          <Tab label="Resources" />
           <Tab label="Settings" />
         </Tabs>
 
@@ -357,6 +415,73 @@ export default function LessonEditor({ open, onClose, lesson, courseId, onSave }
         )}
 
         {activeTab === 2 && (
+          <Box>
+            <Typography variant="subtitle1" gutterBottom>
+              Downloadable Resources
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Upload PDFs, documents, and other materials for students to download
+            </Typography>
+
+            <Button
+              variant="contained"
+              component="label"
+              startIcon={<AddIcon />}
+              disabled={uploading}
+              sx={{ mb: 2 }}
+            >
+              Add Resource
+              <input
+                type="file"
+                hidden
+                accept=".pdf,.doc,.docx,.ppt,.pptx,.txt,.zip,.jpg,.png"
+                onChange={(e) => handleResourceUpload(e.target.files[0])}
+              />
+            </Button>
+
+            {uploading && (
+              <Box sx={{ mb: 2 }}>
+                <LinearProgress variant="determinate" value={uploadProgress} />
+              </Box>
+            )}
+
+            {formData.resources.length > 0 ? (
+              <List>
+                {formData.resources.map((resource, index) => (
+                  <ListItem key={index} sx={{ border: '1px solid #e0e0e0', mb: 1, borderRadius: 1 }}>
+                    <Box sx={{ flex: 1 }}>
+                      <ListItemText
+                        primary={resource.name}
+                        secondary={`Type: ${resource.type || 'N/A'} | Size: ${resource.size ? (resource.size / 1024).toFixed(2) : '0'} KB`}
+                      />
+                      <TextField
+                        fullWidth
+                        size="small"
+                        label="Description (optional)"
+                        value={resource.description || ''}
+                        onChange={(e) => handleResourceDescriptionChange(index, e.target.value)}
+                        sx={{ mt: 1 }}
+                      />
+                    </Box>
+                    <ListItemSecondaryAction>
+                      <IconButton
+                        edge="end"
+                        onClick={() => handleResourceDelete(index)}
+                        color="error"
+                      >
+                        <DeleteIcon />
+                      </IconButton>
+                    </ListItemSecondaryAction>
+                  </ListItem>
+                ))}
+              </List>
+            ) : (
+              <Alert severity="info">No resources added yet</Alert>
+            )}
+          </Box>
+        )}
+
+        {activeTab === 3 && (
           <Box>
             <TextField
               fullWidth

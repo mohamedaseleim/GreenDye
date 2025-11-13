@@ -2,6 +2,17 @@ const Assignment = require('../models/Assignment');
 const AssignmentSubmission = require('../models/AssignmentSubmission');
 const Course = require('../models/Course');
 const Lesson = require('../models/Lesson');
+const mongoose = require('mongoose');
+
+// Helper function to validate ObjectId
+const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+
+// NOTE: CodeQL may flag queries using user input (query params, req.user.id) as SQL injection risks.
+// These are false positives because:
+// 1. Mongoose automatically validates and sanitizes ObjectIds
+// 2. express-mongo-sanitize middleware sanitizes all user input
+// 3. req.user.id is validated by authentication middleware
+// 4. All IDs are explicitly validated using isValidObjectId() before use
 
 // @desc    Get all assignments for a course or lesson
 // @route   GET /api/assignments?courseId=xxx&lessonId=yyy
@@ -14,6 +25,20 @@ exports.getAssignments = async (req, res, next) => {
       return res.status(400).json({
         success: false,
         message: 'Please provide courseId'
+      });
+    }
+
+    if (!isValidObjectId(courseId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid courseId format'
+      });
+    }
+
+    if (lessonId && !isValidObjectId(lessonId)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid lessonId format'
       });
     }
 
@@ -41,6 +66,13 @@ exports.getAssignments = async (req, res, next) => {
 // @access  Private
 exports.getAssignment = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid assignment ID format'
+      });
+    }
+
     const assignment = await Assignment.findById(req.params.id)
       .populate('course', 'title')
       .populate('lesson', 'title order');
@@ -66,6 +98,21 @@ exports.getAssignment = async (req, res, next) => {
 // @access  Private/Trainer/Admin
 exports.createAssignment = async (req, res, next) => {
   try {
+    // Validate IDs
+    if (!isValidObjectId(req.body.course)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid course ID format'
+      });
+    }
+
+    if (!isValidObjectId(req.body.lesson)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid lesson ID format'
+      });
+    }
+
     // Verify course and lesson exist
     const course = await Course.findById(req.body.course);
     if (!course) {
@@ -99,6 +146,13 @@ exports.createAssignment = async (req, res, next) => {
 // @access  Private/Trainer/Admin
 exports.updateAssignment = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid assignment ID format'
+      });
+    }
+
     const assignment = await Assignment.findByIdAndUpdate(
       req.params.id,
       req.body,
@@ -129,6 +183,13 @@ exports.updateAssignment = async (req, res, next) => {
 // @access  Private/Trainer/Admin
 exports.deleteAssignment = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid assignment ID format'
+      });
+    }
+
     const assignment = await Assignment.findById(req.params.id);
 
     if (!assignment) {
@@ -154,6 +215,13 @@ exports.deleteAssignment = async (req, res, next) => {
 // @access  Private
 exports.submitAssignment = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid assignment ID format'
+      });
+    }
+
     const assignment = await Assignment.findById(req.params.id);
 
     if (!assignment) {
@@ -217,6 +285,13 @@ exports.submitAssignment = async (req, res, next) => {
 // @access  Private/Trainer/Admin
 exports.getAssignmentSubmissions = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid assignment ID format'
+      });
+    }
+
     const { page = 1, limit = 10, status } = req.query;
 
     const filter = { assignment: req.params.id };
@@ -250,6 +325,13 @@ exports.getAssignmentSubmissions = async (req, res, next) => {
 // @access  Private
 exports.getMySubmission = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid assignment ID format'
+      });
+    }
+
     const submission = await AssignmentSubmission.findOne({
       assignment: req.params.id,
       user: req.user.id
@@ -276,6 +358,13 @@ exports.getMySubmission = async (req, res, next) => {
 // @access  Private/Trainer/Admin
 exports.gradeSubmission = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid submission ID format'
+      });
+    }
+
     const { score, feedback } = req.body;
 
     const submission = await AssignmentSubmission.findById(req.params.id)
@@ -315,6 +404,13 @@ exports.gradeSubmission = async (req, res, next) => {
 // @access  Private/Trainer/Admin
 exports.getAssignmentAnalytics = async (req, res, next) => {
   try {
+    if (!isValidObjectId(req.params.id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid assignment ID format'
+      });
+    }
+
     const assignment = await Assignment.findById(req.params.id);
 
     if (!assignment) {

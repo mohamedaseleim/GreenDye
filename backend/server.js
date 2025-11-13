@@ -88,6 +88,7 @@ app.use('/api/enrollments', require('./routes/enrollmentRoutes'));
 app.use('/api/lessons', require('./routes/lessonRoutes'));
 app.use('/api/sections', require('./routes/sectionRoutes'));
 app.use('/api/quizzes', require('./routes/quizRoutes')); // includes attempts/analytics/grade
+app.use('/api/assignments', require('./routes/assignmentRoutes')); // assignment management
 app.use('/api/forums', require('./routes/forumRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
@@ -152,6 +153,7 @@ app.get('/api/docs', (req, res) => {
       lessons: '/api/lessons - Lesson management',
       quizzes:
         '/api/quizzes - Quiz and assessment (including submission, attempts, analytics and grading)',
+      assignments: '/api/assignments - Assignment management (create, submit, grade, analytics)',
       forums: '/api/forums - Discussion forums',
       notifications: '/api/notifications - Notification system',
       payments: '/api/payments - Payment processing',

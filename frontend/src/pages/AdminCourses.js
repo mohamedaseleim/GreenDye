@@ -42,13 +42,16 @@ import {
   AttachMoney as PriceIcon,
   Category as CategoryIcon,
   LocalOffer as TagIcon,
-  Edit as EditContentIcon
+  Edit as EditContentIcon,
+  PlayLesson as LessonIcon
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import adminService from '../services/adminService';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { COURSE_CATEGORIES, getCourseTitle, getApprovalStatusColor } from '../utils/courseUtils';
+import LessonManagement from '../components/LessonManagement';
+import LessonManagement from '../components/LessonManagement';
 
 const AdminCourses = () => {
   const { user } = useAuth();
@@ -73,6 +76,7 @@ const AdminCourses = () => {
   const [openTagsDialog, setOpenTagsDialog] = useState(false);
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [openLessonDialog, setOpenLessonDialog] = useState(false);
   
   // Selected data
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -353,6 +357,11 @@ const AdminCourses = () => {
       setFormLearningOutcomes([]);
       fetchCourses();
       fetchStatistics();
+      
+      // Redirect trainers to their dashboard after successful course creation
+      if (user && user.role === 'trainer') {
+        navigate('/trainer/dashboard');
+      }
     } catch (error) {
       console.error('Error creating course:', error);
       toast.error('Failed to create course');
@@ -392,6 +401,15 @@ const AdminCourses = () => {
     setFormLearningOutcomes(formLearningOutcomes.filter(outcome => outcome !== outcomeToRemove));
   };
 
+  const handleOpenLessonDialog = (course) => {
+    setSelectedCourse(course);
+    setOpenLessonDialog(true);
+  };
+
+  const handleCloseLessonDialog = () => {
+    setOpenLessonDialog(false);
+    setSelectedCourse(null);
+  };
 
 
   return (
@@ -635,6 +653,14 @@ const AdminCourses = () => {
                           color="primary"
                         >
                           <EditContentIcon />
+                        </IconButton>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleOpenLessonDialog(course)}
+                          title="Quick Lesson Management"
+                          color="secondary"
+                        >
+                          <LessonIcon />
                         </IconButton>
                         <IconButton 
                           size="small" 
@@ -1338,6 +1364,15 @@ const AdminCourses = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Lesson Management Dialog */}
+      {selectedCourse && (
+        <LessonManagement
+          courseId={selectedCourse._id}
+          open={openLessonDialog}
+          onClose={handleCloseLessonDialog}
+        />
+      )}
     </Container>
   );
 };

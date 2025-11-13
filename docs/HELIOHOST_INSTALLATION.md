@@ -438,15 +438,17 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    # Frontend React application
+    # Static asset caching - MUST be separate from location / for proper routing
+    # This location block uses regex matching and has higher precedence
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Frontend React application - catch all for client-side routing
+    # This MUST come after specific location blocks for proper fallback
     location / {
         try_files $uri $uri/ /index.html;
-        
-        # Cache static assets
-        location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
     }
 
     # Security headers
@@ -544,15 +546,17 @@ server {
         add_header Cache-Control "public, immutable";
     }
 
-    # Frontend React application
+    # Static asset caching - MUST be separate from location / for proper routing
+    # This location block uses regex matching and has higher precedence
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Frontend React application - catch all for client-side routing
+    # This MUST come after specific location blocks for proper fallback
     location / {
         try_files $uri $uri/ /index.html;
-        
-        # Cache static assets
-        location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
     }
 
     # Security headers

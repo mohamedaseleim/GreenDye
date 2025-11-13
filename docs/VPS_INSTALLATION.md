@@ -525,23 +525,26 @@ server {
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
     }
 
-    # Serve frontend static files
-    location / {
-        root /var/www/greendye/GreenDye/frontend/build;
-        try_files $uri $uri/ /index.html;
-        
-        # Cache static assets
-        location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
-            expires 1y;
-            add_header Cache-Control "public, immutable";
-        }
-    }
-
     # Upload files location
     location /uploads {
         alias /var/www/greendye/GreenDye/backend/uploads;
         expires 1y;
         add_header Cache-Control "public";
+    }
+
+    # Static asset caching - MUST be separate from location / for proper routing
+    # This location block uses regex matching and has higher precedence
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {
+        root /var/www/greendye/GreenDye/frontend/build;
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    # Serve frontend static files - React SPA with client-side routing
+    # This MUST come after specific location blocks for proper fallback
+    location / {
+        root /var/www/greendye/GreenDye/frontend/build;
+        try_files $uri $uri/ /index.html;
     }
 
     # Deny access to hidden files

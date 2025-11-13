@@ -355,6 +355,11 @@ const AdminCourses = () => {
       setFormLearningOutcomes([]);
       fetchCourses();
       fetchStatistics();
+      
+      // Redirect trainers to their dashboard after successful course creation
+      if (user && user.role === 'trainer') {
+        navigate('/trainer/dashboard');
+      }
     } catch (error) {
       console.error('Error creating course:', error);
       toast.error('Failed to create course');

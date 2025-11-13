@@ -19,6 +19,9 @@ import {
   ListItem,
   ListItemText,
   ListItemIcon,
+  Divider,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import {
   Add as AddIcon,
@@ -32,6 +35,8 @@ import {
   Assignment as AssignmentIcon,
 } from '@mui/icons-material';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
+import ReactQuill from 'react-quill';
+import 'react-quill/dist/quill.snow.css';
 import { toast } from 'react-toastify';
 import adminService from '../services/adminService';
 
@@ -40,11 +45,37 @@ const SectionManagement = ({ courseId, open, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [openSectionDialog, setOpenSectionDialog] = useState(false);
   const [selectedSection, setSelectedSection] = useState(null);
+  const [descriptionTab, setDescriptionTab] = useState(0);
   
   const [sectionFormData, setSectionFormData] = useState({
     title: { en: '', ar: '', fr: '' },
     description: { en: '', ar: '', fr: '' },
   });
+
+  // Quill editor configuration
+  const quillModules = {
+    toolbar: [
+      [{ header: [1, 2, 3, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ list: 'ordered' }, { list: 'bullet' }],
+      ['link'],
+      [{ color: [] }, { background: [] }],
+      ['clean'],
+    ],
+  };
+
+  const quillFormats = [
+    'header',
+    'bold',
+    'italic',
+    'underline',
+    'strike',
+    'list',
+    'bullet',
+    'link',
+    'color',
+    'background',
+  ];
 
   const fetchSectionsAndLessons = useCallback(async () => {
     setLoading(true);
@@ -367,51 +398,84 @@ const SectionManagement = ({ courseId, open, onClose }) => {
                 }
               />
             </Grid>
+
+            {/* Description with Rich Text Editor */}
             <Grid item xs={12}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Description (English)"
-                value={sectionFormData.description.en || ''}
-                onChange={(e) =>
-                  setSectionFormData({
-                    ...sectionFormData,
-                    description: { ...sectionFormData.description, en: e.target.value },
-                  })
-                }
-              />
+              <Divider sx={{ my: 2 }}>
+                <Typography variant="subtitle2" color="primary">
+                  Section Description
+                </Typography>
+              </Divider>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Description (Arabic)"
-                value={sectionFormData.description.ar || ''}
-                onChange={(e) =>
-                  setSectionFormData({
-                    ...sectionFormData,
-                    description: { ...sectionFormData.description, ar: e.target.value },
-                  })
-                }
-              />
+
+            <Grid item xs={12}>
+              <Tabs value={descriptionTab} onChange={(e, val) => setDescriptionTab(val)}>
+                <Tab label="English" />
+                <Tab label="Arabic" />
+                <Tab label="French" />
+              </Tabs>
             </Grid>
-            <Grid item xs={12} sm={6}>
-              <TextField
-                fullWidth
-                multiline
-                rows={3}
-                label="Description (French)"
-                value={sectionFormData.description.fr || ''}
-                onChange={(e) =>
-                  setSectionFormData({
-                    ...sectionFormData,
-                    description: { ...sectionFormData.description, fr: e.target.value },
-                  })
-                }
-              />
-            </Grid>
+
+            {descriptionTab === 0 && (
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Description (English)
+                </Typography>
+                <ReactQuill
+                  theme="snow"
+                  value={sectionFormData.description.en || ''}
+                  onChange={(value) =>
+                    setSectionFormData({
+                      ...sectionFormData,
+                      description: { ...sectionFormData.description, en: value },
+                    })
+                  }
+                  modules={quillModules}
+                  formats={quillFormats}
+                />
+              </Grid>
+            )}
+
+            {descriptionTab === 1 && (
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Description (Arabic)
+                </Typography>
+                <ReactQuill
+                  theme="snow"
+                  value={sectionFormData.description.ar || ''}
+                  onChange={(value) =>
+                    setSectionFormData({
+                      ...sectionFormData,
+                      description: { ...sectionFormData.description, ar: value },
+                    })
+                  }
+                  modules={quillModules}
+                  formats={quillFormats}
+                />
+              </Grid>
+            )}
+
+            {descriptionTab === 2 && (
+              <Grid item xs={12}>
+                <Typography variant="subtitle2" gutterBottom>
+                  Description (French)
+                </Typography>
+                <ReactQuill
+                  theme="snow"
+                  value={sectionFormData.description.fr || ''}
+                  onChange={(value) =>
+                    setSectionFormData({
+                      ...sectionFormData,
+                      description: { ...sectionFormData.description, fr: value },
+                    })
+                  }
+                  modules={quillModules}
+                  formats={quillFormats}
+                />
+              </Grid>
+            )}
+          </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>

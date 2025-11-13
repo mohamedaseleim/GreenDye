@@ -41,13 +41,15 @@ import {
   BarChart as AnalyticsIcon,
   AttachMoney as PriceIcon,
   Category as CategoryIcon,
-  LocalOffer as TagIcon
+  LocalOffer as TagIcon,
+  PlayLesson as LessonIcon
 } from '@mui/icons-material';
 import { toast } from 'react-toastify';
 import adminService from '../services/adminService';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { COURSE_CATEGORIES, getCourseTitle, getApprovalStatusColor } from '../utils/courseUtils';
+import LessonManagement from '../components/LessonManagement';
 
 const AdminCourses = () => {
   const { user } = useAuth();
@@ -72,6 +74,7 @@ const AdminCourses = () => {
   const [openTagsDialog, setOpenTagsDialog] = useState(false);
   const [openCategoryDialog, setOpenCategoryDialog] = useState(false);
   const [openCreateDialog, setOpenCreateDialog] = useState(false);
+  const [openLessonDialog, setOpenLessonDialog] = useState(false);
   
   // Selected data
   const [selectedCourse, setSelectedCourse] = useState(null);
@@ -391,6 +394,15 @@ const AdminCourses = () => {
     setFormLearningOutcomes(formLearningOutcomes.filter(outcome => outcome !== outcomeToRemove));
   };
 
+  const handleOpenLessonDialog = (course) => {
+    setSelectedCourse(course);
+    setOpenLessonDialog(true);
+  };
+
+  const handleCloseLessonDialog = () => {
+    setOpenLessonDialog(false);
+    setSelectedCourse(null);
+  };
 
 
   return (
@@ -627,6 +639,14 @@ const AdminCourses = () => {
                         )}
                       </TableCell>
                       <TableCell>
+                        <IconButton 
+                          size="small" 
+                          onClick={() => handleOpenLessonDialog(course)}
+                          title="Manage Lessons"
+                          color="primary"
+                        >
+                          <LessonIcon />
+                        </IconButton>
                         <IconButton 
                           size="small" 
                           onClick={() => handleOpenAnalytics(course)}
@@ -1329,6 +1349,15 @@ const AdminCourses = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* Lesson Management Dialog */}
+      {selectedCourse && (
+        <LessonManagement
+          courseId={selectedCourse._id}
+          open={openLessonDialog}
+          onClose={handleCloseLessonDialog}
+        />
+      )}
     </Container>
   );
 };

@@ -152,6 +152,7 @@ app.get('/api/docs', (req, res) => {
       lessons: '/api/lessons - Lesson management',
       quizzes:
         '/api/quizzes - Quiz and assessment (including submission, attempts, analytics and grading)',
+      assignments: '/api/assignments - Assignment management (create, submit, grade, analytics)',
       forums: '/api/forums - Discussion forums',
       notifications: '/api/notifications - Notification system',
       payments: '/api/payments - Payment processing',

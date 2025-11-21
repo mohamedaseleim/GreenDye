@@ -476,7 +476,6 @@ const SectionManagement = ({ courseId, open, onClose }) => {
               </Grid>
             )}
           </Grid>
-          </Grid>
         </DialogContent>
         <DialogActions>
           <Button onClick={() => setOpenSectionDialog(false)}>Cancel</Button>

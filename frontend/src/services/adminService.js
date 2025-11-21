@@ -47,7 +47,7 @@ const regenerateCertificate = async (id) => {
 };
 
 const bulkUploadCertificates = async (certificates) => {
-  const response = await axios.post(`${API_URL}/certificates/bulk`, { certificates }, getAuthHeader());
+  const response = await axios.post(`${API_URL}/certificates/bulk`, certificates, getAuthHeader());
   return response.data;
 };
 

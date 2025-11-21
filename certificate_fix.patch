@@ -1,0 +1,62 @@
+diff --git a/frontend/src/pages/AdminCertificates.js b/frontend/src/pages/AdminCertificates.js
+index 9dba49d..f8d248a 100644
+--- a/frontend/src/pages/AdminCertificates.js
++++ b/frontend/src/pages/AdminCertificates.js
+@@ -216,6 +216,34 @@ const AdminCertificates = () => {
+     });
+   };
+ 
++    const handleCreateCertificate = async () => {
++    try {
++      const scoreError = validateScore(formData.score);
++      if (scoreError) {
++        toast.error(scoreError);
++        return;
++      }
++
++      const durationError = validateDuration(formData.duration);
++      if (durationError) {
++        toast.error(durationError);
++        return;
++      }
++
++      const data = { ...formData };
++      if (data.score) data.score = parseFloat(data.score);
++      if (data.duration) data.duration = parseFloat(data.duration);
++
++      await adminService.createCertificate(data);
++      toast.success('Certificate created successfully');
++      handleCloseCreateDialog();
++      fetchCertificates();
++    } catch (error) {
++      toast.error(error.response?.data?.message || 'Failed to create certificate');
++      console.error('Error:', error);
++    }
++  };
++
+   const handleUpdateCertificate = async () => {
+     try {
+       // Validate score if provided
+@@ -313,7 +341,8 @@ const AdminCertificates = () => {
+       });
+ 
+       const response = await adminService.bulkUploadCertificates(certificates);
+-      toast.success(`Uploaded ${response.data.success.length} certificates. ${response.data.failed.length} failed.`);
++      // The response structure is { success: true, message: 'Bulk upload completed', data: { success: [], failed: [] } }
++      toast.success(`Uploaded ${response.data.data.success.length} certificates. ${response.data.data.failed.length} failed.`);
+       setOpenBulkDialog(false);
+       setBulkData('');
+       fetchCertificates();
+diff --git a/frontend/src/services/adminService.js b/frontend/src/services/adminService.js
+index 0946632..2d5694d 100644
+--- a/frontend/src/services/adminService.js
++++ b/frontend/src/services/adminService.js
+@@ -47,7 +47,7 @@ const regenerateCertificate = async (id) => {
+ };
+ 
+ const bulkUploadCertificates = async (certificates) => {
+-  const response = await axios.post(`${API_URL}/certificates/bulk`, { certificates }, getAuthHeader());
++  const response = await axios.post(`${API_URL}/certificates/bulk`, certificates, getAuthHeader());
+   return response.data;
+ };
+ 

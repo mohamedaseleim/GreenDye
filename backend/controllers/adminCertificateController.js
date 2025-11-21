@@ -469,7 +469,11 @@ exports.bulkUploadCertificates = async (req, res, next) => {
         results.success.push({
           certificateId: certificate.certificateId,
           userName: user.name,
-          courseName: (course.title && course.title.get) ? (course.title.get('en') || course.title.get('default')) : 'N/A'
+          courseName: course.title ? (
+          (typeof course.title.get === 'function' ? course.title.get('en') : course.title.en) || 
+          (typeof course.title.get === 'function' ? course.title.get('default') : course.title.default) || 
+         'Untitled Course'
+          ) : 'N/A'
         });
       } catch (error) {
         results.failed.push({

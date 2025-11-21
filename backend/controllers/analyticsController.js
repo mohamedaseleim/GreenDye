@@ -342,7 +342,7 @@ exports.getUserAnalytics = async (req, res, _next) => {
     const learningTime = await Analytics.aggregate([
       {
         $match: {
-          user: mongoose.Types.ObjectId(userId),
+          user: new mongoose.Types.ObjectId(userId),
           eventType: { $in: ['video_play', 'lesson_complete'] }
         }
       },

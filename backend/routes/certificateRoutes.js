@@ -5,8 +5,8 @@ const {
   getCertificates,
   getCertificate,
   generateCertificate,
-  revokeCertificate,
   downloadCertificate
+  // revokeCertificate  <-- Remove this import
 } = require('../controllers/certificateController');
 
 // Protect all routes
@@ -22,7 +22,8 @@ router.get('/:id', getCertificate);
 router.post('/generate', authorize('admin', 'trainer'), generateCertificate);
 
 // Revoke a certificate (admin only)
-router.put('/:id/revoke', authorize('admin'), revokeCertificate);
+// REMOVE THIS ROUTE - It is already handled in adminCertificateRoutes.js
+// router.put('/:id/revoke', authorize('admin'), revokeCertificate);
 
 // Download certificate as PDF (user or admin)
 router.get('/:id/download', downloadCertificate);

@@ -216,34 +216,6 @@ const AdminCertificates = () => {
     });
   };
 
-    const handleCreateCertificate = async () => {
-    try {
-      const scoreError = validateScore(formData.score);
-      if (scoreError) {
-        toast.error(scoreError);
-        return;
-      }
-
-      const durationError = validateDuration(formData.duration);
-      if (durationError) {
-        toast.error(durationError);
-        return;
-      }
-
-      const data = { ...formData };
-      if (data.score) data.score = parseFloat(data.score);
-      if (data.duration) data.duration = parseFloat(data.duration);
-
-      await adminService.createCertificate(data);
-      toast.success('Certificate created successfully');
-      handleCloseCreateDialog();
-      fetchCertificates();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to create certificate');
-      console.error('Error:', error);
-    }
-  };
-
   const handleUpdateCertificate = async () => {
     try {
       // Validate score if provided

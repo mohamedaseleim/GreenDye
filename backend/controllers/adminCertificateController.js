@@ -662,7 +662,6 @@ exports.exportCertificates = async (req, res, next) => {
       certificateId: cert.certificateId,
       userName: cert.userName,
       userEmail: cert.user?.email,
-      courseName: (cert.courseName && cert.courseName.get) ? (cert.courseName.get('en') || cert.courseName.get('default')) : 'N/A',
       courseName: cert.courseName ? (
       (typeof cert.courseName.get === 'function' ? cert.courseName.get('en') : cert.courseName.en) || 
       (typeof cert.courseName.get === 'function' ? cert.courseName.get('default') : cert.courseName.default) || 

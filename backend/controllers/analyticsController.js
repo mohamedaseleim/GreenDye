@@ -358,7 +358,7 @@ exports.getUserAnalytics = async (req, res, _next) => {
     const quizPerformance = await Analytics.aggregate([
       {
         $match: {
-          user: mongoose.Types.ObjectId(userId),
+          user: new mongoose.Types.ObjectId(userId),
           eventType: 'quiz_complete'
         }
       },

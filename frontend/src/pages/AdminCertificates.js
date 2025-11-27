@@ -89,17 +89,26 @@ const AdminCertificates = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user, navigate, page, rowsPerPage, search, filterValid, filterRevoked]);
 
-  const fetchCertificates = async (pageOverride) => {
+const fetchCertificates = async (pageOverride) => {
     try {
       setLoading(true);
       const currentPage = pageOverride !== undefined ? pageOverride : page;
+      
+      // إعداد الباراميترات الأساسية
       const params = {
         page: currentPage + 1,
         limit: rowsPerPage,
-        search,
-        isValid: filterValid,
-        isRevoked: filterRevoked
+        search
       };
+      
+      // إضافة الفلاتر فقط إذا كان لها قيمة (مثل صفحة المدربين)
+      if (filterValid !== '') {
+        params.isValid = filterValid;
+      }
+      
+      if (filterRevoked !== '') {
+        params.isRevoked = filterRevoked;
+      }
       
       const response = await adminService.getAllCertificates(params);
       setCertificates(response.data || []);

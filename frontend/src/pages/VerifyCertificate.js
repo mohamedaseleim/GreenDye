@@ -300,26 +300,14 @@ const VerifyCertificate = () => {
                   </Grid>
                 )}
 
-                {/* Issued By */}
-                {certificate.issuedBy && (
+                {/* Completion Date */}
+                {certificate.completionDate && (
                   <Grid item xs={12} sm={6}>
                     <Typography variant="subtitle2" color="text.secondary">
-                      Issued by
+                      Completion Date
                     </Typography>
                     <Typography variant="body1" fontWeight="medium">
-                      {certificate.issuedBy}
-                    </Typography>
-                  </Grid>
-                )}
-
-                {/* Verification Date */}
-                {certificate.verificationDate && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Verification Date
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {formatDate(certificate.verificationDate)}
+                      {formatDate(certificate.completionDate)}
                     </Typography>
                   </Grid>
                 )}
@@ -336,18 +324,6 @@ const VerifyCertificate = () => {
                   </Grid>
                 )}
 
-                {/* Completion Date */}
-                {certificate.completionDate && (
-                  <Grid item xs={12} sm={6}>
-                    <Typography variant="subtitle2" color="text.secondary">
-                      Completion Date
-                    </Typography>
-                    <Typography variant="body1" fontWeight="medium">
-                      {formatDate(certificate.completionDate)}
-                    </Typography>
-                  </Grid>
-                )}
-
                 {/* Expiry Date */}
                 {certificate.expiryDate && (
                   <Grid item xs={12} sm={6}>
@@ -356,6 +332,18 @@ const VerifyCertificate = () => {
                     </Typography>
                     <Typography variant="body1" fontWeight="medium">
                       {formatDate(certificate.expiryDate)}
+                    </Typography>
+                  </Grid>
+                )}
+
+                {/* Issued By */}
+                {certificate.issuedBy && (
+                  <Grid item xs={12} sm={6}>
+                    <Typography variant="subtitle2" color="text.secondary">
+                      Issued by
+                    </Typography>
+                    <Typography variant="body1" fontWeight="medium">
+                      {certificate.issuedBy}
                     </Typography>
                   </Grid>
                 )}

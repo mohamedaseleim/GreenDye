@@ -76,6 +76,7 @@ const AdminCertificates = () => {
     duration: '',
     heldIn: '',
     issuedBy: 'GreenDye Academy',
+    completionDate: '',
     issueDate: '',
     expiryDate: ''
   });
@@ -192,6 +193,7 @@ const fetchCertificates = async (pageOverride) => {
       duration: cert.metadata?.duration || '',
       heldIn: cert.metadata?.heldIn || '',
       issuedBy: cert.metadata?.issuedBy || 'GreenDye Academy',
+      issueDate: cert.completionDate ? new Date(cert.completionDate).toISOString().split('T')[0] : '',
       issueDate: cert.issueDate ? new Date(cert.issueDate).toISOString().split('T')[0] : '',
       expiryDate: cert.expiryDate ? new Date(cert.expiryDate).toISOString().split('T')[0] : ''
     });
@@ -220,6 +222,7 @@ const fetchCertificates = async (pageOverride) => {
       duration: '',
       heldIn: '',
       issuedBy: 'GreenDye Academy',
+      completionDate: '',
       issueDate: '',
       expiryDate: ''
     });
@@ -256,6 +259,7 @@ const fetchCertificates = async (pageOverride) => {
       if (formData.duration) data.duration = parseFloat(formData.duration);
       if (formData.heldIn) data.heldIn = formData.heldIn;
       if (formData.issuedBy) data.issuedBy = formData.issuedBy;
+      if (formData.completionDate) data.completionDate = formData.completionDate;
       if (formData.issueDate) data.issueDate = formData.issueDate;
       // Allow clearing expiry date by setting to null if empty string
       if (formData.expiryDate) {
@@ -376,6 +380,7 @@ const fetchCertificates = async (pageOverride) => {
       duration: '',
       heldIn: '',
       issuedBy: 'GreenDye Academy',
+      completionDate: '',
       issueDate: '',
       expiryDate: ''
     });
@@ -465,6 +470,7 @@ const fetchCertificates = async (pageOverride) => {
       if (formData.duration) data.duration = parseFloat(formData.duration);
       if (formData.heldIn) data.heldIn = formData.heldIn;
       if (formData.issuedBy) data.issuedBy = formData.issuedBy;
+      if (formData.completionDate) data.completionDate = formData.completionDate;
       if (formData.issueDate) data.issueDate = formData.issueDate;
       if (formData.expiryDate) data.expiryDate = formData.expiryDate;
 
@@ -890,6 +896,18 @@ const fetchCertificates = async (pageOverride) => {
                 />
               </Grid>
 
+              {/* Completion Date (Optional) */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Completion Date (Optional)"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.completionDate}
+                  onChange={(e) => handleFormChange('completionDate', e.target.value)}
+                />
+              </Grid>
+
               {/* Issue Date (Optional) */}
               <Grid item xs={12} md={6}>
                 <TextField
@@ -1064,6 +1082,18 @@ const fetchCertificates = async (pageOverride) => {
                   value={formData.issuedBy}
                   onChange={(e) => handleFormChange('issuedBy', e.target.value)}
                   placeholder="GreenDye Academy"
+                />
+              </Grid>
+        
+              {/* Completion Date */}
+              <Grid item xs={12} md={6}>
+                <TextField
+                  fullWidth
+                  label="Completion Date"
+                  type="date"
+                  InputLabelProps={{ shrink: true }}
+                  value={formData.completionDate}
+                  onChange={(e) => handleFormChange('completionDate', e.target.value)}
                 />
               </Grid>
 

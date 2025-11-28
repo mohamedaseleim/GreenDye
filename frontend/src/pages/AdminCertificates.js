@@ -193,7 +193,7 @@ const fetchCertificates = async (pageOverride) => {
       duration: cert.metadata?.duration || '',
       heldIn: cert.metadata?.heldIn || '',
       issuedBy: cert.metadata?.issuedBy || 'GreenDye Academy',
-      issueDate: cert.completionDate ? new Date(cert.completionDate).toISOString().split('T')[0] : '',
+      completionDate: cert.completionDate ? new Date(cert.completionDate).toISOString().split('T')[0] : '',
       issueDate: cert.issueDate ? new Date(cert.issueDate).toISOString().split('T')[0] : '',
       expiryDate: cert.expiryDate ? new Date(cert.expiryDate).toISOString().split('T')[0] : ''
     });

@@ -392,18 +392,26 @@ const fetchCertificates = async (pageOverride) => {
     return course.title?.en || course.title?.default || course.title || 'Untitled Course';
   };
 
-  const validateScore = (scoreString) => {
-    if (!scoreString || !scoreString.trim()) return null; // No score provided is valid
-    const scoreValue = parseFloat(scoreString);
+   const validateScore = (scoreString) => {
+    // التحويل إلى نص لضمان عدم حدوث خطأ مع الأرقام
+    const strVal = String(scoreString !== undefined && scoreString !== null ? scoreString : '');
+    
+    if (!strVal.trim()) return null; // No score provided is valid
+    
+    const scoreValue = parseFloat(strVal);
     if (isNaN(scoreValue) || scoreValue < 0 || scoreValue > 100) {
       return 'Score must be a valid number between 0 and 100';
     }
     return null; // Valid score
   };
-
+  
   const validateDuration = (durationString) => {
-    if (!durationString || !durationString.trim()) return null; // No duration provided is valid
-    const durationValue = parseFloat(durationString);
+    // التحويل إلى نص لضمان عدم حدوث خطأ مع الأرقام
+    const strVal = String(durationString !== undefined && durationString !== null ? durationString : '');
+    
+    if (!strVal.trim()) return null; // No duration provided is valid
+    
+    const durationValue = parseFloat(strVal);
     if (isNaN(durationValue) || durationValue < 0) {
       return 'Duration must be a valid positive number';
     }

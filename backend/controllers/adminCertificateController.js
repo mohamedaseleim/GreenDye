@@ -110,6 +110,7 @@ exports.createCertificate = async (req, res, next) => {
       issuedBy,
       issueDate,
       expiryDate,
+      completionDate,
       certificateId
     } = sanitizedInput;
 
@@ -195,7 +196,11 @@ exports.createCertificate = async (req, res, next) => {
     if (expiryDate) {
       certificateData.expiryDate = expiryDate;
     }
-
+    
+   if (completionDate) {
+      certificateData.completionDate = completionDate;
+    } 
+    
     // Set metadata fields
     if (tutorName) {
       certificateData.metadata.instructor = tutorName;
@@ -297,7 +302,8 @@ exports.updateCertificate = async (req, res, next) => {
       duration,
       issuedBy,
       issueDate,
-      expiryDate
+      expiryDate,
+      completionDate
     } = req.body;
 
     // Update allowed fields
@@ -310,6 +316,7 @@ exports.updateCertificate = async (req, res, next) => {
     if (grade) certificate.grade = grade;
     if (score !== undefined) certificate.score = score;
     if (issueDate) certificate.issueDate = issueDate;
+    if (completionDate) certificate.completionDate = completionDate;
     if (expiryDate !== undefined) certificate.expiryDate = expiryDate;
     
     // Update metadata fields

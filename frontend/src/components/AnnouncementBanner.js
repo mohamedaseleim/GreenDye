@@ -2,8 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Alert, IconButton, Box, Collapse } from '@mui/material';
 import { Close as CloseIcon } from '@mui/icons-material';
 import axios from 'axios';
+import { useTranslation } from 'react-i18next'; // استيراد useTranslation لدعم تعدد اللغات
 
 const AnnouncementBanner = ({ userRole = 'all' }) => {
+  const { i18n } = useTranslation(); // الحصول على كائن i18n لمعرفة اللغة الحالية
   const [announcements, setAnnouncements] = useState([]);
   const [closedAnnouncements, setClosedAnnouncements] = useState([]);
 
@@ -34,9 +36,11 @@ const AnnouncementBanner = ({ userRole = 'all' }) => {
     localStorage.setItem('closedAnnouncements', JSON.stringify(newClosed));
   };
 
+  // دالة معدلة لاستخدام اللغة الحالية من i18n
   const getLocalizedText = (textObject) => {
     if (!textObject) return '';
-    return textObject.en || textObject.ar || textObject.fr || '';
+    // الأولوية للغة الحالية، ثم الإنجليزية كبديل، ثم أي لغة متوفرة
+    return textObject[i18n.language] || textObject.en || textObject.ar || textObject.fr || '';
   };
 
   const getSeverity = (type) => {

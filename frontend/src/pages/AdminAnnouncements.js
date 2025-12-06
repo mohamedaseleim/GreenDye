@@ -384,6 +384,31 @@ const AdminAnnouncements = () => {
                 inputProps={{ dir: 'rtl' }}
               />
             </Grid>
+
+            {/* Added French Content Section */}
+            <Grid item xs={12}>
+              <Typography variant="subtitle1" gutterBottom>
+                French Content
+              </Typography>
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                label="Title (FR)"
+                value={formData.title.fr}
+                onChange={(e) => handleInputChange('title', e.target.value, 'fr')}
+              />
+            </Grid>
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                multiline
+                rows={3}
+                label="Content (FR)"
+                value={formData.content.fr}
+                onChange={(e) => handleInputChange('content', e.target.value, 'fr')}
+              />
+            </Grid>
           </Grid>
         </DialogContent>
         <DialogActions>

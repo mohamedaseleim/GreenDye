@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import {
   Box,
   Container,
@@ -40,6 +40,17 @@ import adminService from '../services/adminService';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
+// Define formats outside component to prevent re-creation on every render
+const QUILL_FORMATS = [
+  'header',
+  'bold', 'italic', 'underline', 'strike',
+  'list', 'bullet', 'indent',
+  'align',
+  'link', 'image', 'video',
+  'color', 'background',
+  'blockquote', 'code-block'
+];
+
 const AdminPages = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -59,14 +70,35 @@ const AdminPages = () => {
     menuOrder: 0
   });
 
-  // Quill editor refs for custom handlers
+  // Quill editor refs
   const quillRefEn = React.useRef(null);
   const quillRefAr = React.useRef(null);
   const quillRefFr = React.useRef(null);
 
-  // Image upload handler
-  const imageHandler = React.useCallback((quillRef) => {
-    return function() {
+  useEffect(() => {
+    if (!user || user.role !== 'admin') {
+      navigate('/');
+      return;
+    }
+    fetchPages();
+  }, [user, navigate]);
+
+  const fetchPages = async () => {
+    try {
+      setLoading(true);
+      const response = await adminService.getAllPages();
+      setPages(response.data || []);
+    } catch (error) {
+      toast.error('Failed to fetch pages');
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Image upload handler factory
+  const createImageHandler = useCallback((quillRef) => {
+    return () => {
       const input = document.createElement('input');
       input.setAttribute('type', 'file');
       input.setAttribute('accept', 'image/*');
@@ -97,8 +129,7 @@ const AdminPages = () => {
             const quill = quillRef.current?.getEditor();
             if (quill) {
               const range = quill.getSelection(true);
-              quill.insertEmbed(range.index, 'image', imageUrl);
-              quill.setSelection(range.index + 1);
+              quill.insertEmbed(range?.index || 0, 'image', imageUrl);
             }
             toast.success('Image uploaded successfully');
           } else {
@@ -112,8 +143,8 @@ const AdminPages = () => {
     };
   }, []);
 
-  // Quill editor configuration
-  const getQuillModules = (quillRef) => ({
+  // Memoize modules for each language to prevent re-renders
+  const modulesEn = useMemo(() => ({
     toolbar: {
       container: [
         [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
@@ -127,41 +158,48 @@ const AdminPages = () => {
         ['clean']
       ],
       handlers: {
-        image: imageHandler(quillRef)
+        image: createImageHandler(quillRefEn)
       }
     }
-  });
+  }), [createImageHandler]);
 
-  const quillFormats = [
-    'header',
-    'bold', 'italic', 'underline', 'strike',
-    'list', 'bullet', 'indent',
-    'align',
-    'link', 'image', 'video',
-    'color', 'background',
-    'blockquote', 'code-block'
-  ];
-
-  useEffect(() => {
-    if (!user || user.role !== 'admin') {
-      navigate('/');
-      return;
+  const modulesAr = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'align': [] }],
+        ['link', 'image', 'video'],
+        [{ 'color': [] }, { 'background': [] }],
+        ['blockquote', 'code-block'],
+        ['clean']
+      ],
+      handlers: {
+        image: createImageHandler(quillRefAr)
+      }
     }
-    fetchPages();
-  }, [user, navigate]);
+  }), [createImageHandler]);
 
-  const fetchPages = async () => {
-    try {
-      setLoading(true);
-      const response = await adminService.getAllPages();
-      setPages(response.data || []);
-    } catch (error) {
-      toast.error('Failed to fetch pages');
-      console.error('Error:', error);
-    } finally {
-      setLoading(false);
+  const modulesFr = useMemo(() => ({
+    toolbar: {
+      container: [
+        [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+        ['bold', 'italic', 'underline', 'strike'],
+        [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+        [{ 'indent': '-1'}, { 'indent': '+1' }],
+        [{ 'align': [] }],
+        ['link', 'image', 'video'],
+        [{ 'color': [] }, { 'background': [] }],
+        ['blockquote', 'code-block'],
+        ['clean']
+      ],
+      handlers: {
+        image: createImageHandler(quillRefFr)
+      }
     }
-  };
+  }), [createImageHandler]);
 
   const handleOpenDialog = (page = null) => {
     if (page) {
@@ -169,7 +207,12 @@ const AdminPages = () => {
       setFormData({
         slug: page.slug || '',
         title: page.title || { en: '', ar: '', fr: '' },
-        content: page.content || { en: '', ar: '', fr: '' },
+        // Ensure content is initialized properly, handling potential missing keys
+        content: { 
+          en: page.content?.en || '', 
+          ar: page.content?.ar || '', 
+          fr: page.content?.fr || '' 
+        },
         metaDescription: page.metaDescription || { en: '', ar: '', fr: '' },
         template: page.template || 'default',
         status: page.status || 'draft',
@@ -460,8 +503,8 @@ const AdminPages = () => {
                     theme="snow"
                     value={formData.content.en}
                     onChange={(value) => handleInputChange('content', value, 'en')}
-                    modules={getQuillModules(quillRefEn)}
-                    formats={quillFormats}
+                    modules={modulesEn}
+                    formats={QUILL_FORMATS}
                   />
                 </Box>
               </Box>
@@ -506,8 +549,8 @@ const AdminPages = () => {
                     theme="snow"
                     value={formData.content.ar}
                     onChange={(value) => handleInputChange('content', value, 'ar')}
-                    modules={getQuillModules(quillRefAr)}
-                    formats={quillFormats}
+                    modules={modulesAr}
+                    formats={QUILL_FORMATS}
                   />
                 </Box>
               </Box>
@@ -551,8 +594,8 @@ const AdminPages = () => {
                     theme="snow"
                     value={formData.content.fr}
                     onChange={(value) => handleInputChange('content', value, 'fr')}
-                    modules={getQuillModules(quillRefFr)}
-                    formats={quillFormats}
+                    modules={modulesFr}
+                    formats={QUILL_FORMATS}
                   />
                 </Box>
               </Box>
